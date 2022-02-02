@@ -1,0 +1,25 @@
+{
+  "name": "rds",
+  "description": "React development server",
+  "private": true,
+  "author": "Arnuad Barré (https://github.com/ArnaudBarre)",
+  "scripts": {
+    "start": "esbuild src/server/index.ts --bundle --outdir=dist/server --platform=node --target=node16 --external:chokidar --external:ws --external:@swc/core --legal-comments=inline --watch",
+    "start-client": "esbuild src/client/index.ts --bundle --outdir=dist/client --format=esm --legal-comments=inline --watch"
+  },
+  "prettier": {
+    "trailingComma": "all"
+  },
+  "dependencies": {
+    "@swc/core": "1.2.130",
+    "chokidar": "^3.5.3",
+    "esbuild": "^0.14.11",
+    "ws": "^8.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.8",
+    "@types/ws": "^8.2.2",
+    "prettier": "^2.5.1",
+    "typescript": "^4.5.4"
+  }
+}
