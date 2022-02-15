@@ -38,18 +38,17 @@ socket.addEventListener("message", async ({ data }) => {
         isFirstUpdate = false;
       }
 
-      if (!hotModules.has(payload.path)) return; // Module not yet loaded (code splitting)
-      const [base, query] = payload.path.split("?");
-      try {
-        await import(base + `?t=${Date.now()}${query ? `&${query}` : ""}`);
-        console.log(`[rds] Hot updated: ${payload.path}`);
-      } catch (err) {
-        if (!(err as Error).message.includes("fetch")) {
-          console.error(err);
-        }
-        console.error(
-          `[hmr] Failed to reload ${payload.path}. This could be due to syntax errors. (see errors above)`,
-        );
+      for (const path of payload.paths) {
+        import(path)
+          .then(() => console.log(`[rds] Hot updated: ${path}`))
+          .catch((err) => {
+            if (!(err as Error).message.includes("fetch")) {
+              console.error(err);
+            }
+            console.error(
+              `[hmr] Failed to reload ${path}. This could be due to syntax errors. (see errors above)`,
+            );
+          });
       }
       break;
     case "reload":
@@ -69,7 +68,7 @@ socket.addEventListener("message", async ({ data }) => {
 });
 
 const clearErrorOverlay = () =>
-  (document.getElementById(overlayId) as ErrorOverlay).close();
+  (document.getElementById(overlayId) as ErrorOverlay | null)?.close();
 
 // ping server
 socket.addEventListener("close", async ({ wasClean }) => {

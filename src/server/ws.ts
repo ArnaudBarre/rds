@@ -6,6 +6,7 @@ import { HMRError, HMRPayload } from "../hmrPayload";
 import { HMRWebSocket } from "./types";
 
 import { colors } from "./colors";
+import { log } from "./logger";
 
 export const createWebSocketServer = (server: Server): HMRWebSocket => {
   const wss = new WebSocketServer({ noServer: true });
@@ -31,9 +32,7 @@ export const createWebSocketServer = (server: Server): HMRWebSocket => {
 
   wss.on("error", (e: Error & { code: string }) => {
     if (e.code !== "EADDRINUSE") {
-      console.log(
-        colors.red(`WebSocket server error:\n${e.stack || e.message}`),
-      );
+      log(colors.red(`WebSocket server error:\n${e.stack || e.message}`));
     }
   });
 

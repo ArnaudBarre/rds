@@ -2,7 +2,7 @@
   "name": "template",
   "private": true,
   "scripts": {
-    "start": "../dist/server/index.js"
+    "start": "../dist/server/index.js --debug"
   },
   "dependencies": {
     "react": "^17.0.2",

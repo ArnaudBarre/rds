@@ -2,6 +2,7 @@
   "include": ["src"],
   "compilerOptions": {
     "module": "ES2020",
+    "target": "ES2021",
 
     /* Compile via esbuild */
     "noEmit": true,
