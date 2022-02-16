@@ -32,7 +32,7 @@ export const createWebSocketServer = (server: Server): HMRWebSocket => {
 
   wss.on("error", (e: Error & { code: string }) => {
     if (e.code !== "EADDRINUSE") {
-      log(colors.red(`WebSocket server error:\n${e.stack || e.message}`));
+      log.info(colors.red(`WebSocket server error:\n${e.stack || e.message}`));
     }
   });
 

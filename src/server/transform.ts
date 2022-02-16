@@ -3,7 +3,7 @@ import { AnalyzedImport, swcCache } from "./swc";
 import { resolve } from "./resolve";
 import { ENTRY_POINT, RDS_CLIENT } from "./consts";
 import { Graph, GraphNode, HMRWebSocket } from "./types";
-import { dependencies } from "./dependencies";
+import { addDependency } from "./dependencies";
 
 export const graph: Graph = new Map([
   [
@@ -20,8 +20,6 @@ export const initTransformSrcImports = (ws: HMRWebSocket) => {
     Promise<{ code: string; depsImports: AnalyzedImport[] }>
   >("transform", async (url) => {
     let { code, imports, hasFastRefresh } = await swcCache.get(url);
-
-    console.log(url, hasFastRefresh);
 
     const graphNode = graph.get(url)!;
     graphNode.selfUpdate = hasFastRefresh;
@@ -66,7 +64,7 @@ export const initTransformSrcImports = (ws: HMRWebSocket) => {
     }
 
     for (const imp of depsImports) {
-      dependencies.add(imp.source);
+      addDependency(imp.source, ws);
     }
 
     return {

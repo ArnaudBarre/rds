@@ -102,7 +102,7 @@ transformSrcImports
   .then(async () => {
     await buildDependencies();
     server.listen(3000, async () => {
-      log(colors.cyan(`[rds] Dev server running at:`));
+      log.info(colors.cyan(`[rds] Dev server running at:`));
       const localUrl = "http://localhost:3000";
       Object.values(os.networkInterfaces())
         .flatMap((nInterface) => nInterface ?? [])
@@ -112,8 +112,8 @@ transformSrcImports
             ? `  > Local:   ${localUrl}`
             : `  > Network: http://${detail.address}:3000`,
         )
-        .forEach((msg) => log(msg));
-      log(
+        .forEach((msg) => log.info(msg));
+      log.info(
         colors.green(`Ready in ${(performance.now() - start).toFixed(0)} ms`),
       );
       if (process.platform === "darwin") {

@@ -29,10 +29,10 @@ export const initSrcWatcher = (
         invalidate(graphNode);
         const updates = new Set<string>();
         if (propagateUpdate(graphNode, updates)) {
-          log(colors.green("page reload ") + colors.dim(path));
+          log.info(colors.green("page reload ") + colors.dim(path));
           hmrWS.send({ type: "reload" });
         } else {
-          log(
+          log.info(
             colors.green("hmr update ") +
               [...updates].map((update) => colors.dim(update)).join(", "),
           );

@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="server" pattern="file[rds]:src//*&amp;&amp;!file[rds]:src/client//*" />
+</component>
