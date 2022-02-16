@@ -11,8 +11,8 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@parcel/css": "^1.2.0",
-    "@swc/core": "1.2.130",
+    "@parcel/css": "^1.3.1",
+    "@swc/core": "^1.2.130",
     "chokidar": "^3.5.3",
     "esbuild": "^0.14.18",
     "ws": "^8.4.2"

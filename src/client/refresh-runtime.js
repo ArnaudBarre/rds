@@ -175,7 +175,6 @@ function performReactRefresh() {
       }
     });
 
-    // TODO: rename these fields to something more meaningful.
     let update = {
       updatedFamilies: updatedFamilies,
       // Families that will re-render preserving state
