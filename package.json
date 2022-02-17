@@ -4,7 +4,7 @@
   "private": true,
   "author": "Arnuad Barre (https://github.com/ArnaudBarre)",
   "scripts": {
-    "start": "esbuild src/server/index.ts --bundle --outdir=dist/server --platform=node --target=node16 --external:esbuild --external:chokidar --external:ws --external:@swc/core --legal-comments=inline --watch",
+    "start": "esbuild src/server/index.ts --bundle --outdir=dist/server --platform=node --target=node16 --external:esbuild --external:chokidar --external:ws --external:@swc/core --external:@parcel/css --legal-comments=inline --watch",
     "start-client": "esbuild src/client/index.ts --bundle --outdir=dist/client --format=esm --target=safari13 --legal-comments=inline --watch"
   },
   "prettier": {

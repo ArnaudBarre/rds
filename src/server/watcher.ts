@@ -6,24 +6,30 @@ import { colors } from "./colors";
 import { swcCache } from "./swc";
 import { resolveExtensionCache } from "./resolve";
 import { graph, TransformSrcImports } from "./transform";
+import { isCSS } from "./utils";
+import { cssCache } from "./css";
 
 export const initSrcWatcher = (
   hmrWS: HMRWebSocket,
   transformSrcImports: TransformSrcImports,
 ) => {
   const invalidate = (node: GraphNode) => {
+    transformSrcImports.delete(node.url);
     for (const importer of node.importers) {
-      transformSrcImports.delete(node.url);
       invalidate(importer);
     }
   };
 
-  return watch("src/**/*.[jt]s?(x)", { ignoreInitial: true })
+  return watch(["src/**/*.[jt]s?(x)", "src/**/*.css"], { ignoreInitial: true })
     .on("add", (path) => {
-      resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
+      log.debug(`add ${path}`);
+      if (!isCSS(path)) {
+        resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
+      }
     })
     .on("change", async (path) => {
-      swcCache.delete(path);
+      log.debug(`change ${path}`);
+      (isCSS(path) ? cssCache : swcCache).delete(path);
       const graphNode = graph.get(path);
       if (graphNode) {
         invalidate(graphNode);
@@ -46,9 +52,12 @@ export const initSrcWatcher = (
       }
     })
     .on("unlink", (path) => {
-      resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
+      log.debug(`unlink ${path}`);
+      if (!isCSS(path)) {
+        resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
+      }
+      (isCSS(path) ? cssCache : swcCache).delete(path);
       transformSrcImports.delete(path);
-      swcCache.delete(path);
       // TODO: Update importers if exists. Will throws and trigger the overlay
     });
 };

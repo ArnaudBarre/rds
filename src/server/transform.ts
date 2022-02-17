@@ -1,9 +1,10 @@
-import { cache, getHashedUrl, split } from "./utils";
+import { cache, getHashedUrl, isCSS, split } from "./utils";
 import { AnalyzedImport, swcCache } from "./swc";
 import { resolve } from "./resolve";
 import { ENTRY_POINT, RDS_CLIENT } from "./consts";
 import { Graph, GraphNode, HMRWebSocket } from "./types";
 import { addDependency } from "./dependencies";
+import { cssCache } from "./css";
 
 export const graph: Graph = new Map([
   [
@@ -19,24 +20,58 @@ export const initTransformSrcImports = (ws: HMRWebSocket) => {
     string,
     Promise<{ code: string; depsImports: AnalyzedImport[] }>
   >("transform", async (url) => {
-    let { code, imports, hasFastRefresh } = await swcCache.get(url);
-
     const graphNode = graph.get(url)!;
-    graphNode.selfUpdate = hasFastRefresh;
     const oldSrcImports = graphNode.imports;
-    const [srcImports, depsImports] = split(imports, (imp) =>
-      imp.source.startsWith("."),
-    );
-    graphNode.imports = srcImports.map((i) => i.source);
 
-    const importsToPrune = oldSrcImports.filter(
-      (it) => !graphNode.imports.includes(it),
-    );
-    if (importsToPrune.length) {
-      ws.send({ type: "prune", paths: importsToPrune });
-      for (const importToPrune of importsToPrune) {
-        graph.get(resolve(url, importToPrune))!.importers.delete(graphNode);
+    let content: string;
+    let depsImports: AnalyzedImport[] = [];
+
+    const isCSSFile = isCSS(url);
+    if (isCSSFile) {
+      const { code, dependencies } = cssCache.get(url);
+      graphNode.selfUpdate = true; // TODO: handles css modules
+      graphNode.imports = dependencies.map((i) => i.url);
+      content = `import { updateStyle } from "/${RDS_CLIENT}";
+updateStyle("${url}", ${JSON.stringify(code)});
+      `;
+    } else {
+      const { code, imports, hasFastRefresh } = await swcCache.get(url);
+      graphNode.selfUpdate = hasFastRefresh;
+      const [srcImports, _depsImports] = split(imports, (imp) =>
+        imp.source.startsWith("."),
+      );
+      depsImports = _depsImports;
+      graphNode.imports = srcImports.map((i) => i.source);
+
+      for (const imp of depsImports) {
+        addDependency(imp.source, ws);
       }
+
+      content = hasFastRefresh
+        ? `import { RefreshRuntime } from "/${RDS_CLIENT}";
+const prevRefreshReg = window.$RefreshReg$;
+const prevRefreshSig = window.$RefreshSig$;
+window.$RefreshReg$ = RefreshRuntime.getRefreshReg("${url}")
+window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+
+${code}
+
+window.$RefreshReg$ = prevRefreshReg;
+window.$RefreshSig$ = prevRefreshSig;
+RefreshRuntime.enqueueUpdate();
+`
+        : code;
+    }
+
+    const importsToPrune = oldSrcImports
+      .filter((it) => !graphNode.imports.includes(it))
+      .map((it) => resolve(url, it));
+    for (const importToPrune of importsToPrune) {
+      graph.get(importToPrune)!.importers.delete(graphNode);
+    }
+    const cssImportsToPrune = importsToPrune.filter((i) => isCSS(i));
+    if (cssImportsToPrune.length) {
+      ws.send({ type: "prune-css", paths: cssImportsToPrune });
     }
 
     for (const imp of graphNode.imports) {
@@ -57,35 +92,20 @@ export const initTransformSrcImports = (ws: HMRWebSocket) => {
           importers: new Set([graphNode]),
         });
       }
-      code = code.replace(
-        new RegExp(`from\\s+['"](${imp})['"]`),
-        `from "${await toHashedUrl(resolvedUrl)}"`,
-      );
+      if (isCSSFile) {
+        content = content.replace(
+          new RegExp(`@import\\s+['"](${imp})['"]`),
+          `@import "${await toHashedUrl(resolvedUrl)}"`,
+        );
+      } else {
+        content = content.replace(
+          new RegExp(`(import|from)\\s+['"](${imp})['"]`),
+          `$1 "${await toHashedUrl(resolvedUrl)}"`,
+        );
+      }
     }
 
-    for (const imp of depsImports) {
-      addDependency(imp.source, ws);
-    }
-
-    return {
-      depsImports,
-      code: hasFastRefresh
-        ? `import { RefreshRuntime, createHotContext } from "/${RDS_CLIENT}";
-import.meta.hot = createHotContext("${url}");
-const prevRefreshReg = window.$RefreshReg$;
-const prevRefreshSig = window.$RefreshSig$;
-window.$RefreshReg$ = RefreshRuntime.getRefreshReg("${url}")
-window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
-
-${code}
-
-window.$RefreshReg$ = prevRefreshReg;
-window.$RefreshSig$ = prevRefreshSig;
-import.meta.hot.accept();
-RefreshRuntime.enqueueUpdate();
-`
-        : code,
-    };
+    return { code: content, depsImports };
   });
 
   const toHashedUrl = async (url: string) =>

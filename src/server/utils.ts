@@ -2,10 +2,16 @@ import fs from "fs";
 import crypto from "crypto";
 import { dirname, join } from "path";
 
-import { log } from "./logger";
+import { isDebug, log } from "./logger";
+
+export const isCSS = (path: string) => path.endsWith(".css");
 
 export const getHash = (content: string) =>
-  `${crypto.createHash("sha1").update(content, "utf-8").digest("hex")}`;
+  `${crypto
+    .createHash("sha1")
+    .update(content, "utf-8")
+    .digest("hex")
+    .slice(0, 8)}`;
 
 export const getHashedUrl = (base: string, content: string) =>
   `${base}?h=${getHash(content)}`;
@@ -27,15 +33,30 @@ export const readCacheFile = (path: string) => readFile(join(cacheDir, path));
 export const cache = <Key, Value>(name: string, load: (key: Key) => Value) => {
   const cache = new Map<Key, Value>();
   return {
-    has: cache.has.bind(cache),
+    has: (key: Key) => {
+      log.debug(`${name}: has - ${key}`);
+      cache.has(key);
+    },
     delete: (key: Key) => {
       log.debug(`${name}: delete - ${key}`);
       cache.delete(key);
     },
     get: (key: Key) => {
+      log.debug(`${name}: get - ${key}`);
       const cached = cache.get(key);
       if (cached) return cached;
+      const start = performance.now();
       const value = load(key);
+      if (isDebug) {
+        (async () => {
+          await value;
+          log.debug(
+            `${name}: load - ${key}: ${Math.round(
+              performance.now() - start,
+            )}ms`,
+          );
+        })();
+      }
       cache.set(key, value);
       return value;
     },

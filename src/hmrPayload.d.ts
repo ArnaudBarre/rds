@@ -1,7 +1,7 @@
 export type HMRPayload =
   | { type: "connected" }
   | { type: "update"; paths: string[] }
-  | { type: "prune"; paths: string[] }
+  | { type: "prune-css"; paths: string[] }
   | { type: "reload" }
   | { type: "error"; error: HMRError };
 

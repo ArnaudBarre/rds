@@ -54,11 +54,8 @@ socket.addEventListener("message", async ({ data }) => {
     case "reload":
       location.reload();
       break;
-    case "prune":
-      // After an HMR update, some modules are no longer imported on the page,
-      // but they may have left behind side effects that need to be cleaned up
-      // (.e.g style injections)
-      payload.paths.forEach((path) => pruneMap.get(path)?.());
+    case "prune-css":
+      payload.paths.forEach(removeStyle);
       break;
     case "error":
       clearErrorOverlay();
@@ -90,10 +87,24 @@ const waitForSuccessfulPing = async () => {
   }
 };
 
-const hotModules = new Set<string>();
-const pruneMap = new Map<string, () => unknown>();
+const stylesMap = new Map<string, HTMLStyleElement>();
 
-export const createHotContext = (ownerPath: string) => ({
-  accept: () => hotModules.add(ownerPath),
-  prune: (cb: () => unknown) => pruneMap.set(ownerPath, cb),
-});
+export const updateStyle = (id: string, content: string) => {
+  const style = stylesMap.get(id);
+  if (style) {
+    style.innerHTML = content;
+  } else {
+    const newStyle = document.createElement("style");
+    newStyle.setAttribute("type", "text/css");
+    newStyle.innerHTML = content;
+    document.head.appendChild(newStyle);
+    stylesMap.set(id, newStyle);
+  }
+};
+
+const removeStyle = (id: string) => {
+  const style = stylesMap.get(id);
+  if (!style) return;
+  document.head.removeChild(style);
+  stylesMap.delete(id);
+};

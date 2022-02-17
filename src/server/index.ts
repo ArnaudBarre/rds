@@ -12,7 +12,7 @@ import { createWebSocketServer } from "./ws";
 import { LoadedFile } from "./types";
 import { DEPENDENCY_PREFIX, ENTRY_POINT, RDS_CLIENT } from "./consts";
 import { initPublicWatcher } from "./public";
-import { getHash, readCacheFile } from "./utils";
+import { getHash, isCSS, readCacheFile } from "./utils";
 import {
   buildDependencies,
   getDependency,
@@ -77,12 +77,17 @@ const handleRequest = async (url: string): Promise<LoadedFile> => {
   if (/\.[jt]sx?$/.test(url)) {
     const { code, depsImports } = await transformSrcImports.get(url);
     const content = await transformDependenciesImports(code, depsImports);
-    return { type: "js", content, browserCache: url !== ENTRY_POINT };
+    return { type: "js", content, browserCache: true };
+  }
+  if (isCSS(url)) {
+    const { code } = await transformSrcImports.get(url);
+    return { type: "js", content: code, browserCache: true };
   }
   // load as file
   if (url.includes(".")) throw new Error(`Unhandled file ${url}`);
 
   const { type, content } = await getPublicFile("index.html");
+  const entryUrl = await transformSrcImports.toHashedUrl(ENTRY_POINT);
   return {
     type,
     content: content
@@ -92,7 +97,7 @@ const handleRequest = async (url: string): Promise<LoadedFile> => {
       )
       .replace(
         "</body>",
-        `  <script type="module" src="/${ENTRY_POINT}"></script>\n  </body>`,
+        `  <script type="module" src="${entryUrl}"></script>\n  </body>`,
       ),
   };
 };
