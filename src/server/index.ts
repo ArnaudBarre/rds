@@ -12,7 +12,7 @@ import { LoadedFile } from "./types";
 import { DEPENDENCY_PREFIX, ENTRY_POINT, RDS_CLIENT } from "./consts";
 import { initPublicWatcher } from "./public";
 import {
-  getExt,
+  getExtension,
   getHash,
   isCSS,
   isJS,
@@ -29,6 +29,7 @@ import { log } from "./logger";
 import { initSrcWatcher } from "./watcher";
 import { initTransformSrcImports } from "./transform";
 import { svgCache } from "./svg";
+import { assetsCache } from "./assets";
 
 const server = createServer(async (req, res) => {
   const [url, _query] = req.url!.split("?") as [string, string | undefined];
@@ -56,7 +57,9 @@ const server = createServer(async (req, res) => {
 
 const ws = createWebSocketServer(server);
 const { publicFiles, publicWatcher, getPublicFile } = initPublicWatcher(ws);
-const transformSrcImports = initTransformSrcImports(ws);
+const transformSrcImports = initTransformSrcImports(ws, (url) =>
+  srcWatcher.add(url),
+);
 const srcWatcher = initSrcWatcher(ws, transformSrcImports);
 
 const handleRequest = async (url: string): Promise<LoadedFile> => {
@@ -69,7 +72,7 @@ const handleRequest = async (url: string): Promise<LoadedFile> => {
   }
   if (publicFiles.has(url)) {
     const content = await getPublicFile(url);
-    return { type: getExt(url), content, browserCache: false };
+    return { type: getExtension(url), content, browserCache: false };
   }
 
   if (url.startsWith(DEPENDENCY_PREFIX)) {
@@ -98,8 +101,10 @@ const handleRequest = async (url: string): Promise<LoadedFile> => {
     ]);
     return { type: "js", content, browserCache: true };
   }
-  // load as file
-  if (url.includes(".")) throw new Error(`Unhandled file ${url}`);
+  if (url.includes(".")) {
+    const content = await assetsCache.get(url);
+    return { type: getExtension(url), content, browserCache: true };
+  }
 
   const content = await getPublicFile("index.html");
   const entryUrl = await transformSrcImports.toHashedUrl(ENTRY_POINT);

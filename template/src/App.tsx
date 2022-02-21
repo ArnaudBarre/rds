@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Logo from "./logo.svg";
 import "./App.css";
+import logoUrl from "./logo.png";
 
 export const App = () => {
   const [count, setCount] = useState(0);
@@ -18,6 +19,7 @@ export const App = () => {
           Edit <code>App.tsx</code> and save to test HMR updates.
         </p>
         <Logo />
+        <img src={logoUrl} />
         <p>
           <a
             className="App-link"

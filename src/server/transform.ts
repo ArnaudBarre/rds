@@ -1,4 +1,4 @@
-import { cache, getHashedUrl, isCSS, isInnerNode, split } from "./utils";
+import { cache, getHashedUrl, isCSS, isInnerNode, isSVG, split } from "./utils";
 import { AnalyzedImport, swcCache } from "./swc";
 import { resolve } from "./resolve";
 import { ENTRY_POINT, RDS_CLIENT } from "./consts";
@@ -6,6 +6,7 @@ import { Graph, GraphNode, HMRWebSocket } from "./types";
 import { addDependency } from "./dependencies";
 import { cssCache } from "./css";
 import { svgCache } from "./svg";
+import { assetsCache } from "./assets";
 
 export const graph: Graph = new Map([
   [
@@ -16,7 +17,10 @@ export const graph: Graph = new Map([
 
 export type TransformSrcImports = ReturnType<typeof initTransformSrcImports>;
 
-export const initTransformSrcImports = (ws: HMRWebSocket) => {
+export const initTransformSrcImports = (
+  ws: HMRWebSocket,
+  watchFile: (url: string) => void,
+) => {
   const transformSrcImportsCache = cache<
     string,
     Promise<{ code: string; depsImports: AnalyzedImport[] }>
@@ -88,6 +92,7 @@ RefreshRuntime.enqueueUpdate();
           impGraphNode.importers.add(graphNode);
         }
       } else {
+        watchFile(resolvedUrl);
         graph.set(resolvedUrl, {
           url: resolvedUrl,
           selfUpdate: false,
@@ -101,10 +106,17 @@ RefreshRuntime.enqueueUpdate();
           `@import "${await toHashedUrl(resolvedUrl)}"`,
         );
       } else {
-        content = content.replace(
-          new RegExp(`(import|from)\\s+['"](${imp})['"]`),
-          `$1 "${await toHashedUrl(resolvedUrl)}"`,
-        );
+        if (isInnerNode(resolvedUrl) || isSVG(resolvedUrl)) {
+          content = content.replace(
+            new RegExp(`(import|from)\\s+['"](${imp})['"]`),
+            `$1 "${await toHashedUrl(resolvedUrl)}"`,
+          );
+        } else {
+          content = content.replace(
+            new RegExp(`import\\s+(\\S+)\\s+from\\s+['"](${imp})['"]`),
+            `const $1 = "${await toHashedUrl(resolvedUrl)}"`,
+          );
+        }
       }
     }
 
@@ -116,7 +128,9 @@ RefreshRuntime.enqueueUpdate();
       url,
       isInnerNode(url)
         ? (await transformSrcImportsCache.get(url)).code
-        : await svgCache.get(url),
+        : isSVG(url)
+        ? await svgCache.get(url)
+        : await assetsCache.get(url),
     )}`;
 
   return {

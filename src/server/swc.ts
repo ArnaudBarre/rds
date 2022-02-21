@@ -1,9 +1,8 @@
 import { ImportDeclaration, transformFile } from "@swc/core";
 import { Visitor } from "@swc/core/Visitor";
-
-import { cache } from "./utils";
-import { extname } from "path";
 import { NamedImportSpecifier } from "@swc/core/types";
+
+import { cache, getExtension } from "./utils";
 
 const importReactRE = /(^|\n)import\s+(\*\s+as\s+)?React(,|\s+)/;
 
@@ -20,7 +19,7 @@ export const swcCache = cache<
     plugin: (p) => visitor.visitProgram(p),
     jsc: {
       // https://github.com/swc-project/swc/issues/3297
-      parser: extname(url).startsWith("t")
+      parser: getExtension(url).startsWith("t")
         ? { syntax: "typescript", tsx: url.endsWith("x") }
         : { syntax: "ecmascript", jsx: url.endsWith("x") },
       target: "es2020",

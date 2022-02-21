@@ -1,6 +1,6 @@
 import fs from "fs";
 import crypto from "crypto";
-import { dirname, join } from "path";
+import { dirname, extname, join } from "path";
 
 import { isDebug, log } from "./logger";
 
@@ -9,16 +9,20 @@ export const isJS = (path: string) => /\.[jt]sx?$/.test(path);
 export const isSVG = (path: string) => path.endsWith(".svg");
 export const isInnerNode = (path: string) => isJS(path) || isCSS(path);
 
-export const getExt = (url: string) => url.slice(url.lastIndexOf(".") + 1);
+export const getExtension = (path: string) => extname(path).slice(1);
 
-export const getHash = (content: string) =>
-  `${crypto
+export const getHash = (content: string | Buffer) =>
+  crypto
     .createHash("sha1")
-    .update(content, "utf-8")
+    .update(
+      // @ts-ignore
+      content,
+      typeof content === "string" ? "utf-8" : undefined,
+    )
     .digest("hex")
-    .slice(0, 8)}`;
+    .slice(0, 8);
 
-export const getHashedUrl = (base: string, content: string) =>
+export const getHashedUrl = (base: string, content: string | Buffer) =>
   `${base}?h=${getHash(content)}`;
 
 export const readFile = (path: string) => fs.promises.readFile(path, "utf-8");

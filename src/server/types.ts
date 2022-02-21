@@ -2,7 +2,7 @@ import { HMRPayload } from "../hmrPayload";
 import { mimeTypes } from "./mimeTypes";
 
 export type LoadedFile = {
-  content: string;
+  content: string | Buffer;
   type: keyof typeof mimeTypes;
   browserCache: boolean;
 };

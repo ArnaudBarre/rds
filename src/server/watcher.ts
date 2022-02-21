@@ -9,6 +9,8 @@ import { graph, TransformSrcImports } from "./transform";
 import { isCSS, isJS, isSVG } from "./utils";
 import { cssCache } from "./css";
 import { svgCache } from "./svg";
+import { assetsCache } from "./assets";
+import { ENTRY_POINT } from "./consts";
 
 export const initSrcWatcher = (
   hmrWS: HMRWebSocket,
@@ -21,15 +23,7 @@ export const initSrcWatcher = (
     }
   };
 
-  return watch(["src/**/*.[jt]s?(x)", "src/**/*.css", "src/**/*.svg"], {
-    ignoreInitial: true,
-  })
-    .on("add", (path) => {
-      log.debug(`add ${path}`);
-      if (isJS(path)) {
-        resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
-      }
-    })
+  return watch([ENTRY_POINT], { ignoreInitial: true, disableGlobbing: true })
     .on("change", async (path) => {
       log.debug(`change ${path}`);
       clearCache(path);
@@ -69,7 +63,7 @@ const clearCache = (path: string) => {
   if (isJS(path)) swcCache.delete(path);
   else if (isCSS(path)) cssCache.delete(path);
   else if (isSVG(path)) svgCache.delete(path);
-  else throw new Error(`Unexpected ${path}`);
+  else assetsCache.delete(path);
 };
 
 const propagateUpdate = (
