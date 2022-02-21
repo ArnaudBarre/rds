@@ -1,6 +1,7 @@
+import fs from "fs";
+
 import { getHash, lookup, readFileSync } from "./utils";
 import { log } from "./logger";
-import fs from "fs";
 
 const start = performance.now();
 const content = lookup(["package-lock.json", "yarn.lock", "pnpm-lock.yaml"]);

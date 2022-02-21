@@ -39,8 +39,18 @@ socket.addEventListener("message", async ({ data }) => {
       }
 
       for (const path of payload.paths) {
-        import(path)
-          .then(() => console.log(`[rds] Hot updated: ${path}`))
+        // dynamic import are not re-evaluated when cached
+        // fetch + temp script tag allow to have caching +
+        // revaluate js modules on each hot update
+        fetch(path)
+          .then(async (response) => {
+            const script = document.createElement("script");
+            script.setAttribute("type", "module");
+            script.innerHTML = await response.text();
+            document.head.appendChild(script);
+            document.head.removeChild(script);
+            console.log(`[rds] Hot updated: ${path}`);
+          })
           .catch((err) => {
             if (!(err as Error).message.includes("fetch")) {
               console.error(err);

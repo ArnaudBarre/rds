@@ -1,10 +1,11 @@
-import { cache, getHashedUrl, isCSS, split } from "./utils";
+import { cache, getHashedUrl, isCSS, isInnerNode, split } from "./utils";
 import { AnalyzedImport, swcCache } from "./swc";
 import { resolve } from "./resolve";
 import { ENTRY_POINT, RDS_CLIENT } from "./consts";
 import { Graph, GraphNode, HMRWebSocket } from "./types";
 import { addDependency } from "./dependencies";
 import { cssCache } from "./css";
+import { svgCache } from "./svg";
 
 export const graph: Graph = new Map([
   [
@@ -63,13 +64,15 @@ RefreshRuntime.enqueueUpdate();
         : code;
     }
 
-    const importsToPrune = oldSrcImports
-      .filter((it) => !graphNode.imports.includes(it))
-      .map((it) => resolve(url, it));
-    for (const importToPrune of importsToPrune) {
-      graph.get(importToPrune)!.importers.delete(graphNode);
+    const cssImportsToPrune: string[] = [];
+    for (const oldImp of oldSrcImports) {
+      if (graphNode.imports.includes(oldImp)) continue;
+      const impUrl = resolve(url, oldImp);
+      graph.get(impUrl)!.importers.delete(graphNode);
+      if (isCSS(impUrl) && graph.get(impUrl)!.importers.size === 0) {
+        cssImportsToPrune.push(impUrl);
+      }
     }
-    const cssImportsToPrune = importsToPrune.filter((i) => isCSS(i));
     if (cssImportsToPrune.length) {
       ws.send({ type: "prune-css", paths: cssImportsToPrune });
     }
@@ -109,7 +112,12 @@ RefreshRuntime.enqueueUpdate();
   });
 
   const toHashedUrl = async (url: string) =>
-    `/${getHashedUrl(url, (await transformSrcImportsCache.get(url)).code)}`;
+    `/${getHashedUrl(
+      url,
+      isInnerNode(url)
+        ? (await transformSrcImportsCache.get(url)).code
+        : await svgCache.get(url),
+    )}`;
 
   return {
     ...transformSrcImportsCache,

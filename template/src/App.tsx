@@ -1,5 +1,5 @@
 import { useState } from "react";
-// import logo from "./logo.svg";
+import Logo from "./logo.svg";
 import "./App.css";
 
 export const App = () => {
@@ -17,6 +17,7 @@ export const App = () => {
         <p>
           Edit <code>App.tsx</code> and save to test HMR updates.
         </p>
+        <Logo />
         <p>
           <a
             className="App-link"

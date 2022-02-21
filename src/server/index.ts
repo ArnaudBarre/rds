@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import { start } from "./start";
 import { createServer } from "http";
-import fs from "fs";
-import path from "path";
+import { join } from "path";
 import os from "os";
 import { exec } from "child_process";
 
@@ -12,7 +11,15 @@ import { createWebSocketServer } from "./ws";
 import { LoadedFile } from "./types";
 import { DEPENDENCY_PREFIX, ENTRY_POINT, RDS_CLIENT } from "./consts";
 import { initPublicWatcher } from "./public";
-import { getHash, isCSS, readCacheFile } from "./utils";
+import {
+  getExt,
+  getHash,
+  isCSS,
+  isJS,
+  isSVG,
+  readCacheFile,
+  readFileSync,
+} from "./utils";
 import {
   buildDependencies,
   getDependency,
@@ -21,6 +28,7 @@ import {
 import { log } from "./logger";
 import { initSrcWatcher } from "./watcher";
 import { initTransformSrcImports } from "./transform";
+import { svgCache } from "./svg";
 
 const server = createServer(async (req, res) => {
   const [url, _query] = req.url!.split("?") as [string, string | undefined];
@@ -54,27 +62,27 @@ const srcWatcher = initSrcWatcher(ws, transformSrcImports);
 const handleRequest = async (url: string): Promise<LoadedFile> => {
   if (url === RDS_CLIENT) {
     return {
-      content: fs.readFileSync(
-        path.join(__dirname, "../client/index.js"),
-        "utf-8",
-      ),
+      content: readFileSync(join(__dirname, "../client/index.js")),
       type: "js",
-      // TODO: use caching based on rds version
+      browserCache: false, // TODO: use caching based on rds version
     };
   }
-  if (publicFiles.has(url)) return getPublicFile(url);
+  if (publicFiles.has(url)) {
+    const content = await getPublicFile(url);
+    return { type: getExt(url), content, browserCache: false };
+  }
 
   if (url.startsWith(DEPENDENCY_PREFIX)) {
     const path = url.slice(DEPENDENCY_PREFIX.length + 1);
     if (url.endsWith(".map")) {
       const content = await readCacheFile(path);
-      return { type: "json", content };
+      return { type: "json", content, browserCache: false }; // TODO: enable browser cache
     } else {
       const code = await getDependency(path);
       return { type: "js", content: code, browserCache: true };
     }
   }
-  if (/\.[jt]sx?$/.test(url)) {
+  if (isJS(url)) {
     const { code, depsImports } = await transformSrcImports.get(url);
     const content = await transformDependenciesImports(code, depsImports);
     return { type: "js", content, browserCache: true };
@@ -83,13 +91,20 @@ const handleRequest = async (url: string): Promise<LoadedFile> => {
     const { code } = await transformSrcImports.get(url);
     return { type: "js", content: code, browserCache: true };
   }
+  if (isSVG(url)) {
+    const code = await svgCache.get(url);
+    const content = await transformDependenciesImports(code, [
+      { source: "react", specifiers: [] },
+    ]);
+    return { type: "js", content, browserCache: true };
+  }
   // load as file
   if (url.includes(".")) throw new Error(`Unhandled file ${url}`);
 
-  const { type, content } = await getPublicFile("index.html");
+  const content = await getPublicFile("index.html");
   const entryUrl = await transformSrcImports.toHashedUrl(ENTRY_POINT);
   return {
-    type,
+    type: "html",
     content: content
       .replace(
         "<head>",
@@ -99,6 +114,7 @@ const handleRequest = async (url: string): Promise<LoadedFile> => {
         "</body>",
         `  <script type="module" src="${entryUrl}"></script>\n  </body>`,
       ),
+    browserCache: false,
   };
 };
 
@@ -123,7 +139,7 @@ transformSrcImports
       );
       if (process.platform === "darwin") {
         exec(`osascript openChrome.applescript ${localUrl}`, {
-          cwd: path.join(__dirname, "../../bin"),
+          cwd: join(__dirname, "../../bin"),
         });
       }
     });

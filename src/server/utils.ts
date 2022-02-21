@@ -5,6 +5,11 @@ import { dirname, join } from "path";
 import { isDebug, log } from "./logger";
 
 export const isCSS = (path: string) => path.endsWith(".css");
+export const isJS = (path: string) => /\.[jt]sx?$/.test(path);
+export const isSVG = (path: string) => path.endsWith(".svg");
+export const isInnerNode = (path: string) => isJS(path) || isCSS(path);
+
+export const getExt = (url: string) => url.slice(url.lastIndexOf(".") + 1);
 
 export const getHash = (content: string) =>
   `${crypto
@@ -35,7 +40,7 @@ export const cache = <Key, Value>(name: string, load: (key: Key) => Value) => {
   return {
     has: (key: Key) => {
       log.debug(`${name}: has - ${key}`);
-      cache.has(key);
+      return cache.has(key);
     },
     delete: (key: Key) => {
       log.debug(`${name}: delete - ${key}`);

@@ -1,16 +1,12 @@
 import { watch } from "chokidar";
 
-import { LoadedFile, HMRWebSocket } from "./types";
+import { HMRWebSocket } from "./types";
 import { cache, readFile } from "./utils";
 
 export const initPublicWatcher = (ws: HMRWebSocket) => {
   const publicFiles = new Set<string>();
-  const publicFilesCache = cache<string, Promise<LoadedFile>>(
-    "publicFiles",
-    async (url) => ({
-      content: await readFile(`public/${url}`),
-      type: url.slice(url.lastIndexOf(".") + 1),
-    }),
+  const publicFilesCache = cache("publicFiles", (url) =>
+    readFile(`public/${url}`),
   );
   const clearCacheAndReload = (path: string) => {
     if (publicFilesCache.has(path)) {
