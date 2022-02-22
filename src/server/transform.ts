@@ -33,14 +33,19 @@ export const initTransformSrcImports = (
 
     const isCSSFile = isCSS(url);
     if (isCSSFile) {
-      const { code, dependencies } = cssCache.get(url);
-      graphNode.selfUpdate = true; // TODO: handles css modules
-      graphNode.imports = dependencies.map((i) => [
-        i.url,
-        i.type === "url" ? i.placeholder : i.url,
-      ]);
+      const { code, imports, cssModule } = cssCache.get(url);
+      graphNode.selfUpdate = !cssModule; // Can't self accept because of modules exports
+      graphNode.imports = imports;
       content = `import { updateStyle } from "/${RDS_CLIENT}";
-updateStyle("${url}", ${JSON.stringify(code)});\n`;
+updateStyle("${url}", ${JSON.stringify(code)});
+${
+  cssModule
+    ? Object.entries(cssModule)
+        .map(([key, value]) => `export const ${key} = "${value}";\n`)
+        .concat(`export default { ${Object.keys(cssModule).join(", ")} };\n`)
+        .join("")
+    : ""
+}`;
     } else {
       const { code, imports, hasFastRefresh } = await swcCache.get(url);
       graphNode.selfUpdate = hasFastRefresh;

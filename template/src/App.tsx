@@ -2,6 +2,7 @@ import { useState } from "react";
 import Logo from "./logo.svg";
 import "./App.css";
 import logoUrl from "./logo.png";
+import styles from "./app.module.css";
 
 export const App = () => {
   const [count, setCount] = useState(0);
@@ -32,7 +33,7 @@ export const App = () => {
           </a>
           {" | "}
           <a
-            className="App-link"
+            className={styles.someClass2}
             href="https://vitejs.dev/guide/features.html"
             target="_blank"
             rel="noopener noreferrer"
