@@ -9,6 +9,7 @@ export const cssCache = cache("css", (url: string) => {
     code: readFileSync(url),
     sourceMap: true,
     analyzeDependencies: true,
+    drafts: { nesting: true },
     targets: { safari: 13 << 16 },
   });
   return {

@@ -35,10 +35,12 @@ export const initTransformSrcImports = (
     if (isCSSFile) {
       const { code, dependencies } = cssCache.get(url);
       graphNode.selfUpdate = true; // TODO: handles css modules
-      graphNode.imports = dependencies.map((i) => i.url);
+      graphNode.imports = dependencies.map((i) => [
+        i.url,
+        i.type === "url" ? i.placeholder : i.url,
+      ]);
       content = `import { updateStyle } from "/${RDS_CLIENT}";
-updateStyle("${url}", ${JSON.stringify(code)});
-      `;
+updateStyle("${url}", ${JSON.stringify(code)});\n`;
     } else {
       const { code, imports, hasFastRefresh } = await swcCache.get(url);
       graphNode.selfUpdate = hasFastRefresh;
@@ -46,7 +48,7 @@ updateStyle("${url}", ${JSON.stringify(code)});
         imp.source.startsWith("."),
       );
       depsImports = _depsImports;
-      graphNode.imports = srcImports.map((i) => i.source);
+      graphNode.imports = srcImports.map((i) => [i.source, i.source]);
 
       for (const imp of depsImports) {
         addDependency(imp.source, ws);
@@ -69,8 +71,8 @@ RefreshRuntime.enqueueUpdate();
     }
 
     const cssImportsToPrune: string[] = [];
-    for (const oldImp of oldSrcImports) {
-      if (graphNode.imports.includes(oldImp)) continue;
+    for (const [oldImp] of oldSrcImports) {
+      if (graphNode.imports.some(([i]) => oldImp === i)) continue;
       const impUrl = resolve(url, oldImp);
       graph.get(impUrl)!.importers.delete(graphNode);
       if (isCSS(impUrl) && graph.get(impUrl)!.importers.size === 0) {
@@ -81,7 +83,7 @@ RefreshRuntime.enqueueUpdate();
       ws.send({ type: "prune-css", paths: cssImportsToPrune });
     }
 
-    for (const imp of graphNode.imports) {
+    for (const [imp, placeholder] of graphNode.imports) {
       const resolvedUrl = resolve(url, imp);
       const impGraphNode = graph.get(resolvedUrl);
       if (impGraphNode) {
@@ -101,19 +103,26 @@ RefreshRuntime.enqueueUpdate();
         });
       }
       if (isCSSFile) {
-        content = content.replace(
-          new RegExp(`@import\\s+['"](${imp})['"]`),
-          `@import "${await toHashedUrl(resolvedUrl)}"`,
-        );
+        if (isCSS(resolvedUrl)) {
+          content = content.replace(
+            new RegExp(`@import\\s+['"](${placeholder})['"]`),
+            `@import "${await toHashedUrl(resolvedUrl)}"`,
+          );
+        } else {
+          content = content.replace(
+            placeholder,
+            await toHashedUrl(resolvedUrl),
+          );
+        }
       } else {
         if (isInnerNode(resolvedUrl) || isSVG(resolvedUrl)) {
           content = content.replace(
-            new RegExp(`(import|from)\\s+['"](${imp})['"]`),
+            new RegExp(`(import|from)\\s+['"](${placeholder})['"]`),
             `$1 "${await toHashedUrl(resolvedUrl)}"`,
           );
         } else {
           content = content.replace(
-            new RegExp(`import\\s+(\\S+)\\s+from\\s+['"](${imp})['"]`),
+            new RegExp(`import\\s+(\\S+)\\s+from\\s+['"](${placeholder})['"]`),
             `const $1 = "${await toHashedUrl(resolvedUrl)}"`,
           );
         }

@@ -12,7 +12,7 @@ export type HMRWebSocket = { send(payload: HMRPayload): void; close(): void };
 export type GraphNode = {
   url: string;
   selfUpdate: boolean;
-  imports: string[];
+  imports: [value: string, placeholder: string][];
   importers: Set<GraphNode>;
 };
 export type Graph = Map<string, GraphNode>;

@@ -1,5 +1,9 @@
 .App {
   text-align: center;
+
+  &.bold {
+    font-weight: bold;
+  }
 }
 
 .App-logo {
@@ -11,6 +15,13 @@
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
   }
+}
+
+.logo-bg {
+  height: 100px;
+  width: 100px;
+  background-image: url("./logo.png");
+  background-size: cover;
 }
 
 .App-header {
