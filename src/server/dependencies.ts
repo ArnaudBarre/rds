@@ -12,10 +12,11 @@ import {
 } from "./utils";
 import { colors } from "./colors";
 import { log } from "./logger";
-import { DEPENDENCY_PREFIX } from "./consts";
+import { DEPENDENCY_PREFIX, RDS_CSS_UTILS, RDS_PREFIX } from "./consts";
 import { AnalyzedImport } from "./swc";
-import { HMRWebSocket } from "./types";
 import { dependenciesHash } from "./dependenciesHash";
+import { ws } from "./ws";
+import { cssGenerator } from "./css/generator";
 
 const dependencies = new Set<string>();
 
@@ -32,11 +33,12 @@ if (fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 let initialLoad = true;
 let reBundlePromise: Promise<void> | undefined;
 
-export const addDependency = (dep: string, ws: HMRWebSocket) => {
+export const addDependency = (dep: string) => {
+  if (dep.startsWith(RDS_PREFIX)) return;
   if (dependencies.has(dep)) return;
-  if (initialLoad) {
-    dependencies.add(dep);
-  } else if (!reBundlePromise) {
+  dependencies.add(dep);
+  if (initialLoad) return;
+  if (!reBundlePromise) {
     reBundlePromise = buildDependencies().finally(() => {
       reBundlePromise = undefined;
       ws.send({ type: "reload" });
@@ -100,6 +102,16 @@ export const transformDependenciesImports = async (
   depImports: AnalyzedImport[],
 ) => {
   for (const dep of depImports) {
+    if (dep.source.startsWith(RDS_PREFIX)) {
+      if (dep.source === RDS_CSS_UTILS) {
+        code = code.replace(
+          new RegExp(`import\\s+['"]${dep.source}['"]`),
+          `import "${cssGenerator.getHashedCSSUtilsUrl()}"`,
+        );
+        continue;
+      }
+      throw new Error(`Unhandled entry ${dep.source}`);
+    }
     if (!metadata!.deps[dep.source]) {
       throw new Error(`Unbundled dependency ${dep.source}`);
     }
@@ -111,16 +123,16 @@ export const transformDependenciesImports = async (
     if (needInterop && dep.specifiers.length) {
       const defaultImportName = `__rds_${dep.source.replace(/[-@/]/g, "_")}`;
       code = code.replace(
-        new RegExp(`import \{[^\}]+\}\\s+from\\s+['"](${dep.source})['"];`),
-        `import ${defaultImportName} from "/${hashedUrl}";` +
+        new RegExp(`import \{[^\}]+\}\\s+from\\s+['"]${dep.source}['"];`),
+        `import ${defaultImportName} from "${hashedUrl}";` +
           dep.specifiers
             .map((s) => `const ${s.local} = ${defaultImportName}["${s.name}"];`)
             .join(""),
       );
     } else {
       code = code.replace(
-        new RegExp(`from\\s+['"](${dep.source})['"]`),
-        `from "/${hashedUrl}"`,
+        new RegExp(`from\\s+['"]${dep.source}['"]`),
+        `from "${hashedUrl}"`,
       );
     }
   }

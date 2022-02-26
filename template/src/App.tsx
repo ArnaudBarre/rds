@@ -28,7 +28,7 @@ export const App = () => {
         <div className="logo-bg" />
         <p>
           <a
-            className="App-link"
+            className="text-gray-500"
             href="https://reactjs.org"
             target="_blank"
             rel="noopener noreferrer"

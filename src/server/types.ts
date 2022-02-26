@@ -16,3 +16,5 @@ export type GraphNode = {
   importers: Set<GraphNode>;
 };
 export type Graph = Map<string, GraphNode>;
+
+export type CSSModule = false | { [key: string]: string };

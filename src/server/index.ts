@@ -7,10 +7,16 @@ import { exec } from "child_process";
 
 import { colors } from "./colors";
 import { mimeTypes } from "./mimeTypes";
-import { createWebSocketServer } from "./ws";
+import { ws } from "./ws";
 import { LoadedFile } from "./types";
-import { DEPENDENCY_PREFIX, ENTRY_POINT, RDS_CLIENT } from "./consts";
-import { initPublicWatcher } from "./public";
+import {
+  DEPENDENCY_PREFIX,
+  ENTRY_POINT,
+  RDS_CLIENT,
+  RDS_CSS_UTILS,
+  RDS_PREFIX,
+} from "./consts";
+import { publicFiles, publicFilesCache, publicWatcher } from "./public";
 import {
   getExtension,
   getHash,
@@ -26,14 +32,20 @@ import {
   transformDependenciesImports,
 } from "./dependencies";
 import { log } from "./logger";
-import { initSrcWatcher } from "./watcher";
-import { initTransformSrcImports } from "./transform";
+import { transformSrcImports } from "./transform";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
+import { cssGenerator } from "./css/generator";
+import { srcWatcher } from "./srcWatcher";
+import { setupHmr } from "./hmr";
+import { cssToHMR } from "./css/utils";
 
 const server = createServer(async (req, res) => {
-  const [url, _query] = req.url!.split("?") as [string, string | undefined];
-  const { content, type, browserCache } = await handleRequest(url.slice(1));
+  const [url, query] = req.url!.split("?") as [string, string | undefined];
+  const { content, type, browserCache } = await handleRequest(
+    url.slice(1),
+    new URLSearchParams(query),
+  );
 
   res.setHeader("Content-Type", mimeTypes[type]);
   if (browserCache) {
@@ -55,23 +67,33 @@ const server = createServer(async (req, res) => {
   }
 });
 
-const ws = createWebSocketServer(server);
-const { publicFiles, publicWatcher, getPublicFile } = initPublicWatcher(ws);
-const transformSrcImports = initTransformSrcImports(ws, (url) =>
-  srcWatcher.add(url),
-);
-const srcWatcher = initSrcWatcher(ws, transformSrcImports);
+server.on("upgrade", ws.handleUpgrade);
+setupHmr();
 
-const handleRequest = async (url: string): Promise<LoadedFile> => {
-  if (url === RDS_CLIENT) {
-    return {
-      content: readFileSync(join(__dirname, "../client/index.js")),
-      type: "js",
-      browserCache: false, // TODO: use caching based on rds version
-    };
+const handleRequest = async (
+  url: string,
+  _query: URLSearchParams,
+): Promise<LoadedFile> => {
+  if (url.startsWith(RDS_PREFIX)) {
+    if (url === RDS_CLIENT) {
+      return {
+        content: readFileSync(join(__dirname, "../client/index.js")),
+        type: "js",
+        browserCache: false, // TODO: use caching based on rds version
+      };
+    }
+    if (url === RDS_CSS_UTILS) {
+      return {
+        content: cssToHMR(url, cssGenerator.generate(), false),
+        type: "js",
+        browserCache: true,
+      };
+    }
+    throw new Error(`Unexpect entry point: ${url}`);
   }
+
   if (publicFiles.has(url)) {
-    const content = await getPublicFile(url);
+    const content = await publicFilesCache.get(url);
     return { type: getExtension(url), content, browserCache: false };
   }
 
@@ -106,7 +128,7 @@ const handleRequest = async (url: string): Promise<LoadedFile> => {
     return { type: getExtension(url), content, browserCache: true };
   }
 
-  const content = await getPublicFile("index.html");
+  const content = await publicFilesCache.get("index.html");
   const entryUrl = await transformSrcImports.toHashedUrl(ENTRY_POINT);
   return {
     type: "html",
@@ -127,6 +149,7 @@ transformSrcImports
   .get(ENTRY_POINT)
   .then(async () => {
     await buildDependencies();
+    cssGenerator.enableUpdates();
     server.listen(3000, async () => {
       log.info(colors.cyan(`[rds] Dev server running at:`));
       const localUrl = "http://localhost:3000";

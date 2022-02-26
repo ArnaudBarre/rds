@@ -1,21 +1,18 @@
-import { watch } from "chokidar";
-
-import { GraphNode, HMRWebSocket } from "./types";
+import { GraphNode } from "./types";
 import { log } from "./logger";
 import { colors } from "./colors";
 import { swcCache } from "./swc";
 import { resolveExtensionCache } from "./resolve";
-import { graph, TransformSrcImports } from "./transform";
+import { graph, transformSrcImports } from "./transform";
 import { isCSS, isJS, isSVG } from "./utils";
-import { cssCache } from "./css";
+import { parcelCache } from "./css/parcel";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
-import { ENTRY_POINT } from "./consts";
+import { ws } from "./ws";
+import { srcWatcher } from "./srcWatcher";
+import { cssGenerator } from "./css/generator";
 
-export const initSrcWatcher = (
-  hmrWS: HMRWebSocket,
-  transformSrcImports: TransformSrcImports,
-) => {
+export const setupHmr = () => {
   const invalidate = (node: GraphNode) => {
     transformSrcImports.delete(node.url);
     for (const importer of node.importers) {
@@ -23,7 +20,7 @@ export const initSrcWatcher = (
     }
   };
 
-  return watch([ENTRY_POINT], { ignoreInitial: true, disableGlobbing: true })
+  srcWatcher
     .on("change", async (path) => {
       log.debug(`change ${path}`);
       clearCache(path);
@@ -33,13 +30,13 @@ export const initSrcWatcher = (
         const updates = new Set<string>();
         if (propagateUpdate(graphNode, updates)) {
           log.info(colors.green("page reload ") + colors.dim(path));
-          hmrWS.send({ type: "reload" });
+          ws.send({ type: "reload" });
         } else {
           log.info(
             colors.green("hmr update ") +
               [...updates].map((update) => colors.dim(update)).join(", "),
           );
-          hmrWS.send({
+          ws.send({
             type: "update",
             paths: await Promise.all(
               [...updates].map(transformSrcImports.toHashedUrl),
@@ -60,8 +57,10 @@ export const initSrcWatcher = (
 };
 
 const clearCache = (path: string) => {
-  if (isJS(path)) swcCache.delete(path);
-  else if (isCSS(path)) cssCache.delete(path);
+  if (isJS(path)) {
+    cssGenerator.scanContentCache.delete(path);
+    swcCache.delete(path);
+  } else if (isCSS(path)) parcelCache.delete(path);
   else if (isSVG(path)) svgCache.delete(path);
   else assetsCache.delete(path);
 };

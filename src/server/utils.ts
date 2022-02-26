@@ -23,7 +23,7 @@ export const getHash = (content: string | Buffer) =>
     .slice(0, 8);
 
 export const getHashedUrl = (base: string, content: string | Buffer) =>
-  `${base}?h=${getHash(content)}`;
+  `/${base}?h=${getHash(content)}`;
 
 export const readFile = (path: string) => fs.promises.readFile(path, "utf-8");
 export const readFileSync = (path: string) => fs.readFileSync(path, "utf-8");
@@ -87,3 +87,6 @@ export const lookup = (formats: string[], dir = "."): string | undefined => {
   const parentDir = dirname(dir);
   if (parentDir !== dir) return lookup(formats, parentDir);
 };
+
+export const notNull = <T>(value: T | null | undefined): value is T =>
+  value != null;
