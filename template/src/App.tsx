@@ -26,7 +26,7 @@ export const App = () => {
         <Logo />
         <img src={logoUrl} className="App-logo" />
         <div className="logo-bg" />
-        <p>
+        <p className="space-x-4">
           <a
             className="text-gray-500"
             href="https://reactjs.org"

@@ -4,7 +4,8 @@ import { cache, getHashedUrl, readFile } from "../utils";
 import { ws } from "../ws";
 import { log } from "../logger";
 import { colors } from "../colors";
-import { getRuleIndexMatch, matchToCSSObject } from "./matcher";
+import { getRuleIndexMatch, matchToCSSObject, rules } from "./matcher";
+import { SelectorRewrite } from "./types";
 
 let ready = false;
 const blockList = new Set<string>();
@@ -41,7 +42,8 @@ const scanContentCache = cache("scanContent", async (url: string) => {
 const generatorCache = cache("generator", (_: null) => {
   return allMatches
     .map((match) => {
-      return `.${escapeSelector(match[1])} {\n${Object.entries(
+      const rewrite: SelectorRewrite = rules[match[0]][3] ?? ((v) => v);
+      return `.${escapeSelector(rewrite(match[1]))} {\n${Object.entries(
         matchToCSSObject(match),
       )
         .map(([key, value]) => `  ${key}: ${value};`)
@@ -59,7 +61,7 @@ export const cssGenerator = {
   getHashedCSSUtilsUrl,
 };
 
-const validSelectorRe = /^[a-z0-9:\[\]-]+$/;
+const validSelectorRe = /^[a-z0-9:/\[\]-]+$/;
 type RuleMatch = [ruleIndex: number, input: string];
 const scanCode = (code: string): RuleMatch[] => {
   const matches: RuleMatch[] = [];
@@ -81,4 +83,4 @@ const scanCode = (code: string): RuleMatch[] => {
 };
 
 const escapeSelector = (selector: string) =>
-  selector.replace(/[-:\[\]]/g, (c) => `\\${c}`);
+  selector.replace(/[:/\[\]]/g, (c) => `\\${c}`);

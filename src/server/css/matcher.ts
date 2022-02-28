@@ -1,10 +1,10 @@
 import { Rule, StaticRule } from "./types";
 import { getCSSConfig } from "./getCSSConfig";
-import { getRules } from "./rules";
+import { getRules } from "./rules/all";
 
 const config = getCSSConfig();
 const dynamicContext = { config, theme: config.theme };
-const rules = getRules(config);
+export const rules = getRules(config);
 
 type RuleMatch = [ruleIndex: number, input: string];
 

@@ -1,14 +1,16 @@
-export type ResolvedCSSConfig = {
-  theme: Theme & { colors: Record<string, string> };
-};
+import { ResolvedTheme } from "./theme/types";
 
-export type Theme = {
-  colors: Record<string, string | Record<string, string>>;
-  spacing: Record<string, string>;
+export type ResolvedCSSConfig = {
+  theme: ResolvedTheme;
 };
 
 export type Rule = DynamicRule | StaticRule;
-export type DynamicRule = [RegExp, DynamicValidator, DynamicMatcher];
+export type DynamicRule = [
+  RegExp,
+  DynamicValidator,
+  DynamicMatcher,
+  SelectorRewrite?,
+];
 export type StaticRule = [string, CSSObject];
 export type DynamicValidator = (
   groups: (string | undefined)[],
@@ -18,6 +20,7 @@ export type DynamicMatcher = (
   groups: (string | undefined)[],
   context: DynamicContext,
 ) => CSSObject;
+export type SelectorRewrite = (value: string) => string;
 type DynamicContext = Readonly<{
   config: ResolvedCSSConfig;
   theme: ResolvedCSSConfig["theme"];
