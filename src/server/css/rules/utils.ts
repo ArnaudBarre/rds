@@ -1,31 +1,35 @@
 import { Rule, SelectorRewrite } from "../types";
-import { ResolvedTheme, SimpleThemeKey } from "../theme/types";
 
 export const themeRule = (
-  regex: RegExp,
-  theme: ResolvedTheme,
-  key: SimpleThemeKey,
+  prefix: string,
+  themeMap: Record<string, string>,
   property: string,
-): Rule => [
-  regex,
-  ([v]) => !!theme[key][v!],
-  ([v]) => ({ [property]: theme[key][v!] }),
-];
-
-export const withNegativeThemeRule = (
-  regex: RegExp, // should contains direction group
-  theme: ResolvedTheme,
-  key: SimpleThemeKey,
-  getProperties: (d: string | undefined) => string[],
   selectorRewrite?: SelectorRewrite,
 ): Rule => [
-  new RegExp(`^(-)?${regex.source}-(.+)$`),
-  ([, , v]) => !!theme[key][v!], // TODO: validate if value is a unit when negative
+  new RegExp(`^${prefix}(-(.+))?$`),
+  ([, v = "DEFAULT"]) => !!themeMap[v!],
+  ([, v = "DEFAULT"]) => ({ [property]: themeMap[v!] }),
+  selectorRewrite,
+];
+
+export const withDirectionThemeRule = (
+  regex: RegExp, // should contains direction group
+  themeMap: Record<string, string>,
+  getProperties: (d: string | undefined) => string[],
+  options?: {
+    selectorRewrite?: SelectorRewrite;
+    supportsNegativeValues: boolean;
+  },
+): Rule => [
+  new RegExp(
+    `^${options?.supportsNegativeValues ? "(-)?" : "()"}${regex.source}-(.+)$`,
+  ),
+  ([, , v]) => !!themeMap[v!], // TODO: validate if value is a unit when negative
   ([n = "", d, v]) => {
-    const value = n + theme[key][v!];
+    const value = n + themeMap[v!];
     return Object.fromEntries(getProperties(d).map((k) => [k, value]));
   },
-  selectorRewrite,
+  options?.selectorRewrite,
 ];
 
 export const enumRule = (
@@ -38,3 +42,5 @@ export const enumRule = (
   () => true,
   ([v]) => ({ [property]: transformValue(v!) }),
 ];
+
+export const childSelectorRewrite: SelectorRewrite = (v) => `${v} > * + *`;

@@ -1,7 +1,28 @@
 import { ResolvedCSSConfig, Rule } from "../types";
-import { enumRule, withNegativeThemeRule } from "./utils";
+import { enumRule, withDirectionThemeRule } from "./utils";
 
 export const getLayout = ({ theme }: ResolvedCSSConfig): Rule[] => [
+  // https://tailwindcss.com/docs/aspect-ratio
+  // TODO
+  // https://tailwindcss.com/docs/container
+  // TODO
+  // https://tailwindcss.com/docs/columns
+  // TODO
+  // https://tailwindcss.com/docs/break-after
+  enumRule("break-after-", "break-after", breaks),
+  // https://tailwindcss.com/docs/break-before
+  enumRule("break-before-", "break-before", breaks),
+  // https://tailwindcss.com/docs/break-inside
+  enumRule("break-inside-", "break-inside", [
+    "auto",
+    "avoid",
+    "avoid-page",
+    "avoid-column",
+  ]),
+  // https://tailwindcss.com/docs/box-decoration-break
+  enumRule("box-decoration-", "box-decoration-break", ["clone", "slice"]),
+  // https://tailwindcss.com/docs/box-sizing
+  enumRule("box-", "box-sizing", ["border-box", "content-box"]),
   // https://tailwindcss.com/docs/display
   enumRule("", "display", [
     "block",
@@ -75,10 +96,9 @@ export const getLayout = ({ theme }: ResolvedCSSConfig): Rule[] => [
     "sticky",
   ]),
   // https://tailwindcss.com/docs/top-right-bottom-left
-  withNegativeThemeRule(
+  withDirectionThemeRule(
     /inset(-x|-y|-tr|-br|-bl|-tl)?/, // https://github.com/tailwindlabs/tailwindcss/discussions/7706
-    theme,
-    "inset",
+    theme.inset,
     (d = "-all") =>
       ({
         all: ["top", "right", "bottom", "left"],
@@ -89,16 +109,37 @@ export const getLayout = ({ theme }: ResolvedCSSConfig): Rule[] => [
         bl: ["bottom", "left"],
         tl: ["top", "left"],
       }[d.slice(1)] as string[]),
+    { supportsNegativeValues: true },
   ),
-  withNegativeThemeRule(/top()/, theme, "inset", () => ["top"]),
-  withNegativeThemeRule(/right()/, theme, "inset", () => ["right"]),
-  withNegativeThemeRule(/bottom()/, theme, "inset", () => ["bottom"]),
-  withNegativeThemeRule(/left()/, theme, "inset", () => ["left"]),
+  withDirectionThemeRule(/(top)/, theme.inset, () => ["top"], {
+    supportsNegativeValues: true,
+  }),
+  withDirectionThemeRule(/(right)/, theme.inset, () => ["right"], {
+    supportsNegativeValues: true,
+  }),
+  withDirectionThemeRule(/(bottom)/, theme.inset, () => ["bottom"], {
+    supportsNegativeValues: true,
+  }),
+  withDirectionThemeRule(/(left)/, theme.inset, () => ["left"], {
+    supportsNegativeValues: true,
+  }),
   // https://tailwindcss.com/docs/visibility
   ["visible", { visibility: "visible" }],
   ["invisible", { visibility: "hidden" }],
-  withNegativeThemeRule(/z()/, theme, "zIndex", () => ["z-index"]),
+  withDirectionThemeRule(/(z)/, theme.zIndex, () => ["z-index"], {
+    supportsNegativeValues: true,
+  }),
 ];
 
 const overflows = ["auto", "hidden", "clip", "visible", "scroll"];
 const overscrolls = ["none", "contain", "auto"];
+const breaks = [
+  "auto",
+  "avoid",
+  "all",
+  "avoid",
+  "page",
+  "left",
+  "right",
+  "column",
+];
