@@ -1,7 +1,7 @@
-import { ResolvedCSSConfig } from "./types";
-import { baseTheme } from "./theme/baseTheme";
 import { log } from "../logger";
 import { mapObjectValue } from "../utils";
+import { ResolvedCSSConfig } from "./types";
+import { baseTheme } from "./theme/baseTheme";
 import {
   ResolvedTheme,
   ThemeKey,
@@ -38,7 +38,10 @@ export const getCSSConfig = () => {
   for (const key in theme) {
     const value = theme[key as ThemeKey];
     if (typeof value === "function") {
-      theme[key as ThemeKey] = value(themeValueCallbackOptions);
+      // @ts-ignore
+      theme[key] =
+        // Avoid being under ts-ignore
+        value(themeValueCallbackOptions);
     }
   }
 

@@ -1,6 +1,6 @@
 import { Rule, StaticRule } from "./types";
 import { getCSSConfig } from "./getCSSConfig";
-import { getRules } from "./rules/all";
+import { getRules } from "./rules";
 
 const config = getCSSConfig();
 const dynamicContext = { config, theme: config.theme };

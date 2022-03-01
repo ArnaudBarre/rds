@@ -1,5 +1,5 @@
 import { ResolvedTheme } from "./theme/types";
-import { CorePlugin } from "./rules";
+import { CorePlugin } from "./corePlugins";
 
 export type ResolvedCSSConfig = {
   theme: ResolvedTheme;
