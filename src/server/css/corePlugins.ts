@@ -1,4 +1,10 @@
-import { CSSObject, ResolvedCSSConfig, Rule, SelectorRewrite } from "./types";
+import {
+  CSSObject,
+  ResolvedCSSConfig,
+  Rule,
+  RuleMeta,
+  SelectorRewrite,
+} from "./types";
 
 export type RuleOrRules = Rule | Rule[];
 const defineCorePlugins = <Map extends Record<string, RuleOrRules>>(map: Map) =>
@@ -69,16 +75,16 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
           }[d.slice(1)] as string[]),
         { supportsNegativeValues: true },
       ),
-      withDirectionThemeRule(/(top)/, theme.inset, () => ["top"], {
+      themeRule("top", theme.inset, "top", {
         supportsNegativeValues: true,
       }),
-      withDirectionThemeRule(/(right)/, theme.inset, () => ["right"], {
+      themeRule("right", theme.inset, "right", {
         supportsNegativeValues: true,
       }),
-      withDirectionThemeRule(/(bottom)/, theme.inset, () => ["bottom"], {
+      themeRule("bottom", theme.inset, "bottom", {
         supportsNegativeValues: true,
       }),
-      withDirectionThemeRule(/(left)/, theme.inset, () => ["left"], {
+      themeRule("left", theme.inset, "left", {
         supportsNegativeValues: true,
       }),
     ],
@@ -86,28 +92,24 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
       ["isolate", { isolation: "isolate" }],
       ["isolation-auto", { isolation: "auto" }],
     ],
-    zIndex: withDirectionThemeRule(/(z)/, theme.zIndex, () => ["z-index"], {
+    zIndex: themeRule("z", theme.zIndex, "z-index", {
       supportsNegativeValues: true,
     }),
-    order: [], // TODO
-    gridColumn: [], // TODO
-    gridColumnStart: [], // TODO
-    gridColumnEnd: [], // TODO
-    gridRow: [], // TODO
-    gridRowStart: [], // TODO
-    gridRowEnd: [], // TODO
+    order: themeRule("order", theme.order, "order", {
+      supportsNegativeValues: true,
+    }),
+    gridColumn: themeRule("col", theme.gridColumn, "grid-column"),
+    gridColumnStart: themeRule(
+      "col-start",
+      theme.gridColumnStart,
+      "grid-column-start",
+    ),
+    gridColumnEnd: themeRule("col-end", theme.gridColumnEnd, "grid-column-end"),
+    gridRow: themeRule("row", theme.gridRow, "grid-row"),
+    gridRowStart: themeRule("row-start", theme.gridRowStart, "grid-row-start"),
+    gridRowEnd: themeRule("row-end", theme.gridRowEnd, "grid-row-end"),
     float: enumRule("float-", "float", ["right", "left", "none"]),
     clear: enumRule("clear-", "clear", ["left", "right", "both", "none"]),
-    margin: withDirectionThemeRule(
-      /m([xytrbl])?/,
-      theme.margin,
-      (d) => {
-        if (d === "x") return ["margin-left", "margin-right"];
-        if (d === "y") return ["margin-top", "margin-bottom"];
-        return [`margin${getDirection(d)}`];
-      },
-      { supportsNegativeValues: true },
-    ),
     boxSizing: enumRule("box-", "box-sizing", ["border-box", "content-box"]),
     display: enumRule("", "display", [
       "block",
@@ -132,7 +134,7 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
       "list-item",
       "hidden",
     ]),
-    aspectRatio: [], // TODO
+    aspectRatio: themeRule("aspect", theme.aspectRatio, "aspect-ratio"),
     height: themeRule("h", theme.height, "height"),
     maxHeight: themeRule("min-h", theme.minHeight, "min-height"),
     minHeight: themeRule("max-h", theme.maxHeight, "max-height"),
@@ -142,16 +144,66 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
     flex: themeRule("flex", theme.flex, "flex"),
     flexShrink: themeRule("shrink", theme.flexShrink, "flex-shrink"),
     flexGrow: themeRule("grow", theme.flexGrow, "flex-grow"),
-    flexBasis: [], // TODO
-    tableLayout: [], // TODO
-    borderCollapse: [], // TODO
-    transformOrigin: [], // TODO
-    translate: [], // TODO
-    rotate: [], // TODO
-    skew: [], // TODO
-    scale: [], // TODO
-    transform: [], // TODO
-    animation: [], // TODO
+    flexBasis: themeRule("basis", theme.flexBasis, "flex-basis"),
+    tableLayout: enumRule("table-", "table-layout", ["auto", "fixed"]),
+    borderCollapse: enumRule("border-", "border-collapse", [
+      "collapse",
+      "separate",
+    ]),
+    transformOrigin: themeRule(
+      "origin",
+      theme.transformOrigin,
+      "transform-origin",
+    ),
+    translate: withDirectionThemeRule(
+      /translate-([xy])/,
+      theme.translate,
+      (d) => [`--tw-translate-${d!}`, ["transform", cssTransformValue]],
+      { supportsNegativeValues: true, addDefault: "transform" },
+    ),
+    rotate: themeRule(
+      "rotate",
+      theme.rotate,
+      [`--tw-rotate`, ["transform", cssTransformValue]],
+      { supportsNegativeValues: true, addDefault: "transform" },
+    ),
+    skew: withDirectionThemeRule(
+      /skew-([xy])/,
+      theme.skew,
+      (d) => [`--tw-skew-${d!}`, ["transform", cssTransformValue]],
+      { supportsNegativeValues: true, addDefault: "transform" },
+    ),
+    scale: withDirectionThemeRule(
+      /scale(-[xy])?/,
+      theme.scale,
+      (d) => [
+        ...(d ? [`--tw-scale-${d}`] : ["--tw-scale-x", "--tw-scale-y"]),
+        ["transform", cssTransformValue],
+      ],
+      { supportsNegativeValues: true, addDefault: "transform" },
+    ),
+    transform: rules([
+      [
+        "transform",
+        { transform: cssTransformValue },
+        { addDefault: "transform" },
+      ],
+      ["transform-cpu", { transform: cssTransformValue }],
+      [
+        "transform-gpu",
+        {
+          transform: cssTransformValue.replace(
+            "translate(var(--tw-translate-x), var(--tw-translate-y))",
+            "translate3d(var(--tw-translate-x), var(--tw-translate-y), 0)",
+          ),
+        },
+      ],
+      ["transform-none", { transform: "none" }],
+    ]),
+    // Non-compliant: Only handles references to same name keyframes
+    animation: themeRule("animate", theme.animation, ["animation"], {
+      addKeyframes: true,
+    }),
     cursor: themeRule("cursor", theme.cursor, "cursor"),
     touchAction: [], // TODO
     userSelect: enumRule("select-", "user-select", [
@@ -266,32 +318,31 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
         { supportsNegativeValues: true, selectorRewrite: childSelectorRewrite },
       ),
     ],
+    // Non-compliant order: Allow margin to override space
+    margin: withDirectionThemeRule(
+      /m([xytrbl])?/,
+      theme.margin,
+      (d) => {
+        if (d === "x") return ["margin-left", "margin-right"];
+        if (d === "y") return ["margin-top", "margin-bottom"];
+        return [`margin${getDirection(d)}`];
+      },
+      { supportsNegativeValues: true },
+    ),
     divideWidth: [
-      themeRule(
-        "divide-x",
-        theme.divideWidth,
-        "border-left-width",
-        childSelectorRewrite,
-      ),
-      themeRule(
-        "divide-y",
-        theme.divideWidth,
-        "border-top-width",
-        childSelectorRewrite,
-      ),
+      themeRule("divide-x", theme.divideWidth, "border-left-width", {
+        selectorRewrite: childSelectorRewrite,
+      }),
+      themeRule("divide-y", theme.divideWidth, "border-top-width", {
+        selectorRewrite: childSelectorRewrite,
+      }),
       // Non-compliant version for https://tailwindcss.com/docs/divide-width#reversing-children-order
-      themeRule(
-        "divide-x-reverse",
-        theme.divideWidth,
-        "border-right-width",
-        childSelectorRewrite,
-      ),
-      themeRule(
-        "divide-y",
-        theme.divideWidth,
-        "border-bottom-width",
-        childSelectorRewrite,
-      ),
+      themeRule("divide-x-reverse", theme.divideWidth, "border-right-width", {
+        selectorRewrite: childSelectorRewrite,
+      }),
+      themeRule("divide-y", theme.divideWidth, "border-bottom-width", {
+        selectorRewrite: childSelectorRewrite,
+      }),
     ],
     divideStyle: enumRule(
       "divide",
@@ -300,12 +351,9 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
       childSelectorRewrite,
     ),
     // TODO: Handle opacity
-    divideColor: themeRule(
-      "divide",
-      theme.divideColor,
-      "border-color",
-      childSelectorRewrite,
-    ),
+    divideColor: themeRule("divide", theme.divideColor, "border-color", {
+      selectorRewrite: childSelectorRewrite,
+    }),
     divideOpacity: [], // TODO
     placeSelf: enumRule("place-self-", "place-self", [
       "auto",
@@ -509,7 +557,7 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
         "stacked-fractions",
       ],
       (v) => (v === "normal-nums" ? "normal" : v),
-    ),
+    ), // TODO: fix
     lineHeight: themeRule("leading", theme.lineHeight, "line-height"),
     letterSpacing: themeRule("tracking", theme.letterSpacing, "letter-spacing"),
     textColor: themeRule("text", theme.textColor, "color"),
@@ -602,39 +650,47 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
     content: themeRule("content", theme.content, "content"),
   });
 
-export const themeRule = (
+// Force TS to see 3/4 rules as Rule[] instead of non conform Rule
+const rules = (v: Rule[]) => v;
+
+type Properties = (string | [string, string])[];
+const themeRule = (
   prefix: string,
   themeMap: Record<string, string>,
-  property: string,
-  selectorRewrite?: SelectorRewrite,
-): Rule => [
-  new RegExp(`^${prefix}(-(.+))?$`),
-  ([, v = "DEFAULT"]) => !!themeMap[v!],
-  ([, v = "DEFAULT"]) => ({ [property]: themeMap[v!] }),
-  selectorRewrite,
-];
+  properties: string | Properties,
+  options: RuleMeta & { supportsNegativeValues?: boolean } = {},
+): Rule =>
+  withDirectionThemeRule(
+    new RegExp(`${prefix}()`), // Fake direction group
+    themeMap,
+    () => (typeof properties === "string" ? [properties] : properties),
+    options,
+  );
 
-export const withDirectionThemeRule = (
+const withDirectionThemeRule = (
   regex: RegExp, // should contains direction group
   themeMap: Record<string, string>,
-  getProperties: (d: string | undefined) => string[],
-  options?: {
-    selectorRewrite?: SelectorRewrite;
-    supportsNegativeValues: boolean;
-  },
+  getProperties: (d: string | undefined) => Properties,
+  {
+    supportsNegativeValues,
+    ...ruleMeta
+  }: RuleMeta & { supportsNegativeValues?: boolean } = {},
 ): Rule => [
   new RegExp(
-    `^${options?.supportsNegativeValues ? "(-)?" : "()"}${regex.source}-(.+)$`,
+    `^${supportsNegativeValues ? "(-)?" : "()"}${regex.source}(-(.+))?$`,
   ),
-  ([, , v]) => !!themeMap[v!], // TODO: validate if value is a unit when negative
-  ([n = "", d, v]) => {
+  ([, , , v = "DEFAULT"]) => !!themeMap[v!], // TODO: validate if value is a unit when negative
+  ([n = "", d, , v = "DEFAULT"]) => {
     const value = n + themeMap[v!];
-    return Object.fromEntries(getProperties(d).map((k) => [k, value]));
+    const entries: [string, string][] = getProperties(d).map((p) =>
+      Array.isArray(p) ? p : [p, value],
+    );
+    return Object.fromEntries(entries);
   },
-  options?.selectorRewrite,
+  ruleMeta,
 ];
 
-export const enumRule = (
+const enumRule = (
   prefix: string,
   property: string,
   values: string[],
@@ -645,7 +701,7 @@ export const enumRule = (
   ([v]) => ({ [property]: transformValue(v!) }),
 ];
 
-export const childSelectorRewrite: SelectorRewrite = (v) => `${v} > * + *`;
+const childSelectorRewrite: SelectorRewrite = (v) => `${v} > * + *`;
 
 const prefixFlex = (v: string) =>
   ["start", "end"].includes(v) ? `flex-${v}` : v;
@@ -670,3 +726,12 @@ const getDirection = (d: string | undefined) => {
   if (!d) return "";
   return { t: "-top", r: "-right", b: "-bottom", l: "-left" }[d];
 };
+
+const cssTransformValue = [
+  "translate(var(--tw-translate-x), var(--tw-translate-y))",
+  "rotate(var(--tw-rotate))",
+  "skewX(var(--tw-skew-x))",
+  "skewY(var(--tw-skew-y))",
+  "scaleX(var(--tw-scale-x))",
+  "scaleY(var(--tw-scale-y))",
+].join(" ");

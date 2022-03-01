@@ -1,16 +1,16 @@
-import { ResolvedCSSConfig, Rule } from "./types";
+import { Rule } from "./types";
 import { CorePlugin, getCorePlugins, RuleOrRules } from "./corePlugins";
+import { cssConfig } from "./cssConfig";
 
-const isRules = (v: RuleOrRules): v is Rule[] => Array.isArray(v[0]);
+const isRules = (v: RuleOrRules): v is Rule[] =>
+  Array.isArray(v[0]) || v[0] === undefined;
 
-export const getRules = (config: ResolvedCSSConfig): Rule[] => {
-  const corePlugins = getCorePlugins(config);
-  const rules: Rule[] = [];
-  for (const corePlugin in corePlugins) {
-    if (config.corePlugins[corePlugin as CorePlugin] !== false) {
-      const value = corePlugins[corePlugin as CorePlugin];
-      rules.push(...(isRules(value) ? value : [value]));
-    }
+const corePlugins = getCorePlugins(cssConfig);
+const coreRules: Rule[] = [];
+for (const corePlugin in corePlugins) {
+  if (cssConfig.corePlugins[corePlugin as CorePlugin] !== false) {
+    const value = corePlugins[corePlugin as CorePlugin];
+    coreRules.push(...(isRules(value) ? value : [value]));
   }
-  return rules.concat(config.plugins); // TODO: sort
-};
+}
+export const rules = coreRules.concat(cssConfig.plugins); // TODO: sort

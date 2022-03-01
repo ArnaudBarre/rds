@@ -38,7 +38,7 @@ import { assetsCache } from "./assets";
 import { cssGenerator } from "./css/generator";
 import { srcWatcher } from "./srcWatcher";
 import { setupHmr } from "./hmr";
-import { cssToHMR } from "./css/utils";
+import { cssToHMR } from "./css/utils/hmr";
 
 const server = createServer(async (req, res) => {
   const [url, query] = req.url!.split("?") as [string, string | undefined];
@@ -172,8 +172,9 @@ transformSrcImports
       }
     });
   })
-  .catch((e) => {
+  .catch(async (e) => {
     console.error(e);
+    await close();
     process.exit(1);
   });
 

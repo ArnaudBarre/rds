@@ -1,11 +1,14 @@
 import { RDS_CSS_UTILS } from "../consts";
-import { cache, getHashedUrl, readFile } from "../utils";
+import { cache, getHashedUrl, notNull, readFile } from "../utils";
 
 import { ws } from "../ws";
 import { log } from "../logger";
 import { colors } from "../colors";
-import { getRuleIndexMatch, matchToCSSObject, rules } from "./matcher";
-import { SelectorRewrite } from "./types";
+import { rules } from "./rules";
+import { getRuleIndexMatch, getRuleMeta, matchToCSSObject } from "./matcher";
+import { Keyframes } from "./types";
+import { cssDefaults, CSSDefault } from "./defaults";
+import { cssConfig } from "./cssConfig";
 
 let ready = false;
 const blockList = new Set<string>();
@@ -40,16 +43,46 @@ const scanContentCache = cache("scanContent", async (url: string) => {
 });
 
 const generatorCache = cache("generator", (_: null) => {
-  return allMatches
+  const keyframes: [string, Keyframes][] = [];
+  const defaults: CSSDefault[] = [];
+  // TODO: Handle keyframes, defaults
+  const utils = allMatches
     .map((match) => {
-      const rewrite: SelectorRewrite = rules[match[0]][3] ?? ((v) => v);
-      return `.${escapeSelector(rewrite(match[1]))} {\n${Object.entries(
+      const meta = getRuleMeta(rules[match[0]]);
+      const rewrite = meta?.selectorRewrite ?? ((v) => v);
+      if (meta?.addDefault) defaults.push(meta.addDefault);
+      if (meta?.addKeyframes) {
+        const name = match[1].slice("animate-".length);
+        if (cssConfig.theme.keyframes[name]) {
+          keyframes.push([name, cssConfig.theme.keyframes[name]]);
+        }
+      }
+      return printBlock(
+        `.${escapeSelector(rewrite(match[1]))}`,
         matchToCSSObject(match),
-      )
-        .map(([key, value]) => `  ${key}: ${value};`)
-        .join("\n")}\n}`;
+      );
     })
     .join("\n");
+  return [
+    defaults.length
+      ? printBlock(
+          "*",
+          defaults.reduce<Record<string, string>>(
+            (acc, v) => ({ ...acc, ...cssDefaults[v] }),
+            {},
+          ),
+        )
+      : null,
+    ...keyframes.map(
+      ([name, points]) =>
+        `@keyframes ${name} {\n${Object.entries(points)
+          .map(([key, value]) => printBlock(key, value, 2))
+          .join("\n")}\n}`,
+    ),
+    utils,
+  ]
+    .filter(notNull)
+    .join("\n\n");
 });
 const generate = () => generatorCache.get(null);
 const getHashedCSSUtilsUrl = () => getHashedUrl(RDS_CSS_UTILS, generate());
@@ -84,3 +117,12 @@ const scanCode = (code: string): RuleMatch[] => {
 
 const escapeSelector = (selector: string) =>
   selector.replace(/[:/\[\]]/g, (c) => `\\${c}`);
+
+const printBlock = (
+  selector: string,
+  values: Record<string, string>,
+  indent = 0,
+) =>
+  `${" ".repeat(indent)}${selector} {\n${Object.entries(values)
+    .map(([key, value]) => `${" ".repeat(indent + 2)}${key}: ${value};`)
+    .join("\n")}\n${" ".repeat(indent)}}`;

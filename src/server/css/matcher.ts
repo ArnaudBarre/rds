@@ -1,14 +1,12 @@
-import { Rule, StaticRule } from "./types";
-import { getCSSConfig } from "./getCSSConfig";
-import { getRules } from "./rules";
+import { CSSObject, Rule, RuleMeta, StaticRule } from "./types";
+import { cssConfig } from "./cssConfig";
+import { rules } from "./rules";
 
-const config = getCSSConfig();
-const dynamicContext = { config, theme: config.theme };
-export const rules = getRules(config);
+const dynamicContext = { config: cssConfig, theme: cssConfig.theme };
 
 type RuleMatch = [ruleIndex: number, input: string];
 
-export const matchToCSSObject = ([index, token]: RuleMatch) => {
+export const matchToCSSObject = ([index, token]: RuleMatch): CSSObject => {
   const rule = rules[index];
   return isStaticRule(rule)
     ? rule[1]
@@ -26,4 +24,8 @@ export const getRuleIndexMatch = (token: string): number | undefined => {
   }
 };
 
-const isStaticRule = (rule: Rule): rule is StaticRule => rule[0] === "string";
+export const isStaticRule = (rule: Rule): rule is StaticRule =>
+  rule[0] === "string";
+
+export const getRuleMeta = (rule: Rule): RuleMeta | undefined =>
+  isStaticRule(rule) ? rule[2] : rule[3];

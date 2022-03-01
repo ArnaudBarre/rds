@@ -2,8 +2,9 @@ import { transform } from "@parcel/css";
 
 import { cache, readFileSync } from "../utils";
 import { CSSModule, GraphNode } from "../types";
-import { getRuleIndexMatch, matchToCSSObject, rules } from "./matcher";
-import { CSSEntries, SelectorRewrite } from "./types";
+import { getRuleIndexMatch, getRuleMeta, matchToCSSObject } from "./matcher";
+import { CSSEntries } from "./types";
+import { rules } from "./rules";
 
 const applyRE = /\s@apply ([^;}\n]+)[;}\n]/g;
 
@@ -29,8 +30,8 @@ export const parcelCache = cache(
           if (index === undefined) {
             throw new Error(`No rule matching ${token} in ${url}`);
           }
-          const rewrite: SelectorRewrite | undefined = rules[index][3];
-          if (rewrite) {
+          const meta = getRuleMeta(rules[index]);
+          if (meta?.selectorRewrite || meta?.addDefault || meta?.addKeyframes) {
             // TODO
             throw new Error(
               `${url}: Complex utils like ${token} are not supported`,

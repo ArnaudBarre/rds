@@ -1,5 +1,5 @@
-import { RDS_CLIENT } from "../consts";
-import { CSSModule } from "../types";
+import { RDS_CLIENT } from "../../consts";
+import { CSSModule } from "../../types";
 
 export const cssToHMR = (
   url: string,

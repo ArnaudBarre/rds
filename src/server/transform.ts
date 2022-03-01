@@ -9,7 +9,7 @@ import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
 import { ws } from "./ws";
 import { srcWatcher } from "./srcWatcher";
-import { cssToHMR } from "./css/utils";
+import { cssToHMR } from "./css/utils/hmr";
 import { cssGenerator } from "./css/generator";
 
 export const graph: Graph = new Map([

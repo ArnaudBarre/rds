@@ -1,4 +1,4 @@
-import { CSSObject } from "../types";
+import { Keyframes } from "../types";
 
 export type ResolvedTheme = Record<
   Exclude<ThemeKey, "fontSize" | "dropShadow" | "keyframes">,
@@ -6,7 +6,7 @@ export type ResolvedTheme = Record<
 > & {
   fontSize: Record<string, string | [string, string]>;
   dropShadow: Record<string, string | [string, string]>;
-  keyframes: Record<string, Record<string, CSSObject>>;
+  keyframes: Record<string, Keyframes>;
 };
 
 export type BaseTheme = {
@@ -20,7 +20,7 @@ export type BaseTheme = {
   colors: Record<string, string | Record<string, string>>;
   fontSize: Record<string, string | [string, string]>;
   dropShadow: Record<string, string | [string, string]>;
-  keyframes: Record<string, Record<string, CSSObject>>;
+  keyframes: Record<string, Keyframes>;
 };
 
 export type ThemeValueCallbackOptions = {
