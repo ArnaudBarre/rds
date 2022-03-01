@@ -1,7 +1,10 @@
 import { ResolvedTheme } from "./theme/types";
+import { CorePlugin } from "./rules";
 
 export type ResolvedCSSConfig = {
   theme: ResolvedTheme;
+  corePlugins: Partial<Record<CorePlugin, boolean>>;
+  plugins: Rule[];
 };
 
 export type Rule = DynamicRule | StaticRule;

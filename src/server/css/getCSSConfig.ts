@@ -42,7 +42,11 @@ export const getCSSConfig = () => {
     }
   }
 
-  const resolvedConfig: ResolvedCSSConfig = { theme: theme as ResolvedTheme };
+  const resolvedConfig: ResolvedCSSConfig = {
+    theme: theme as ResolvedTheme,
+    corePlugins: {},
+    plugins: [],
+  };
   log.debug(`Load CSS config: ${Math.round(performance.now() - start)}ms`);
   return resolvedConfig;
 };
