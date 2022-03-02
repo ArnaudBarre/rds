@@ -1,8 +1,8 @@
-import { CSSObject, Rule, RuleMeta, StaticRule } from "./types";
+import { CSSObject, DynamicContext, Rule, RuleMeta, StaticRule } from "./types";
 import { cssConfig } from "./cssConfig";
 import { rules } from "./rules";
 
-const dynamicContext = { config: cssConfig, theme: cssConfig.theme };
+const dynamicContext: DynamicContext = { config: cssConfig };
 
 type RuleMatch = [ruleIndex: number, input: string];
 
@@ -14,7 +14,8 @@ export const matchToCSSObject = ([index, token]: RuleMatch): CSSObject => {
 };
 
 export const getRuleIndexMatch = (token: string): number | undefined => {
-  for (const [index, rule] of rules.entries()) {
+  for (let index = 0; index < rules.length; index++) {
+    const rule = rules[index];
     if (isStaticRule(rule)) {
       if (token === rule[0]) return index;
     } else {

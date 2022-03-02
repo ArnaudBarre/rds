@@ -1,4 +1,4 @@
-import { ResolvedTheme } from "./theme/types";
+import { BaseTheme, ResolvedTheme } from "./theme/types";
 import { CorePlugin } from "./corePlugins";
 import { CSSDefault } from "./defaults";
 
@@ -7,6 +7,12 @@ export type ResolvedCSSConfig = {
   corePlugins: Partial<Record<CorePlugin, boolean>>;
   plugins: Rule[];
 };
+
+export type CSSConfig = Partial<{
+  theme: Partial<BaseTheme & { extend: Partial<BaseTheme> }>;
+  corePlugins: Partial<Record<CorePlugin, boolean>>;
+  plugins: Rule[];
+}>;
 
 export type Rule = DynamicRule | StaticRule;
 export type DynamicRule = [RegExp, DynamicValidator, DynamicMatcher, RuleMeta?];
@@ -25,10 +31,7 @@ export type DynamicMatcher = (
   context: DynamicContext,
 ) => CSSObject;
 export type SelectorRewrite = (value: string) => string;
-type DynamicContext = Readonly<{
-  config: ResolvedCSSConfig;
-  theme: ResolvedCSSConfig["theme"];
-}>;
+export type DynamicContext = Readonly<{ config: ResolvedCSSConfig }>;
 export type CSSObject = Record<string, string>;
 export type Keyframes = Record<string, CSSObject>;
 export type CSSEntries = [string, string | number][];

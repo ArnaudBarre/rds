@@ -23,8 +23,8 @@ export const App = () => {
         <p>
           Edit <code>App.tsx</code> and save to test HMR updates.
         </p>
-        <Logo className="rotate-45 h-40" />
-        <img src={logoUrl} className="animate-spin h-20" />
+        <Logo className="rotate-45 h-44" />
+        <img src={logoUrl} className="animate-spin-slow h-44" />
         <div className="logo-bg" />
         <p className="space-x-4">
           <a

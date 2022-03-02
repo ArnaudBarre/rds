@@ -1,4 +1,3 @@
-import fs from "fs";
 import { join } from "path";
 import { build } from "esbuild";
 
@@ -6,9 +5,8 @@ import {
   cache,
   cacheDir,
   getHashedUrl,
+  jsonCacheSync,
   readCacheFile,
-  readJSONSync,
-  writeJSONSync,
 } from "./utils";
 import { colors } from "./colors";
 import { log } from "./logger";
@@ -20,15 +18,11 @@ import { cssGenerator } from "./css/generator";
 
 const dependencies = new Set<string>();
 
-const CURRENT_METADATA_VERSION = 1;
 type Metadata = {
-  version: number;
   dependenciesHash: string;
   deps: { [name: string]: { needInterop: boolean } };
 };
 let metadata: Metadata | undefined;
-
-if (fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 
 let initialLoad = true;
 let reBundlePromise: Promise<void> | undefined;
@@ -46,18 +40,14 @@ export const addDependency = (dep: string) => {
   }
 };
 
-const metadataPath = join(cacheDir, "dependencies.json");
-
 export const buildDependencies = async () => {
   const start = performance.now();
   initialLoad = false;
   const deps = Array.from(dependencies);
-  if (fs.existsSync(metadataPath)) {
-    metadata = readJSONSync<Metadata>(metadataPath);
-    if (
-      metadata.dependenciesHash === dependenciesHash &&
-      metadata.version === CURRENT_METADATA_VERSION
-    ) {
+  const metadataCache = jsonCacheSync<Metadata>("dependencies", 1);
+  metadata = metadataCache.read();
+  if (metadata) {
+    if (metadata.dependenciesHash === dependenciesHash) {
       const cacheSet = new Set(Object.keys(metadata.deps));
       if (cacheSet.size >= deps.length && deps.every((d) => cacheSet.has(d))) {
         log.debug(
@@ -65,6 +55,9 @@ export const buildDependencies = async () => {
         );
         return;
       }
+      log.debug(`Skipping dependencies cache (new used deps)`);
+    } else {
+      log.debug(`Skipping dependencies cache (dependenciesHash change)`);
     }
   }
   const listed = 5;
@@ -83,7 +76,7 @@ export const buildDependencies = async () => {
     sourcemap: true,
     outdir: cacheDir,
   });
-  metadata = { version: CURRENT_METADATA_VERSION, dependenciesHash, deps: {} };
+  metadata = { dependenciesHash, deps: {} };
   const output = result.metafile!["outputs"];
   for (const dep of deps) {
     const { exports } = output[join(cacheDir, getFileName(dep))];
@@ -93,7 +86,7 @@ export const buildDependencies = async () => {
         (exports.length === 1 && exports[0] === "default"),
     };
   }
-  writeJSONSync(metadataPath, metadata);
+  metadataCache.write(metadata);
   log.info(`  ✔ Bundled in ${Math.round(performance.now() - start)}ms`);
 };
 

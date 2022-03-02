@@ -27,14 +27,37 @@ export const getHashedUrl = (base: string, content: string | Buffer) =>
 
 export const readFile = (path: string) => fs.promises.readFile(path, "utf-8");
 export const readFileSync = (path: string) => fs.readFileSync(path, "utf-8");
-export const readJSON = async <T>(path: string): Promise<T> =>
-  JSON.parse(await readFile(path));
-export const readJSONSync = <T>(path: string): T =>
-  JSON.parse(readFileSync(path));
-export const writeJSON = (path: string, data: unknown) =>
-  fs.promises.writeFile(path, JSON.stringify(data));
-export const writeJSONSync = (path: string, data: unknown) =>
-  fs.writeFileSync(path, JSON.stringify(data));
+export const readMaybeFileSync = (path: string) => {
+  try {
+    return readFileSync(path);
+  } catch (err: any) {
+    if (err.code === "ENOENT") return;
+    throw err;
+  }
+};
+export const jsonCacheSync = <T extends Record<string, any>>(
+  name: string,
+  version: number,
+) => {
+  const path = join(cacheDir, `${name}.json`);
+  return {
+    read: (): T | undefined => {
+      const content = readMaybeFileSync(path);
+      if (!content) {
+        log.debug(`${name} cache not found`);
+        return;
+      }
+      const json = JSON.parse(content) as T & { version: number };
+      if (json.version !== version) {
+        log.info(`Skipping ${name} cache (version change)`);
+        return;
+      }
+      return json;
+    },
+    write: (data: T) =>
+      fs.writeFileSync(path, JSON.stringify({ version, ...data })),
+  };
+};
 
 export const cacheDir = "node_modules/.rds";
 export const readCacheFile = (path: string) => readFile(join(cacheDir, path));

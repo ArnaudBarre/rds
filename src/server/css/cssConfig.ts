@@ -1,8 +1,10 @@
 import { log } from "../logger";
+import { getConfig } from "../bundleConfig";
 import { mapObjectValue } from "../utils";
-import { ResolvedCSSConfig } from "./types";
+import { CSSConfig, ResolvedCSSConfig } from "./types";
 import { baseTheme } from "./theme/baseTheme";
 import {
+  BaseTheme,
   ResolvedTheme,
   ThemeKey,
   ThemeValueCallbackOptions,
@@ -10,7 +12,18 @@ import {
 
 const start = performance.now();
 
-const theme = { ...baseTheme }; // TODO: Merge with config
+const config = getConfig<CSSConfig>("css");
+const theme = ((): BaseTheme => {
+  if (!config?.theme) return baseTheme;
+  const { extend, ...userTheme } = config.theme;
+  if (extend) {
+    for (const key in extend) {
+      // @ts-ignore
+      if (extend[key]) baseTheme[key] = { ...baseTheme[key], ...extend[key] };
+    }
+  }
+  return Object.assign(baseTheme, userTheme);
+})();
 theme.colors = Object.fromEntries(
   Object.entries(theme.colors).flatMap(([key, stringOrMap]) =>
     typeof stringOrMap === "string"
@@ -45,8 +58,9 @@ for (const key in theme) {
 }
 
 export const cssConfig: ResolvedCSSConfig = {
-  theme: theme as ResolvedTheme,
   corePlugins: {},
   plugins: [],
+  ...config,
+  theme: theme as ResolvedTheme,
 };
 log.debug(`Load CSS config: ${Math.round(performance.now() - start)}ms`);

@@ -1,9 +1,9 @@
-const enabled = !(
+export const useColors = !(
   "NO_COLOR" in process.env || process.argv.includes("--no-color")
 );
 
 const getFormatter = (open: string, close: string) => (input: string) =>
-  enabled ? open + input + close : input;
+  useColors ? open + input + close : input;
 
 export const colors = {
   bold: getFormatter("\x1b[1m", "\x1b[22m"),

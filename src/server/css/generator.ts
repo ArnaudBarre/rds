@@ -45,14 +45,16 @@ const scanContentCache = cache("scanContent", async (url: string) => {
 const generatorCache = cache("generator", (_: null) => {
   const keyframes: [string, Keyframes][] = [];
   const defaults: CSSDefault[] = [];
-  // TODO: Handle keyframes, defaults
   const utils = allMatches
     .map((match) => {
       const meta = getRuleMeta(rules[match[0]]);
       const rewrite = meta?.selectorRewrite ?? ((v) => v);
       if (meta?.addDefault) defaults.push(meta.addDefault);
       if (meta?.addKeyframes) {
-        const name = match[1].slice("animate-".length);
+        const animationProperty =
+          cssConfig.theme.animation[match[1].slice("animate-".length)];
+        const name = animationProperty.slice(0, animationProperty.indexOf(" "));
+        console.error(name);
         if (cssConfig.theme.keyframes[name]) {
           keyframes.push([name, cssConfig.theme.keyframes[name]]);
         }
@@ -103,7 +105,7 @@ const scanCode = (code: string): RuleMatch[] => {
     .filter((t) => validSelectorRe.test(t) && !blockList.has(t));
   const localMatches = new Set<string>();
   for (const token of tokens) {
-    if (localMatches.has(token)) continue;
+    if (localMatches.has(token) || blockList.has(token)) continue;
     const ruleIndex = getRuleIndexMatch(token);
     if (ruleIndex === undefined) {
       blockList.add(token);
