@@ -63,7 +63,6 @@ export type ThemeKey =
   | "contrast"
   | "container"
   | "content"
-  | "cursor"
   | "divideColor"
   | "divideOpacity"
   | "divideWidth"

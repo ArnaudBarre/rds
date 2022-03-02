@@ -1,6 +1,8 @@
 import { Rule } from "./types";
 import { CorePlugin, getCorePlugins, RuleOrRules } from "./corePlugins";
 import { cssConfig } from "./cssConfig";
+import { split } from "../utils";
+import { getRuleMeta } from "./matcher";
 
 const isRules = (v: RuleOrRules): v is Rule[] =>
   Array.isArray(v[0]) || v[0] === undefined;
@@ -13,4 +15,8 @@ for (const corePlugin in corePlugins) {
     coreRules.push(...(isRules(value) ? value : [value]));
   }
 }
-export const rules = coreRules.concat(cssConfig.plugins); // TODO: sort
+const [components, utils] = split(
+  cssConfig.plugins,
+  (r) => getRuleMeta(r)?.components ?? false,
+);
+export const rules = components.concat(coreRules, utils);

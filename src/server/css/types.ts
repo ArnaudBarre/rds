@@ -21,6 +21,7 @@ export type RuleMeta = {
   selectorRewrite?: SelectorRewrite;
   addDefault?: CSSDefault;
   addKeyframes?: boolean;
+  components?: boolean; // For plugins
 };
 export type DynamicValidator = (
   groups: (string | undefined)[],

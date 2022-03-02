@@ -72,7 +72,7 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
             br: ["bottom", "right"],
             bl: ["bottom", "left"],
             tl: ["top", "left"],
-          }[d.slice(1)] as string[]),
+          }[d.slice(1)]!),
         { supportsNegativeValues: true },
       ),
       themeRule("top", theme.inset, "top", {
@@ -204,8 +204,88 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
     animation: themeRule("animate", theme.animation, ["animation"], {
       addKeyframes: true,
     }),
-    cursor: themeRule("cursor", theme.cursor, "cursor"),
-    touchAction: [], // TODO
+    // Non-compliant: Don't use theme
+    cursor: enumRule("cursor-", "cursor", [
+      "auto",
+      "default",
+      "pointer",
+      "wait",
+      "text",
+      "move",
+      "help",
+      "not-allowed",
+      "none",
+      "context-menu",
+      "progress",
+      "cell",
+      "crosshair",
+      "vertical-text",
+      "alias",
+      "copy",
+      "no-drop",
+      "grab",
+      "grabbing",
+      "all-scroll",
+      "col-resize",
+      "row-resize",
+      "n-resize",
+      "e-resize",
+      "s-resize",
+      "w-resize",
+      "ne-resize",
+      "nw-resize",
+      "se-resize",
+      "sw-resize",
+      "ew-resize",
+      "ns-resize",
+      "nesw-resize",
+      "nwse-resize",
+      "zoom-in",
+      "zoom-out",
+    ]),
+    touchAction: rules([
+      ["touch-auto", { "touch-action": "auto" }],
+      ["touch-none", { "touch-action": "none" }],
+      [
+        "touch-pan-x",
+        { "--tw-pan-x": "pan-x", "touch-action": cssTouchActionValue },
+        { addDefault: "touch-action" },
+      ],
+      [
+        "touch-pan-left",
+        { "--tw-pan-x": "pan-left", "touch-action": cssTouchActionValue },
+        { addDefault: "touch-action" },
+      ],
+      [
+        "touch-pan-right",
+        { "--tw-pan-x": "pan-right", "touch-action": cssTouchActionValue },
+        { addDefault: "touch-action" },
+      ],
+      [
+        "touch-pan-y",
+        { "--tw-pan-y": "pan-y", "touch-action": cssTouchActionValue },
+        { addDefault: "touch-action" },
+      ],
+      [
+        "touch-pan-up",
+        { "--tw-pan-y": "pan-up", "touch-action": cssTouchActionValue },
+        { addDefault: "touch-action" },
+      ],
+      [
+        "touch-pan-down",
+        { "--tw-pan-y": "pan-down", "touch-action": cssTouchActionValue },
+        { addDefault: "touch-action" },
+      ],
+      [
+        "touch-pinch-zoom",
+        {
+          "--tw-pinch-zoom": "pinch-zoom",
+          "touch-action": cssTouchActionValue,
+        },
+        { addDefault: "touch-action" },
+      ],
+      ["touch-manipulation", { "touch-action": "manipulation" }],
+    ]),
     userSelect: enumRule("select-", "user-select", [
       "auto",
       "all",
@@ -218,10 +298,39 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
       ["resize", { resize: "both" }],
       ["resize-none", { resize: "none" }],
     ],
-    scrollSnapType: [], // TODO
-    scrollSnapAlign: [], // TODO
-    scrollSnapStop: [], // TODO
-    scrollMargin: [], // TODO
+    scrollSnapType: rules([
+      ["snap-none", { "scroll-snap-type": "none" }],
+      [
+        "snap-x",
+        { "scroll-snap-type": "x var(--tw-scroll-snap-strictness)" },
+        { addDefault: "scroll-snap-type" },
+      ],
+      [
+        "snap-y",
+        { "scroll-snap-type": "y var(--tw-scroll-snap-strictness)" },
+        { addDefault: "scroll-snap-type" },
+      ],
+      [
+        "snap-both",
+        { "scroll-snap-type": "both var(--tw-scroll-snap-strictness)" },
+        { addDefault: "scroll-snap-type" },
+      ],
+      ["snap-mandatory", { "--tw-scroll-snap-strictness": "mandatory" }],
+      ["snap-proximity", { "--tw-scroll-snap-strictness": "proximity" }],
+    ]),
+    scrollSnapAlign: enumRule("snap-", "scroll-snap-align", [
+      "start",
+      "end",
+      "center",
+      "node",
+    ]),
+    scrollSnapStop: enumRule("snap-", "scroll-snap-stop", ["normal", "always"]),
+    scrollMargin: withDirectionThemeRule(
+      /scroll-m(xytrbl)?/,
+      theme.scrollMargin,
+      (d) => getDirection("scroll-margin", d),
+      { supportsNegativeValues: true },
+    ),
     scrollPadding: [], // TODO
     listStylePosition: enumRule("list-", "list-style-position", [
       "inside",
@@ -229,7 +338,7 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
     ]),
     listStyleType: themeRule("list", theme.listStyleType, "list-style-type"),
     appearance: ["appearance-none", { "appearance-none": "none" }],
-    columns: [], // TODO
+    columns: themeRule("columns", theme.columns, "columns"),
     breakBefore: enumRule("break-before-", "break-before", breaks),
     breakInside: enumRule("break-inside-", "break-inside", [
       "auto",
@@ -238,11 +347,28 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
       "avoid-column",
     ]),
     breakAfter: enumRule("break-after-", "break-after", breaks),
-    gridAutoColumns: [], // TODO
-    gridAutoFlow: [], // TODO
-    gridAutoRows: [], // TODO
-    gridTemplateColumns: [], // TODO
-    gridTemplateRows: [], // TODO
+    gridAutoColumns: themeRule(
+      "auto-cols",
+      theme.gridAutoColumns,
+      "grid-auto-columns",
+    ),
+    gridAutoFlow: enumRule("grid-flow-", "grid-auto-flow", [
+      "row",
+      "column",
+      "row dense",
+      "column dense",
+    ]),
+    gridAutoRows: themeRule("auto-rows", theme.gridAutoRows, "grid-auto-rows"),
+    gridTemplateColumns: themeRule(
+      "grid-cols",
+      theme.gridTemplateColumns,
+      "grid-template-columns",
+    ),
+    gridTemplateRows: themeRule(
+      "grid-rows",
+      theme.gridTemplateRows,
+      "grid-template-rows",
+    ),
     // Non-compliant: Adding display flex when it will always be required
     flexDirection: [
       ["flex-row", { "flex-direction": "row" }],
@@ -322,11 +448,7 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
     margin: withDirectionThemeRule(
       /m([xytrbl])?/,
       theme.margin,
-      (d) => {
-        if (d === "x") return ["margin-left", "margin-right"];
-        if (d === "y") return ["margin-top", "margin-bottom"];
-        return [`margin${getDirection(d)}`];
-      },
+      (d) => getDirection("margin", d),
       { supportsNegativeValues: true },
     ),
     divideWidth: [
@@ -350,11 +472,18 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
       ["solid", "dashed", "dotted", "double", "none"],
       childSelectorRewrite,
     ),
-    // TODO: Handle opacity
-    divideColor: themeRule("divide", theme.divideColor, "border-color", {
-      selectorRewrite: childSelectorRewrite,
-    }),
-    divideOpacity: [], // TODO
+    divideColor: [
+      /^divide-(.+)$/,
+      ([v]) => !!theme.divideColor[v!],
+      ([v]) => ({ "border-color": v! }), // TODO: Handle opacity
+      { selectorRewrite: childSelectorRewrite },
+    ],
+    divideOpacity: themeRule(
+      "divide",
+      theme.divideOpacity,
+      "--tw-divide-opacity",
+      { selectorRewrite: childSelectorRewrite },
+    ),
     placeSelf: enumRule("place-self-", "place-self", [
       "auto",
       "start",
@@ -424,7 +553,7 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
           br: ["border-bottom-right-radius"],
           bl: ["border-bottom-left-radius"],
           tl: ["border-top-left-radius"],
-        }[d.slice(1)] as string[]),
+        }[d.slice(1)]!),
     ),
     borderWidth: withDirectionThemeRule(
       /border(-x|-y|-tr|-br|-bl|-tl)?/,
@@ -438,7 +567,7 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
           r: ["border-right-width"],
           b: ["border-bottom-width"],
           l: ["border-left-width"],
-        }[d.slice(1)] as string[]),
+        }[d.slice(1)]!),
     ),
     borderStyle: enumRule("border", "border-style", [
       "solid",
@@ -494,11 +623,7 @@ export const getCorePlugins = ({ theme }: ResolvedCSSConfig) =>
     padding: withDirectionThemeRule(
       /p([xytrbl])?/,
       theme.padding,
-      (d) => {
-        if (d === "x") return ["padding-left", "padding-right"];
-        if (d === "y") return ["padding-top", "padding-bottom"];
-        return [`padding${getDirection(d)}`];
-      },
+      (d) => getDirection("padding", d),
       { supportsNegativeValues: true },
     ),
     textAlign: enumRule("text-", "text-align", [
@@ -722,10 +847,19 @@ const breaks = [
   "column",
 ];
 
-const getDirection = (d: string | undefined) => {
-  if (!d) return "";
-  return { t: "-top", r: "-right", b: "-bottom", l: "-left" }[d];
-};
+const getDirection = (
+  prefix: string,
+  d: string | undefined = "all",
+): Properties =>
+  ({
+    all: [prefix],
+    x: [`${prefix}-left`, `${prefix}-right`],
+    y: [`${prefix}-top`, `${prefix}-bottom`],
+    t: [`${prefix}-top`],
+    r: [`${prefix}-right`],
+    b: [`${prefix}-bottom`],
+    l: [`${prefix}-left`],
+  }[d]!);
 
 const cssTransformValue = [
   "translate(var(--tw-translate-x), var(--tw-translate-y))",
@@ -735,3 +869,5 @@ const cssTransformValue = [
   "scaleX(var(--tw-scale-x))",
   "scaleY(var(--tw-scale-y))",
 ].join(" ");
+const cssTouchActionValue =
+  "var(--tw-pan-x) var(--tw-pan-y) var(--tw-pinch-zoom)";
