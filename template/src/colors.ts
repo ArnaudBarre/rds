@@ -1,4 +1,4 @@
 export const colors = {
-  blue: "#00e",
-  red: "#e00",
+  primary: "#00e",
+  danger: "#e00",
 };

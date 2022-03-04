@@ -472,10 +472,10 @@ export const getCorePlugins = ({
       selectorRewrite: childSelectorRewrite,
     }),
     // Non-compliant version for https://tailwindcss.com/docs/divide-width#reversing-children-order
-    themeRule("divide-x-reverse", theme.divideWidth, "border-right-width", {
+    themeRule("divide-reverse-x", theme.divideWidth, "border-right-width", {
       selectorRewrite: childSelectorRewrite,
     }),
-    themeRule("divide-y", theme.divideWidth, "border-bottom-width", {
+    themeRule("divide-reverse-y", theme.divideWidth, "border-bottom-width", {
       selectorRewrite: childSelectorRewrite,
     }),
   ],
@@ -595,6 +595,7 @@ export const getCorePlugins = ({
         variable: "--tw-border-opacity",
         enabled: corePlugins.borderOpacity !== false,
       }),
+    { filterDefault: true },
   ),
   borderOpacity: themeRule(
     "border-opacity",
@@ -881,18 +882,23 @@ export const getCorePlugins = ({
     ),
     ["ring-inset", [["--tw-ring-inset", "inset"]]],
   ],
-  ringColor: themeRule("ring", theme.ringColor, (value) =>
-    withAlphaVariable({
-      properties: ["--tw-ring-color"],
-      color: value,
-      variable: "--tw-ring-opacity",
-      enabled: corePlugins.ringOpacity !== false,
-    }),
+  ringColor: themeRule(
+    "ring",
+    theme.ringColor,
+    (value) =>
+      withAlphaVariable({
+        properties: ["--tw-ring-color"],
+        color: value,
+        variable: "--tw-ring-opacity",
+        enabled: corePlugins.ringOpacity !== false,
+      }),
+    { filterDefault: true },
   ),
   ringOpacity: themeRule(
     "ring-opacity",
     theme.ringOpacity,
     "--tw-ring-opacity",
+    { filterDefault: true },
   ),
   ringOffsetWidth: themeRule(
     "ring-offset",
@@ -981,11 +987,13 @@ export const getCorePlugins = ({
     "duration",
     theme.transitionDuration,
     "transition-duration",
+    { filterDefault: true },
   ),
   transitionTimingFunction: themeRule(
     "ease",
     theme.transitionTimingFunction,
     "transition-timing-function",
+    { filterDefault: true },
   ),
   willChange: themeRule("will-change", theme.willChange, "will-change"),
   content: themeRule("content", theme.content, "content"),
@@ -1093,7 +1101,7 @@ const breaks = [
   "auto",
   "avoid",
   "all",
-  "avoid",
+  "avoid-page",
   "page",
   "left",
   "right",

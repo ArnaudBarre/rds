@@ -9,6 +9,11 @@ export const config: CSSConfig = {
         "spin-slow": "spin 20s linear infinite",
       },
     },
+    screens: {
+      sm: { max: "360px" },
+      md: { min: "720px" },
+      lg: "1024px",
+    },
     spacing: {
       0: "0",
       2: "2px",
@@ -28,6 +33,14 @@ export const config: CSSConfig = {
       44: "44px",
       52: "52px",
       56: "56px",
+    },
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: "10px",
+        md: "20px",
+        xl: "40px",
+      },
     },
   },
   corePlugins: {

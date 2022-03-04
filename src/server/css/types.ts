@@ -35,7 +35,10 @@ export type RuleMeta = {
   addKeyframes?: boolean;
   components?: boolean; // For user plugins
 };
-export type ThemeRuleMeta = RuleMeta & { supportsNegativeValues?: boolean };
+export type ThemeRuleMeta = RuleMeta & {
+  supportsNegativeValues?: boolean;
+  filterDefault?: boolean;
+};
 export type SelectorRewrite = (value: string) => string;
 export type CSSEntries = CSSEntry[];
 export type CSSEntry = [string, string];

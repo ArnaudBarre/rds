@@ -1,14 +1,15 @@
 import { split } from "../utils";
+import { log } from "../logger";
 import {
   CorePlugin,
   DirectionThemeRule,
   Rule,
   RuleMeta,
   ThemeRule,
+  ThemeRuleMeta,
 } from "./types";
 import { getCorePlugins, RuleOrRules } from "./corePlugins";
 import { cssConfig } from "./cssConfig";
-import { log } from "../logger";
 
 export const isThemeRule = (rule: Rule): rule is ThemeRule<any> =>
   typeof rule[2] === "function";
@@ -41,65 +42,77 @@ export type RuleEntry = [
   key: string,
   direction: string,
   negative: boolean,
+  order: number,
 ];
 export const rulesEntries = new Map<string, RuleEntry>();
 
-const allowNegativeRE = /^\d/;
+let order = 0;
+const allowNegativeRE = /^[1-9]/;
 const addTheme = (
   prefix: string,
   themeMap: Record<string, unknown>,
   index: number,
   direction: string,
-  supportsNegativeValues: boolean | undefined,
+  meta: ThemeRuleMeta | undefined,
 ) => {
-  if (supportsNegativeValues) {
+  const addThemeEntry = (
+    fullPrefix: string,
+    themeKey: string,
+    negative: boolean,
+  ) => {
+    if (themeKey === "DEFAULT") {
+      if (meta?.filterDefault) return;
+      rulesEntries.set(fullPrefix, [
+        index,
+        themeKey,
+        direction,
+        negative,
+        order++,
+      ]);
+    } else {
+      rulesEntries.set(`${fullPrefix}-${themeKey}`, [
+        index,
+        themeKey,
+        direction,
+        negative,
+        order++,
+      ]);
+    }
+  };
+
+  if (meta?.supportsNegativeValues) {
     const negativePrefix = `-${prefix}`;
     for (const themeKey in themeMap) {
       if (allowNegativeRE.test(themeMap[themeKey] as string)) {
-        rulesEntries.set(
-          themeKey === "DEFAULT"
-            ? negativePrefix
-            : `${negativePrefix}-${themeKey}`,
-          [index, themeKey, direction, true],
-        );
+        addThemeEntry(negativePrefix, themeKey, true);
       }
     }
   }
   for (const themeKey in themeMap) {
-    rulesEntries.set(
-      themeKey === "DEFAULT" ? prefix : `${prefix}-${themeKey}`,
-      [index, themeKey, direction, false],
-    );
+    addThemeEntry(prefix, themeKey, false);
   }
 };
 
 for (const [index, rule] of rules.entries()) {
   if (isThemeRule(rule)) {
-    addTheme(rule[0], rule[1], index, "", rule[3]?.supportsNegativeValues);
+    addTheme(rule[0], rule[1], index, "", rule[3]);
   } else if (isDirectionRule(rule)) {
     if (!rule[4]?.mandatory) {
-      addTheme(rule[0], rule[2], index, "all", rule[4]?.supportsNegativeValues);
+      addTheme(rule[0], rule[2], index, "all", rule[4]);
     }
     const omitHyphen = rule[4]?.omitHyphen;
     for (const direction of rule[1]) {
       const prefix = `${rule[0]}${omitHyphen ? "" : "-"}${direction}`;
-      addTheme(
-        prefix,
-        rule[2],
-        index,
-        direction,
-        rule[4]?.supportsNegativeValues,
-      );
+      addTheme(prefix, rule[2], index, direction, rule[4]);
     }
   } else {
-    rulesEntries.set(rule[0], [index, "", "", false]);
+    rulesEntries.set(rule[0], [index, "", "", false, order++]);
   }
 }
 
-// fs.writeFileSync(
-//   "local/test.json",
-//   JSON.stringify(Object.fromEntries(rulesEntries)),
-// );
+if (rulesEntries.size !== order) {
+  log.warn(`Collision happened for ${order - rulesEntries.size} rule(s)`);
+}
 
 log.debug(
   `${rulesEntries.size} rules entries created in ${(

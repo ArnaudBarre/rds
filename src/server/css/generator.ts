@@ -5,7 +5,7 @@ import { ws } from "../ws";
 import { log } from "../logger";
 import { colors } from "../colors";
 import { getRuleMeta, RuleEntry, rules } from "./rules";
-import { getRuleEntry, ruleEntryToCSSEntries } from "./matcher";
+import { matchToken, ruleEntryToCSSEntries } from "./matcher";
 import { CSSDefault, cssDefaults } from "./defaults";
 import { cssConfig } from "./cssConfig";
 import { CSSEntries } from "./types";
@@ -49,7 +49,7 @@ const generatorCache = cache("generator", (_: null) => {
   const defaults = new Set<CSSDefault>();
   let output = "";
   let utilsOutput = "";
-  for (const match of allMatches) {
+  for (const match of allMatches.sort((a, b) => a[1][4] - b[1][4])) {
     const ruleEntry = match[1];
     const meta = getRuleMeta(rules[ruleEntry[0]]);
     const rewrite = meta?.selectorRewrite ?? ((v) => v);
@@ -80,7 +80,7 @@ const generatorCache = cache("generator", (_: null) => {
     output += `@keyframes ${name} {\n  ${cssConfig.theme.keyframes[name]}\n}\n`;
   });
   if (keyframes.size) output += "\n";
-  if (addContainer) output += printContainer() + "\n\n";
+  if (addContainer) output += printContainer();
 
   return output + utilsOutput;
 });
@@ -94,7 +94,7 @@ export const cssGenerator = {
   getHashedCSSUtilsUrl,
 };
 
-const validSelectorRe = /^[a-z0-9:/\[\]-]+$/;
+const validSelectorRe = /^[a-z0-9:/\[\]#-]+$/;
 const scanCode = (code: string) => {
   const matches: RuleMatch[] = [];
   const tokens = code
@@ -103,7 +103,7 @@ const scanCode = (code: string) => {
   const localMatches = new Set<string>();
   for (const token of tokens) {
     if (localMatches.has(token) || blockList.has(token)) continue;
-    const ruleEntry = getRuleEntry(token);
+    const ruleEntry = matchToken(token);
     if (ruleEntry === undefined) {
       blockList.add(token);
     } else {
@@ -125,20 +125,20 @@ const printContainer = (): string => {
     if (!value) return "";
     return `padding-right: ${value}; padding-left: ${value}; `;
   };
-  return [
-    `.container { width: 100%; ${
-      cssConfig.theme.container.center
-        ? `padding-right: auto; padding-left: auto; `
-        : ""
-    }${getPadding(defaultPadding)}}`,
-    ...Object.entries(cssConfig.theme.screens).map(([name, { min }]) => {
-      if (!min) return "";
-      return `@media (min-width: ${min}) {
+  let output = `.container { width: 100%; ${
+    cssConfig.theme.container.center
+      ? `margin-right: auto; margin-left: auto; `
+      : ""
+  }${getPadding(defaultPadding)}}\n`;
+  for (const name in cssConfig.theme.screens) {
+    const { min } = cssConfig.theme.screens[name];
+    if (!min) continue;
+    output += `@media (min-width: ${min}) {
   .container { max-width: ${min}; ${getPadding(
-        typeof paddingConfig === "string" ? undefined : paddingConfig?.[name],
-      )}}\n}`;
-    }),
-  ].join("\n");
+      typeof paddingConfig === "string" ? undefined : paddingConfig?.[name],
+    )}}\n}\n`;
+  }
+  return output + "\n";
 };
 
 const printBlock = (selector: string, entries: CSSEntries) => {

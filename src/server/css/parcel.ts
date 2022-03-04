@@ -2,8 +2,7 @@ import { transform } from "@parcel/css";
 
 import { cache, readFileSync } from "../utils";
 import { CSSModule, GraphNode } from "../types";
-import { getRuleEntry, ruleEntryToCSSEntries } from "./matcher";
-import { CSSEntries } from "./types";
+import { matchToken, ruleEntryToCSSEntries } from "./matcher";
 import { getRuleMeta, rules } from "./rules";
 
 const applyRE = /\s@apply ([^;}\n]+)[;}\n]/g;
@@ -23,26 +22,29 @@ export const parcelCache = cache(
     const hasApply = content.includes("@apply ");
     if (hasApply) {
       content = content.replace(applyRE, (match, utils: string) => {
-        const tokens = utils.split(" ").filter((t) => t);
-        const cssEntries: CSSEntries = [];
-        for (let token of tokens) {
-          const ruleEntry = getRuleEntry(token);
+        let output = "";
+        for (let token of utils.split(" ")) {
+          if (!token) continue;
+          const ruleEntry = matchToken(token);
           if (ruleEntry === undefined) {
             throw new Error(`No rule matching ${token} in ${url}`);
           }
           const meta = getRuleMeta(rules[ruleEntry[0]]);
-          if (meta?.selectorRewrite || meta?.addDefault || meta?.addKeyframes) {
-            // TODO
+          if (
+            meta?.selectorRewrite || // TODO: Use nesting if not media query
+            meta?.addDefault || // TODO: Maybe it works if added in main
+            meta?.addKeyframes || // TODO: Maybe it works if added in main
+            meta?.addContainer
+          ) {
             throw new Error(
               `${url}: Complex utils like ${token} are not supported`,
             );
           }
-          cssEntries.push(...ruleEntryToCSSEntries(ruleEntry));
+          for (const cssEntry of ruleEntryToCSSEntries(ruleEntry)) {
+            output += `${cssEntry[0]}:${cssEntry[1]};`;
+          }
         }
-        const css = cssEntries
-          .map(([key, value]) => `${key}: ${value};`)
-          .join(" ");
-        return `${match[0]}${css}${match[match.length - 1]}`;
+        return `${match[0]}${output}${match[match.length - 1]}`;
       });
     }
 
