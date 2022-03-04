@@ -1,5 +1,5 @@
 import { RDS_CSS_UTILS } from "../consts";
-import { cache, getHashedUrl, notNull, readFile } from "../utils";
+import { cache, getHashedUrl, readFile } from "../utils";
 
 import { ws } from "../ws";
 import { log } from "../logger";
@@ -47,39 +47,42 @@ const generatorCache = cache("generator", (_: null) => {
   let addContainer = false;
   const keyframes = new Set<string>();
   const defaults = new Set<CSSDefault>();
-  const utils = allMatches
-    .map((match) => {
-      const ruleEntry = match[1];
-      const meta = getRuleMeta(rules[ruleEntry[0]]);
-      const rewrite = meta?.selectorRewrite ?? ((v) => v);
-      if (meta?.addContainer) addContainer = true;
-      if (meta?.addDefault) defaults.add(meta.addDefault);
-      if (meta?.addKeyframes) {
-        const animationProperty = cssConfig.theme.animation[ruleEntry[1]];
-        const name = animationProperty.slice(0, animationProperty.indexOf(" "));
-        if (cssConfig.theme.keyframes[name]) keyframes.add(name);
-      }
-      return printBlock(
-        `.${escapeSelector(rewrite(match[0]))}`,
-        ruleEntryToCSSEntries(ruleEntry),
-      );
-    })
-    .join("\n");
-  return [
-    defaults.size
-      ? printBlock(
-          "*, ::before, ::after",
-          [...defaults].flatMap((d) => cssDefaults[d]),
-        )
-      : null,
-    ...[...keyframes].map(
-      (name) => `@keyframes ${name} {\n  ${cssConfig.theme.keyframes[name]}\n}`,
-    ),
-    addContainer ? printContainer() : null,
-    utils,
-  ]
-    .filter(notNull)
-    .join("\n\n");
+  let output = "";
+  let utilsOutput = "";
+  for (const match of allMatches) {
+    const ruleEntry = match[1];
+    const meta = getRuleMeta(rules[ruleEntry[0]]);
+    const rewrite = meta?.selectorRewrite ?? ((v) => v);
+    if (meta?.addContainer) {
+      addContainer = true;
+      continue;
+    }
+    if (meta?.addDefault) defaults.add(meta.addDefault);
+    if (meta?.addKeyframes) {
+      const animationProperty = cssConfig.theme.animation[ruleEntry[1]];
+      const name = animationProperty.slice(0, animationProperty.indexOf(" "));
+      if (cssConfig.theme.keyframes[name]) keyframes.add(name);
+    }
+    utilsOutput += printBlock(
+      `.${escapeSelector(rewrite(match[0]))}`,
+      ruleEntryToCSSEntries(ruleEntry),
+    );
+  }
+
+  if (defaults.size) {
+    output += printBlock(
+      "*, ::before, ::after",
+      [...defaults].flatMap((d) => cssDefaults[d]),
+    );
+    output += "\n";
+  }
+  keyframes.forEach((name) => {
+    output += `@keyframes ${name} {\n  ${cssConfig.theme.keyframes[name]}\n}\n`;
+  });
+  if (keyframes.size) output += "\n";
+  if (addContainer) output += printContainer() + "\n\n";
+
+  return output + utilsOutput;
 });
 const generate = () => generatorCache.get(null);
 const getHashedCSSUtilsUrl = () => getHashedUrl(RDS_CSS_UTILS, generate());
@@ -138,7 +141,11 @@ const printContainer = (): string => {
   ].join("\n");
 };
 
-const printBlock = (selector: string, entries: CSSEntries) =>
-  `${selector} {\n${entries
-    .map(([key, value]) => `  ${key}: ${value};`)
-    .join("\n")}\n}`;
+const printBlock = (selector: string, entries: CSSEntries) => {
+  selector += ` {\n`;
+  for (let entry of entries) {
+    selector += `  ${entry[0]}: ${entry[1]};\n`;
+  }
+  selector += `}\n`;
+  return selector;
+};
