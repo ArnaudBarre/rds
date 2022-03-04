@@ -1,24 +1,23 @@
-import { CSSEntries, DynamicContext } from "./types";
-import { cssConfig } from "./cssConfig";
-import { isStaticRule, rules, map, dynamicRules } from "./rules";
+import { CSSEntries } from "./types";
+import {
+  isDirectionRule,
+  isThemeRule,
+  rulesEntries,
+  rules,
+  RuleEntry,
+} from "./rules";
 
-const dynamicContext: DynamicContext = { config: cssConfig };
-
-type RuleMatch = [ruleIndex: number, input: string];
-
-export const matchToCSSEntries = ([index, token]: RuleMatch): CSSEntries => {
-  const rule = rules[index];
-  return isStaticRule(rule)
-    ? rule[1]
-    : rule[2](token.match(rule[0])!.slice(1), dynamicContext);
+export const ruleEntryToCSSEntries = (ruleEntry: RuleEntry): CSSEntries => {
+  const rule = rules[ruleEntry[0]];
+  if (isThemeRule(rule)) {
+    return rule[2](rule[1][ruleEntry[1]]);
+  } else if (isDirectionRule(rule)) {
+    return rule[3](ruleEntry[2], rule[2][ruleEntry[1]]);
+  } else {
+    return rule[1];
+  }
 };
 
-export const getRuleIndexMatch = (token: string): number | undefined => {
-  const staticMatch = map.get(token);
-  if (staticMatch !== undefined) return staticMatch;
-  for (const dynamicRule of dynamicRules) {
-    const match = token.match(dynamicRule[0][0]);
-    if (match && dynamicRule[0][1](match.slice(1), dynamicContext))
-      return dynamicRule[1];
-  }
+export const getRuleEntry = (token: string): RuleEntry | undefined => {
+  return rulesEntries.get(token);
 };

@@ -1,7 +1,6 @@
 #!/usr/bin/env tnode
-import path from "path";
 import fs from "fs";
-import * as process from "process";
+import process from "process";
 
 const start = performance.now();
 
@@ -14,14 +13,16 @@ const main = async () => {
   await cssGenerator.scanContentCache.get("../../unocss/bench/source/gen2.js");
   await cssGenerator.scanContentCache.get("../../unocss/bench/source/gen3.js");
   console.log((performance.now() - start2).toFixed(2));
-  fs.writeFileSync("result.css", cssGenerator.generate());
+  fs.writeFileSync("local/result.css", cssGenerator.generate());
   console.log((performance.now() - start2).toFixed(2));
   if (session) {
     session.post("Profiler.stop", (err: any, { profile }: any) => {
       // Write profile to disk, upload, etc.
       if (!err) {
-        const outPath = path.resolve("./rds-profile.cpuprofile");
-        fs.writeFileSync(outPath, JSON.stringify(profile));
+        fs.writeFileSync(
+          "local/rds-profile.cpuprofile",
+          JSON.stringify(profile),
+        );
         console.log("profiled");
       } else {
         throw err;

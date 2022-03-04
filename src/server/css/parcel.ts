@@ -2,7 +2,7 @@ import { transform } from "@parcel/css";
 
 import { cache, readFileSync } from "../utils";
 import { CSSModule, GraphNode } from "../types";
-import { getRuleIndexMatch, matchToCSSEntries } from "./matcher";
+import { getRuleEntry, ruleEntryToCSSEntries } from "./matcher";
 import { CSSEntries } from "./types";
 import { getRuleMeta, rules } from "./rules";
 
@@ -26,18 +26,18 @@ export const parcelCache = cache(
         const tokens = utils.split(" ").filter((t) => t);
         const cssEntries: CSSEntries = [];
         for (let token of tokens) {
-          const index = getRuleIndexMatch(token);
-          if (index === undefined) {
+          const ruleEntry = getRuleEntry(token);
+          if (ruleEntry === undefined) {
             throw new Error(`No rule matching ${token} in ${url}`);
           }
-          const meta = getRuleMeta(rules[index]);
+          const meta = getRuleMeta(rules[ruleEntry[0]]);
           if (meta?.selectorRewrite || meta?.addDefault || meta?.addKeyframes) {
             // TODO
             throw new Error(
               `${url}: Complex utils like ${token} are not supported`,
             );
           }
-          cssEntries.push(...matchToCSSEntries([index, token]));
+          cssEntries.push(...ruleEntryToCSSEntries(ruleEntry));
         }
         const css = cssEntries
           .map(([key, value]) => `${key}: ${value};`)

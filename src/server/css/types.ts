@@ -10,29 +10,33 @@ export type ResolvedCSSConfig = {
 export type CSSConfig = Partial<{
   theme: Partial<BaseTheme & { extend: Partial<BaseTheme> }>;
   corePlugins: Partial<Record<CorePlugin, boolean>>;
-  plugins: Rule[];
+  plugins: Rule[] | ((theme: ResolvedTheme) => Rule[]);
 }>;
 
-export type Rule = StaticRule | DynamicRule;
+export type Rule = StaticRule | ThemeRule<any> | DirectionThemeRule;
 export type StaticRule = [string, CSSEntries, RuleMeta?];
-export type DynamicRule = [RegExp, DynamicValidator, DynamicMatcher, RuleMeta?];
+export type ThemeRule<T> = [
+  string,
+  Record<string, T>,
+  (value: T) => CSSEntries,
+  ThemeRuleMeta?,
+];
+export type DirectionThemeRule = [
+  string,
+  string[],
+  Record<string, string>,
+  (direction: string, value: string) => CSSEntries,
+  (ThemeRuleMeta & { omitHyphen?: boolean; mandatory?: boolean })?,
+];
 export type RuleMeta = {
   selectorRewrite?: SelectorRewrite;
   addDefault?: CSSDefault;
   addContainer?: boolean;
   addKeyframes?: boolean;
-  components?: boolean; // For plugins
+  components?: boolean; // For user plugins
 };
-export type DynamicValidator = (
-  groups: (string | undefined)[],
-  context: DynamicContext,
-) => boolean;
-export type DynamicMatcher = (
-  groups: (string | undefined)[],
-  context: DynamicContext,
-) => CSSEntries;
+export type ThemeRuleMeta = RuleMeta & { supportsNegativeValues?: boolean };
 export type SelectorRewrite = (value: string) => string;
-export type DynamicContext = Readonly<{ config: ResolvedCSSConfig }>;
 export type CSSEntries = CSSEntry[];
 export type CSSEntry = [string, string];
 

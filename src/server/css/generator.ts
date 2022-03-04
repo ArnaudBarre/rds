@@ -4,8 +4,8 @@ import { cache, getHashedUrl, notNull, readFile } from "../utils";
 import { ws } from "../ws";
 import { log } from "../logger";
 import { colors } from "../colors";
-import { getRuleMeta, rules } from "./rules";
-import { getRuleIndexMatch, matchToCSSEntries } from "./matcher";
+import { getRuleMeta, RuleEntry, rules } from "./rules";
+import { getRuleEntry, ruleEntryToCSSEntries } from "./matcher";
 import { CSSDefault, cssDefaults } from "./defaults";
 import { cssConfig } from "./cssConfig";
 import { CSSEntries } from "./types";
@@ -13,6 +13,7 @@ import { CSSEntries } from "./types";
 let ready = false;
 const blockList = new Set<string>();
 const contentMap = new Map<string, Set<string>>();
+type RuleMatch = [string, RuleEntry];
 const allMatches: RuleMatch[] = [];
 const allClasses = new Set<string>();
 
@@ -24,15 +25,15 @@ const scanContentCache = cache("scanContent", async (url: string) => {
   if (
     actual &&
     actual.size >= matches.length &&
-    matches.every((m) => actual.has(m[1]))
+    matches.every((m) => actual.has(m[0]))
   ) {
     return;
   }
-  contentMap.set(url, new Set(matches.map((m) => m[1])));
+  contentMap.set(url, new Set(matches.map((m) => m[0])));
   let hasNew = true;
   for (const match of matches) {
-    if (allClasses.has(match[1])) continue;
-    allClasses.add(match[1]);
+    if (allClasses.has(match[0])) continue;
+    allClasses.add(match[0]);
     allMatches.push(match);
     hasNew = true;
   }
@@ -48,19 +49,19 @@ const generatorCache = cache("generator", (_: null) => {
   const defaults = new Set<CSSDefault>();
   const utils = allMatches
     .map((match) => {
-      const meta = getRuleMeta(rules[match[0]]);
+      const ruleEntry = match[1];
+      const meta = getRuleMeta(rules[ruleEntry[0]]);
       const rewrite = meta?.selectorRewrite ?? ((v) => v);
       if (meta?.addContainer) addContainer = true;
       if (meta?.addDefault) defaults.add(meta.addDefault);
       if (meta?.addKeyframes) {
-        const animationProperty =
-          cssConfig.theme.animation[match[1].slice("animate-".length)];
+        const animationProperty = cssConfig.theme.animation[ruleEntry[1]];
         const name = animationProperty.slice(0, animationProperty.indexOf(" "));
         if (cssConfig.theme.keyframes[name]) keyframes.add(name);
       }
       return printBlock(
-        `.${escapeSelector(rewrite(match[1]))}`,
-        matchToCSSEntries(match),
+        `.${escapeSelector(rewrite(match[0]))}`,
+        ruleEntryToCSSEntries(ruleEntry),
       );
     })
     .join("\n");
@@ -91,8 +92,7 @@ export const cssGenerator = {
 };
 
 const validSelectorRe = /^[a-z0-9:/\[\]-]+$/;
-type RuleMatch = [ruleIndex: number, input: string];
-const scanCode = (code: string): RuleMatch[] => {
+const scanCode = (code: string) => {
   const matches: RuleMatch[] = [];
   const tokens = code
     .split(/[\s'"`;>=]+/g)
@@ -100,11 +100,11 @@ const scanCode = (code: string): RuleMatch[] => {
   const localMatches = new Set<string>();
   for (const token of tokens) {
     if (localMatches.has(token) || blockList.has(token)) continue;
-    const ruleIndex = getRuleIndexMatch(token);
-    if (ruleIndex === undefined) {
+    const ruleEntry = getRuleEntry(token);
+    if (ruleEntry === undefined) {
       blockList.add(token);
     } else {
-      matches.push([ruleIndex, token]);
+      matches.push([token, ruleEntry]);
       localMatches.add(token);
     }
   }

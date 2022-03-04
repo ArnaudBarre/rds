@@ -89,16 +89,16 @@ export const baseTheme: BaseTheme = {
     square: "1 / 1",
     video: "16 / 9",
   },
-  backdropBlur: ({ theme }) => theme("blur"),
-  backdropBrightness: ({ theme }) => theme("brightness"),
-  backdropContrast: ({ theme }) => theme("contrast"),
-  backdropGrayscale: ({ theme }) => theme("grayscale"),
-  backdropHueRotate: ({ theme }) => theme("hueRotate"),
-  backdropInvert: ({ theme }) => theme("invert"),
-  backdropOpacity: ({ theme }) => theme("opacity"),
-  backdropSaturate: ({ theme }) => theme("saturate"),
-  backdropSepia: ({ theme }) => theme("sepia"),
-  backgroundColor: ({ theme }) => theme("colors"),
+  backdropBlur: (theme) => theme("blur"),
+  backdropBrightness: (theme) => theme("brightness"),
+  backdropContrast: (theme) => theme("contrast"),
+  backdropGrayscale: (theme) => theme("grayscale"),
+  backdropHueRotate: (theme) => theme("hueRotate"),
+  backdropInvert: (theme) => theme("invert"),
+  backdropOpacity: (theme) => theme("opacity"),
+  backdropSaturate: (theme) => theme("saturate"),
+  backdropSepia: (theme) => theme("sepia"),
+  backgroundColor: (theme) => theme("colors"),
   backgroundImage: {
     none: "none",
     "gradient-to-t": "linear-gradient(to top, var(--tw-gradient-stops))",
@@ -112,7 +112,7 @@ export const baseTheme: BaseTheme = {
     "gradient-to-l": "linear-gradient(to left, var(--tw-gradient-stops))",
     "gradient-to-tl": "linear-gradient(to top left, var(--tw-gradient-stops))",
   },
-  backgroundOpacity: ({ theme }) => theme("opacity"),
+  backgroundOpacity: (theme) => theme("opacity"),
   backgroundPosition: {
     bottom: "bottom",
     center: "center",
@@ -153,11 +153,11 @@ export const baseTheme: BaseTheme = {
     150: "1.5",
     200: "2",
   },
-  borderColor: ({ theme }) => ({
+  borderColor: (theme) => ({
     ...theme("colors"),
     DEFAULT: theme("colors")["gray-200"] ?? "currentColor",
   }),
-  borderOpacity: ({ theme }) => theme("opacity"),
+  borderOpacity: (theme) => theme("opacity"),
   borderRadius: {
     none: "0px",
     sm: "0.125rem",
@@ -186,9 +186,9 @@ export const baseTheme: BaseTheme = {
     inner: "inset 0 2px 4px 0 rgb(0 0 0 / 0.05)",
     none: "none",
   },
-  boxShadowColor: ({ theme }) => theme("colors"),
-  caretColor: ({ theme }) => theme("colors"),
-  accentColor: ({ theme }) => ({
+  boxShadowColor: (theme) => theme("colors"),
+  caretColor: (theme) => theme("colors"),
+  accentColor: (theme) => ({
     ...theme("colors"),
     auto: "auto",
   }),
@@ -205,9 +205,9 @@ export const baseTheme: BaseTheme = {
   content: {
     none: "none",
   },
-  divideColor: ({ theme }) => theme("borderColor"),
-  divideOpacity: ({ theme }) => theme("borderOpacity"),
-  divideWidth: ({ theme }) => theme("borderWidth"),
+  divideColor: (theme) => theme("borderColor"),
+  divideOpacity: (theme) => theme("borderOpacity"),
+  divideWidth: (theme) => theme("borderWidth"),
   dropShadow: {
     sm: "0 1px 1px rgb(0 0 0 / 0.05)",
     DEFAULT: ["0 1px 2px rgb(0 0 0 / 0.1)", "0 1px 1px rgb(0 0 0 / 0.06)"],
@@ -217,7 +217,7 @@ export const baseTheme: BaseTheme = {
     "2xl": "0 25px 25px rgb(0 0 0 / 0.15)",
     none: "0 0 #0000",
   },
-  fill: ({ theme }) => theme("colors"),
+  fill: (theme) => theme("colors"),
   grayscale: {
     0: "0",
     DEFAULT: "100%",
@@ -240,7 +240,7 @@ export const baseTheme: BaseTheme = {
     initial: "0 1 auto",
     none: "none",
   },
-  flexBasis: ({ theme }) => ({
+  flexBasis: (theme) => ({
     auto: "auto",
     ...theme("spacing"),
     "1/2": "50%",
@@ -341,8 +341,8 @@ export const baseTheme: BaseTheme = {
     extrabold: "800",
     black: "900",
   },
-  gap: ({ theme }) => theme("spacing"),
-  gradientColorStops: ({ theme }) => theme("colors"),
+  gap: (theme) => theme("spacing"),
+  gradientColorStops: (theme) => theme("colors"),
   gridAutoColumns: {
     auto: "auto",
     min: "min-content",
@@ -457,7 +457,7 @@ export const baseTheme: BaseTheme = {
     5: "repeat(5, minmax(0, 1fr))",
     6: "repeat(6, minmax(0, 1fr))",
   },
-  height: ({ theme }) => ({
+  height: (theme) => ({
     auto: "auto",
     ...theme("spacing"),
     "1/2": "50%",
@@ -481,7 +481,7 @@ export const baseTheme: BaseTheme = {
     max: "max-content",
     fit: "fit-content",
   }),
-  inset: ({ theme }) => ({
+  inset: (theme) => ({
     auto: "auto",
     ...theme("spacing"),
     "1/2": "50%",
@@ -528,11 +528,11 @@ export const baseTheme: BaseTheme = {
     disc: "disc",
     decimal: "decimal",
   },
-  margin: ({ theme }) => ({
+  margin: (theme) => ({
     auto: "auto",
     ...theme("spacing"),
   }),
-  maxHeight: ({ theme }) => ({
+  maxHeight: (theme) => ({
     ...theme("spacing"),
     full: "100%",
     screen: "100vh",
@@ -540,7 +540,7 @@ export const baseTheme: BaseTheme = {
     max: "max-content",
     fit: "fit-content",
   }),
-  maxWidth: ({ theme }) => ({
+  maxWidth: (theme) => ({
     none: "none",
     0: "0rem",
     xs: "20rem",
@@ -624,10 +624,10 @@ export const baseTheme: BaseTheme = {
     11: "11",
     12: "12",
   },
-  padding: ({ theme }) => theme("spacing"),
-  placeholderColor: ({ theme }) => theme("colors"),
-  placeholderOpacity: ({ theme }) => theme("opacity"),
-  outlineColor: ({ theme }) => theme("colors"),
+  padding: (theme) => theme("spacing"),
+  placeholderColor: (theme) => theme("colors"),
+  placeholderOpacity: (theme) => theme("opacity"),
+  outlineColor: (theme) => theme("colors"),
   outlineOffset: {
     0: "0px",
     1: "1px",
@@ -642,11 +642,11 @@ export const baseTheme: BaseTheme = {
     4: "4px",
     8: "8px",
   },
-  ringColor: ({ theme }) => ({
+  ringColor: (theme) => ({
     DEFAULT: theme("colors")["blue-500"] ?? "#3b82f6",
     ...theme("colors"),
   }),
-  ringOffsetColor: ({ theme }) => theme("colors"),
+  ringOffsetColor: (theme) => theme("colors"),
   ringOffsetWidth: {
     0: "0px",
     1: "1px",
@@ -654,7 +654,7 @@ export const baseTheme: BaseTheme = {
     4: "4px",
     8: "8px",
   },
-  ringOpacity: ({ theme }) => ({
+  ringOpacity: (theme) => ({
     DEFAULT: "0.5",
     ...theme("opacity"),
   }),
@@ -696,8 +696,8 @@ export const baseTheme: BaseTheme = {
     125: "1.25",
     150: "1.5",
   },
-  scrollMargin: ({ theme }) => theme("spacing"),
-  scrollPadding: ({ theme }) => theme("spacing"),
+  scrollMargin: (theme) => theme("spacing"),
+  scrollPadding: (theme) => theme("spacing"),
   sepia: {
     0: "0",
     DEFAULT: "100%",
@@ -710,15 +710,15 @@ export const baseTheme: BaseTheme = {
     6: "6deg",
     12: "12deg",
   },
-  space: ({ theme }) => theme("spacing"),
-  stroke: ({ theme }) => theme("colors"),
+  space: (theme) => theme("spacing"),
+  stroke: (theme) => theme("colors"),
   strokeWidth: {
     0: "0",
     1: "1",
     2: "2",
   },
-  textColor: ({ theme }) => theme("colors"),
-  textDecorationColor: ({ theme }) => theme("colors"),
+  textColor: (theme) => theme("colors"),
+  textDecorationColor: (theme) => theme("colors"),
   textDecorationThickness: {
     auto: "auto",
     "from-font": "from-font",
@@ -736,8 +736,8 @@ export const baseTheme: BaseTheme = {
     4: "4px",
     8: "8px",
   },
-  textIndent: ({ theme }) => theme("spacing"),
-  textOpacity: ({ theme }) => theme("opacity"),
+  textIndent: (theme) => theme("spacing"),
+  textOpacity: (theme) => theme("opacity"),
   transformOrigin: {
     center: "center",
     top: "top",
@@ -788,7 +788,7 @@ export const baseTheme: BaseTheme = {
     out: "cubic-bezier(0, 0, 0.2, 1)",
     "in-out": "cubic-bezier(0.4, 0, 0.2, 1)",
   },
-  translate: ({ theme }) => ({
+  translate: (theme) => ({
     ...theme("spacing"),
     "1/2": "50%",
     "1/3": "33.333333%",
@@ -808,7 +808,7 @@ export const baseTheme: BaseTheme = {
     sub: "sub",
     super: "super",
   },
-  width: ({ theme }) => ({
+  width: (theme) => ({
     auto: "auto",
     ...theme("spacing"),
     "1/2": "50%",

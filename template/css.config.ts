@@ -30,4 +30,7 @@ export const config: CSSConfig = {
       56: "56px",
     },
   },
+  corePlugins: {
+    borderOpacity: false,
+  },
 };

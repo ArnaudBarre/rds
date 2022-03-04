@@ -14,7 +14,7 @@ export type BaseTheme = {
     "screens" | "container" | "colors" | "fontSize" | "dropShadow"
   >]:
     | Record<string, string>
-    | ((options: ThemeValueCallbackOptions) => Record<string, string>);
+    | ((theme: ThemeCallback) => Record<string, string>);
 } & {
   screens: Record<string, string | Screen>;
   container: Container;
@@ -23,14 +23,9 @@ export type BaseTheme = {
   dropShadow: Record<string, string | [string, string]>;
 };
 
-export type ThemeValueCallbackOptions = {
-  theme: {
-    (key: Exclude<ThemeKey, "container" | "dropShadow">): Record<
-      string,
-      string
-    >;
-    (key: "screens"): Record<string, Screen>;
-  };
+export type ThemeCallback = {
+  (key: Exclude<ThemeKey, "container" | "dropShadow">): Record<string, string>;
+  (key: "screens"): Record<string, Screen>;
 };
 
 export type Screen = { min?: string; max?: string };

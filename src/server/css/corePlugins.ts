@@ -1,10 +1,13 @@
 import {
   CorePlugin,
+  CSSEntries,
   CSSEntry,
+  DirectionThemeRule,
   ResolvedCSSConfig,
   Rule,
-  RuleMeta,
   SelectorRewrite,
+  ThemeRule,
+  ThemeRuleMeta,
 } from "./types";
 import { withAlphaValue, withAlphaVariable } from "./utils/colors";
 
@@ -63,10 +66,11 @@ export const getCorePlugins = ({
     "sticky",
   ]),
   inset: [
-    withDirectionThemeRule(
-      /inset(-x|-y|-tr|-br|-bl|-tl)?/, // https://github.com/tailwindlabs/tailwindcss/discussions/7706
+    directionThemeRule(
+      "inset",
+      ["x", "y", "tr", "br", "bl", "tl"], // https://github.com/tailwindlabs/tailwindcss/discussions/7706
       theme.inset,
-      (d = "-all") =>
+      (d) =>
         ({
           all: ["top", "right", "bottom", "left"],
           x: ["top", "bottom"],
@@ -75,21 +79,15 @@ export const getCorePlugins = ({
           br: ["bottom", "right"],
           bl: ["bottom", "left"],
           tl: ["top", "left"],
-        }[d.slice(1)]!),
+        }[d]),
       { supportsNegativeValues: true },
     ),
-    themeRule("top", theme.inset, "top", {
-      supportsNegativeValues: true,
-    }),
-    themeRule("right", theme.inset, "right", {
-      supportsNegativeValues: true,
-    }),
+    themeRule("top", theme.inset, "top", { supportsNegativeValues: true }),
+    themeRule("right", theme.inset, "right", { supportsNegativeValues: true }),
     themeRule("bottom", theme.inset, "bottom", {
       supportsNegativeValues: true,
     }),
-    themeRule("left", theme.inset, "left", {
-      supportsNegativeValues: true,
-    }),
+    themeRule("left", theme.inset, "left", { supportsNegativeValues: true }),
   ],
   isolation: [
     ["isolate", [["isolation", "isolate"]]],
@@ -158,11 +156,12 @@ export const getCorePlugins = ({
     theme.transformOrigin,
     "transform-origin",
   ),
-  translate: withDirectionThemeRule(
-    /translate-([xy])/,
+  translate: directionThemeRule(
+    "translate",
+    ["x", "y"],
     theme.translate,
-    (d) => [`--tw-translate-${d!}`, ["transform", cssTransformValue]],
-    { supportsNegativeValues: true, addDefault: "transform" },
+    (d) => [`--tw-translate-${d}`, ["transform", cssTransformValue]],
+    { supportsNegativeValues: true, addDefault: "transform", mandatory: true },
   ),
   rotate: themeRule(
     "rotate",
@@ -170,17 +169,19 @@ export const getCorePlugins = ({
     [`--tw-rotate`, ["transform", cssTransformValue]],
     { supportsNegativeValues: true, addDefault: "transform" },
   ),
-  skew: withDirectionThemeRule(
-    /skew-([xy])/,
+  skew: directionThemeRule(
+    "skew",
+    ["x", "y"],
     theme.skew,
-    (d) => [`--tw-skew-${d!}`, ["transform", cssTransformValue]],
-    { supportsNegativeValues: true, addDefault: "transform" },
+    (d) => [`--tw-skew-${d}`, ["transform", cssTransformValue]],
+    { supportsNegativeValues: true, addDefault: "transform", mandatory: true },
   ),
-  scale: withDirectionThemeRule(
-    /scale(-[xy])?/,
+  scale: directionThemeRule(
+    "scale",
+    ["x", "y"],
     theme.scale,
     (d) => [
-      ...(d ? [`--tw-scale-${d}`] : ["--tw-scale-x", "--tw-scale-y"]),
+      ...(d === "all" ? ["--tw-scale-x", "--tw-scale-y"] : [`--tw-scale-${d}`]),
       ["transform", cssTransformValue],
     ],
     { supportsNegativeValues: true, addDefault: "transform" },
@@ -202,7 +203,7 @@ export const getCorePlugins = ({
     ["transform-none", [["transform", "none"]]],
   ],
   // Non-compliant: Only handles references to first keyframes & uses stings for theme.keyframes
-  animation: themeRule("animate", theme.animation, ["animation"], {
+  animation: themeRule("animate", theme.animation, "animation", {
     addKeyframes: true,
   }),
   // Non-compliant: Don't use theme
@@ -295,16 +296,19 @@ export const getCorePlugins = ({
     "node",
   ]),
   scrollSnapStop: enumRule("snap-", "scroll-snap-stop", ["normal", "always"]),
-  scrollMargin: withDirectionThemeRule(
-    /scroll-m(xytrbl)?/,
+  scrollMargin: directionThemeRule(
+    "scroll-m",
+    standardDirections,
     theme.scrollMargin,
     (d) => suffixDirection("scroll-margin", d),
-    { supportsNegativeValues: true },
+    { supportsNegativeValues: true, omitHyphen: true },
   ),
-  scrollPadding: withDirectionThemeRule(
-    /scroll-p(xytrbl)?/,
+  scrollPadding: directionThemeRule(
+    "scroll-p",
+    standardDirections,
     theme.scrollPadding,
     (d) => suffixDirection("scroll-padding", d),
+    { omitHyphen: true },
   ),
   listStylePosition: enumRule("list-", "list-style-position", [
     "inside",
@@ -428,26 +432,37 @@ export const getCorePlugins = ({
     themeRule("gap-y", theme.gap, "row-gap"),
   ],
   space: [
-    withDirectionThemeRule(
-      /space-([xy])/,
+    directionThemeRule(
+      "space",
+      ["x", "y"],
       theme.space,
       (d) => (d === "x" ? ["margin-left"] : ["margin-top"]),
-      { supportsNegativeValues: true, selectorRewrite: childSelectorRewrite },
+      {
+        supportsNegativeValues: true,
+        mandatory: true,
+        selectorRewrite: childSelectorRewrite,
+      },
     ),
     // Non-compliant version for https://tailwindcss.com/docs/space#reversing-children-order
-    withDirectionThemeRule(
-      /space-([xy])-reverse/,
+    directionThemeRule(
+      "space-reverse",
+      ["x", "y"],
       theme.space,
       (d) => (d === "x" ? ["margin-right"] : ["margin-bottom"]),
-      { supportsNegativeValues: true, selectorRewrite: childSelectorRewrite },
+      {
+        supportsNegativeValues: true,
+        mandatory: true,
+        selectorRewrite: childSelectorRewrite,
+      },
     ),
   ],
   // Non-compliant order: Allow margin to override space
-  margin: withDirectionThemeRule(
-    /m([xytrbl])?/,
+  margin: directionThemeRule(
+    "m",
+    standardDirections,
     theme.margin,
     (d) => suffixDirection("margin", d),
-    { supportsNegativeValues: true },
+    { supportsNegativeValues: true, omitHyphen: true },
   ),
   divideWidth: [
     themeRule("divide-x", theme.divideWidth, "border-left-width", {
@@ -465,7 +480,7 @@ export const getCorePlugins = ({
     }),
   ],
   divideStyle: enumRule(
-    "divide",
+    "divide-",
     "border-style",
     ["solid", "dashed", "dotted", "double", "none"],
     childSelectorRewrite,
@@ -549,37 +564,19 @@ export const getCorePlugins = ({
     ["break-words", [["overflow-wrap", "break-word"]]],
     ["break-all", [["word-break", "break-all"]]],
   ],
-  borderRadius: withDirectionThemeRule(
-    /rounded(-t|-r|-l|-b|-tr|-br|-bl|-tl)?/,
+  borderRadius: directionThemeRule(
+    "rounded",
+    ["t", "r", "l", "b", "tr", "br", "bl", "tl"],
     theme.borderRadius,
-    (d = "-all") =>
-      ({
-        all: ["border-radius"],
-        t: ["border-top-left-radius", "border-top-right-radius"],
-        r: ["border-top-right-radius", "border-bottom-right-radius"],
-        b: ["border-bottom-right-radius", "border-bottom-left-radius"],
-        l: ["border-top-left-radius", "border-bottom-left-radius"],
-        tr: ["border-top-right-radius"],
-        br: ["border-bottom-right-radius"],
-        bl: ["border-bottom-left-radius"],
-        tl: ["border-top-left-radius"],
-      }[d.slice(1)]!),
+    (d) => borderRadiusDirectionMap[d],
   ),
-  borderWidth: withDirectionThemeRule(
-    /border(-x|-y|-tr|-br|-bl|-tl)?/,
+  borderWidth: directionThemeRule(
+    "border",
+    standardDirections,
     theme.borderWidth,
-    (d = "-all") =>
-      ({
-        all: ["border-width"],
-        x: ["border-left-width", "border-right-width"],
-        y: ["border-top-width", "border-bottom-width"],
-        t: ["border-top-width"],
-        r: ["border-right-width"],
-        b: ["border-bottom-width"],
-        l: ["border-left-width"],
-      }[d.slice(1)]!),
+    (d) => borderWidthDirectionMap[d],
   ),
-  borderStyle: enumRule("border", "border-style", [
+  borderStyle: enumRule("border-", "border-style", [
     "solid",
     "dashed",
     "dotted",
@@ -587,12 +584,13 @@ export const getCorePlugins = ({
     "hidden",
     "none",
   ]),
-  borderColor: withDirectionThemeRule(
-    /^border(-(xytrbl))?-(.+)$/,
+  borderColor: directionThemeRule(
+    "border",
+    standardDirections,
     theme.borderColor,
-    (d = "all", value) =>
+    (d, value) =>
       withAlphaVariable({
-        properties: directionMap[d].map((dir) => `border${dir}-color`),
+        properties: directionSuffixMap[d].map((dir) => `border${dir}-color`),
         color: value,
         variable: "--tw-border-opacity",
         enabled: corePlugins.borderOpacity !== false,
@@ -685,11 +683,12 @@ export const getCorePlugins = ({
     "scale-down",
   ]),
   objectPosition: themeRule("object", theme.objectPosition, "object-position"),
-  padding: withDirectionThemeRule(
-    /p([xytrbl])?/,
+  padding: directionThemeRule(
+    "p",
+    standardDirections,
     theme.padding,
     (d) => suffixDirection("padding", d),
-    { supportsNegativeValues: true },
+    { supportsNegativeValues: true, omitHyphen: true },
   ),
   textAlign: enumRule("text-", "text-align", [
     "left",
@@ -704,21 +703,16 @@ export const getCorePlugins = ({
   verticalAlign: themeRule("align", theme.verticalAlign, "vertical-align"),
   fontFamily: themeRule("font", theme.fontFamily, "font-family"),
   // Non-compliant: Doesn't handle { lineHeight, letterSpacing } format
-  fontSize: [
-    /^text-(.+)$/,
-    ([v]) => !!theme.fontSize[v!],
-    ([v]) => {
-      const themed = theme.fontSize[v!];
-      if (Array.isArray(themed)) {
-        return [
-          ["font-size", themed[0]],
-          ["line-height", themed[1]],
-        ];
-      } else {
-        return [["font-size", themed]];
-      }
-    },
-  ],
+  fontSize: complexThemeRule("text", theme.fontSize, (value) => {
+    if (Array.isArray(value)) {
+      return [
+        ["font-size", value[0]],
+        ["line-height", value[1]],
+      ];
+    } else {
+      return [["font-size", value]];
+    }
+  }),
   fontWeight: themeRule("font", theme.fontWeight, "font-weight"),
   textTransform: enumRule(
     "",
@@ -913,22 +907,20 @@ export const getCorePlugins = ({
   blur: filterRule("blur", theme.blur),
   brightness: filterRule("brightness", theme.brightness),
   contrast: filterRule("contrast", theme.contrast),
-  dropShadow: [
-    new RegExp(`^drop-shadow(-(.+))?$`),
-    ([, v = "DEFAULT"]) => !!theme.dropShadow[v],
-    ([, v = "DEFAULT"]) => [
+  dropShadow: complexThemeRule(
+    "drop-shadow",
+    theme.dropShadow,
+    (value) => [
       [
         "--tw-drop-shadow",
-        Array.isArray(theme.dropShadow[v])
-          ? (theme.dropShadow[v] as string[])
-              .map((v) => `drop-shadow(${v})`)
-              .join(" ")
-          : `drop-shadow(${theme.dropShadow[v]})`,
+        Array.isArray(value)
+          ? value.map((v) => `drop-shadow(${v})`).join(" ")
+          : `drop-shadow(${value})`,
       ],
       ["filter", cssFilterValue],
     ],
     { addDefault: "filter" },
-  ],
+  ),
   grayscale: filterRule("grayscale", theme.grayscale),
   hueRotate: filterRule("hueRotate", theme.hueRotate),
   invert: filterRule("invert", theme.invert),
@@ -999,42 +991,50 @@ export const getCorePlugins = ({
   content: themeRule("content", theme.content, "content"),
 });
 
-type Properties = (string | CSSEntry)[];
 const themeRule = (
   prefix: string,
   themeMap: Record<string, string>,
-  properties: string | Properties | ((value: string) => Properties),
-  options: RuleMeta & { supportsNegativeValues?: boolean } = {},
-): Rule =>
-  withDirectionThemeRule(
-    new RegExp(`${prefix}()`), // Fake direction group
-    themeMap,
-    typeof properties === "function"
-      ? (_, v) => properties(v)
-      : () => (typeof properties === "string" ? [properties] : properties),
-    options,
-  );
+  properties: string | Properties | ((value: string) => CSSEntries),
+  options?: ThemeRuleMeta,
+): ThemeRule<string> => [
+  prefix,
+  themeMap,
+  typeof properties === "function"
+    ? properties
+    : (value) =>
+        typeof properties === "string"
+          ? [[properties, value]]
+          : properties.map((p) => (typeof p === "string" ? [p, value] : p)),
+  options,
+];
 
-const withDirectionThemeRule = (
-  regex: RegExp, // should contains direction group
+const complexThemeRule = <T>(
+  prefix: string,
+  themeMap: Record<string, T>,
+  properties: (value: T) => CSSEntries,
+  options?: ThemeRuleMeta,
+): ThemeRule<T> => [prefix, themeMap, properties, options];
+
+type Properties = (string | CSSEntry)[];
+const directionThemeRule = <
+  Direction extends string,
+  Mandatory extends boolean,
+>(
+  prefix: string,
+  directions: Direction[] | readonly Direction[],
   themeMap: Record<string, string>,
-  getProperties: (d: string | undefined, value: string) => Properties,
-  {
-    supportsNegativeValues,
-    ...ruleMeta
-  }: RuleMeta & { supportsNegativeValues?: boolean } = {},
-): Rule => [
-  new RegExp(
-    `^${supportsNegativeValues ? "(-)?" : "()"}${regex.source}(-(.+))?$`,
-  ),
-  ([, , , v = "DEFAULT"]) => !!themeMap[v!], // TODO: validate if value is a unit when negative
-  ([n = "", d, , v = "DEFAULT"]) => {
-    const value = n + themeMap[v!];
-    return getProperties(d, value).map((p) =>
-      Array.isArray(p) ? p : [p, value],
-    );
-  },
-  ruleMeta,
+  properties: (
+    direction: Mandatory extends true ? Direction : Direction | "all",
+    value: string,
+  ) => CSSEntries | Properties,
+  options?: ThemeRuleMeta & { omitHyphen?: boolean; mandatory?: Mandatory },
+): DirectionThemeRule => [
+  prefix,
+  directions as string[],
+  themeMap,
+  (d, v) =>
+    properties(d as any, v).map((p) => (typeof p === "string" ? [p, v] : p)),
+  options,
 ];
 
 const enumRule = (
@@ -1054,11 +1054,14 @@ const touchActionRule = (name: string, variable: string): Rule => [
   { addDefault: "touch-action" },
 ];
 
-const filterRule = (name: string, themeMap: Record<string, string>): Rule => [
-  new RegExp(`^${name}(-(.+))?$`),
-  ([, v = "DEFAULT"]) => !!themeMap[v],
-  ([, v = "DEFAULT"]) => [
-    [`--tw-${name}`, `${name}(${themeMap[v]})`],
+const filterRule = (
+  name: string,
+  themeMap: Record<string, string>,
+): ThemeRule<string> => [
+  name,
+  themeMap,
+  (value) => [
+    [`--tw-${name}`, `${name}(${value})`],
     ["filter", cssFilterValue],
   ],
   { addDefault: "filter" },
@@ -1067,11 +1070,11 @@ const filterRule = (name: string, themeMap: Record<string, string>): Rule => [
 const backdropFilterRule = (
   name: `backdrop-${string}`,
   themeMap: Record<string, string>,
-): Rule => [
-  new RegExp(`^${name}(-(.+))?$`),
-  ([, v = "DEFAULT"]) => !!themeMap[v],
-  ([, v = "DEFAULT"]) => [
-    [`--tw-${name}`, `${name.slice(9)}(${themeMap[v]})`],
+): ThemeRule<string> => [
+  name,
+  themeMap,
+  (value) => [
+    [`--tw-${name}`, `${name.slice(9)}(${value})`],
     ["backdrop-filter", cssBackdropFilterValue],
   ],
   { addDefault: "backdrop-filter" },
@@ -1117,10 +1120,12 @@ const blendModes = [
 
 const suffixDirection = (
   prefix: string,
-  d: string | undefined = "all",
-): Properties => directionMap[d].map((suffix) => `${prefix}${suffix}`);
+  d: keyof typeof directionSuffixMap,
+): Properties => directionSuffixMap[d].map((suffix) => `${prefix}${suffix}`);
 
-const directionMap: Record<string, string[]> = {
+const standardDirections = ["x", "y", "t", "l", "b", "r"] as const;
+
+const directionSuffixMap = {
   all: [""],
   x: ["-left", "-right"],
   y: ["-top", "-bottom"],
@@ -1128,6 +1133,28 @@ const directionMap: Record<string, string[]> = {
   r: ["-right"],
   b: ["-bottom"],
   l: ["-left"],
+};
+
+const borderRadiusDirectionMap = {
+  all: ["border-radius"],
+  t: ["border-top-left-radius", "border-top-right-radius"],
+  r: ["border-top-right-radius", "border-bottom-right-radius"],
+  b: ["border-bottom-right-radius", "border-bottom-left-radius"],
+  l: ["border-top-left-radius", "border-bottom-left-radius"],
+  tr: ["border-top-right-radius"],
+  br: ["border-bottom-right-radius"],
+  bl: ["border-bottom-left-radius"],
+  tl: ["border-top-left-radius"],
+};
+
+const borderWidthDirectionMap = {
+  all: ["border-width"],
+  x: ["border-left-width", "border-right-width"],
+  y: ["border-top-width", "border-bottom-width"],
+  t: ["border-top-width"],
+  r: ["border-right-width"],
+  b: ["border-bottom-width"],
+  l: ["border-left-width"],
 };
 
 const cssTransformValue = [
