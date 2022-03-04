@@ -124,8 +124,5 @@ export const mapObject = <K extends string, V, K2 extends string, V2>(
 
 export const mapObjectValue = <K extends string, V, R>(
   object: Record<K, V>,
-  fn: (t: [k: K, v: V]) => R,
-) =>
-  Object.fromEntries(
-    Object.entries(object).map(([key, v]) => [key, fn([key as K, v as V])]),
-  ) as Record<K, R>;
+  fn: (v: V) => R,
+) => mapObject(object, ([key, v]) => [key, fn(v as V)]);

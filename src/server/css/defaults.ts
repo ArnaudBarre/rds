@@ -1,77 +1,75 @@
 import { withAlphaValue } from "./utils/colors";
 import { cssConfig } from "./cssConfig";
+import { CSSEntries } from "./types";
 
-export type CSSDefault = keyof typeof cssDefaults;
+export type CSSDefault =
+  | "transform"
+  | "touch-action"
+  | "scroll-snap-type"
+  | "font-variant-numeric"
+  | "ring-width"
+  | "filter"
+  | "backdrop-filter";
 
 const { theme } = cssConfig;
 const ringOpacityDefault = theme.ringOpacity.DEFAULT ?? "0.5";
 const ringColorDefault = withAlphaValue(
-  theme.ringColor.DEFAULT,
+  theme.ringColor.DEFAULT ?? "",
   ringOpacityDefault,
   `rgb(147 197 253 / ${ringOpacityDefault})`,
 );
 
-export const cssDefaults = {
-  transform: {
-    "--tw-translate-x": "0",
-    "--tw-translate-y": "0",
-    "--tw-rotate": "0",
-    "--tw-skew-x": "0",
-    "--tw-skew-y": "0",
-    "--tw-scale-x": "1",
-    "--tw-scale-y": "1",
-  },
-  "touch-action": {
-    "--tw-pan-x": " ",
-    "--tw-pan-y": " ",
-    "--tw-pinch-zoom": " ",
-  },
-  "scroll-snap-type": {
-    "--tw-scroll-snap-strictness": "proximity",
-  },
-  "font-variant-numeric": {
-    "--tw-ordinal": " ",
-    "--tw-slashed-zero": " ",
-    "--tw-numeric-figure": " ",
-    "--tw-numeric-spacing": " ",
-    "--tw-numeric-fraction": " ",
-  },
-  "box-shadow": {
-    "--tw-ring-offset-shadow": "0 0 #0000",
-    "--tw-ring-shadow": "0 0 #0000",
-    "--tw-shadow": "0 0 #0000",
-    "--tw-shadow-colored": "0 0 #0000",
-  },
-  "ring-width": {
-    "--tw-ring-inset": " ",
-    "--tw-ring-offset-width": theme.ringOffsetWidth.DEFAULT ?? "0px",
-    "--tw-ring-offset-color": theme.ringOffsetColor.DEFAULT ?? "#fff",
-    "--tw-ring-color": ringColorDefault,
-    "--tw-ring-offset-shadow": "0 0 #0000",
-    "--tw-ring-shadow": "0 0 #0000",
-    "--tw-shadow": "0 0 #0000",
-    "--tw-shadow-colored": "0 0 #0000",
-  },
-  filter: {
-    "--tw-blur": " ",
-    "--tw-brightness": " ",
-    "--tw-contrast": " ",
-    "--tw-grayscale": " ",
-    "--tw-hue-rotate": " ",
-    "--tw-invert": " ",
-    "--tw-saturate": " ",
-    "--tw-sepia": " ",
-    "--tw-drop-shadow": " ",
-  },
-  "backdrop-filter": {
-    "--tw-backdrop-blur": " ",
-    "--tw-backdrop-brightness": " ",
-    "--tw-backdrop-contrast": " ",
-    "--tw-backdrop-grayscale": " ",
-    "--tw-backdrop-hue-rotate": " ",
-    "--tw-backdrop-invert": " ",
-    "--tw-backdrop-opacity": " ",
-    "--tw-backdrop-saturate": " ",
-    "--tw-backdrop-sepia": " ",
-  },
+export const cssDefaults: Record<CSSDefault, CSSEntries> = {
+  transform: [
+    ["--tw-translate-x", "0"],
+    ["--tw-translate-y", "0"],
+    ["--tw-rotate", "0"],
+    ["--tw-skew-x", "0"],
+    ["--tw-skew-y", "0"],
+    ["--tw-scale-x", "1"],
+    ["--tw-scale-y", "1"],
+  ],
+  "touch-action": [
+    ["--tw-pan-x", " "],
+    ["--tw-pan-y", " "],
+    ["--tw-pinch-zoom", " "],
+  ],
+  "scroll-snap-type": [["--tw-scroll-snap-strictness", "proximity"]],
+  "font-variant-numeric": [
+    ["--tw-ordinal", " "],
+    ["--tw-slashed-zero", " "],
+    ["--tw-numeric-figure", " "],
+    ["--tw-numeric-spacing", " "],
+    ["--tw-numeric-fraction", " "],
+  ],
+  "ring-width": [
+    ["--tw-ring-inset", " "],
+    ["--tw-ring-offset-width", theme.ringOffsetWidth.DEFAULT ?? "0px"],
+    ["--tw-ring-offset-color", theme.ringOffsetColor.DEFAULT ?? "#fff"],
+    ["--tw-ring-color", ringColorDefault],
+    ["--tw-ring-offset-shadow", "0 0 #0000"],
+    ["--tw-ring-shadow", "0 0 #0000"],
+  ],
+  filter: [
+    ["--tw-blur", " "],
+    ["--tw-brightness", " "],
+    ["--tw-contrast", " "],
+    ["--tw-grayscale", " "],
+    ["--tw-hue-rotate", " "],
+    ["--tw-invert", " "],
+    ["--tw-saturate", " "],
+    ["--tw-sepia", " "],
+    ["--tw-drop-shadow", " "],
+  ],
+  "backdrop-filter": [
+    ["--tw-backdrop-blur", " "],
+    ["--tw-backdrop-brightness", " "],
+    ["--tw-backdrop-contrast", " "],
+    ["--tw-backdrop-grayscale", " "],
+    ["--tw-backdrop-hue-rotate", " "],
+    ["--tw-backdrop-invert", " "],
+    ["--tw-backdrop-opacity", " "],
+    ["--tw-backdrop-saturate", " "],
+    ["--tw-backdrop-sepia", " "],
+  ],
 };

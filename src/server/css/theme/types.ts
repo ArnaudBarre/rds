@@ -1,32 +1,42 @@
-import { Keyframes } from "../types";
-
 export type ResolvedTheme = Record<
-  Exclude<ThemeKey, "fontSize" | "dropShadow" | "keyframes">,
+  Exclude<ThemeKey, "screens" | "container" | "fontSize" | "dropShadow">,
   Record<string, string>
 > & {
+  screens: Record<string, Screen>;
+  container: Container;
   fontSize: Record<string, string | [string, string]>;
   dropShadow: Record<string, string | [string, string]>;
-  keyframes: Record<string, Keyframes>;
 };
 
 export type BaseTheme = {
   [key in Exclude<
     ThemeKey,
-    "colors" | "fontSize" | "dropShadow" | "keyframes"
+    "screens" | "container" | "colors" | "fontSize" | "dropShadow"
   >]:
     | Record<string, string>
     | ((options: ThemeValueCallbackOptions) => Record<string, string>);
 } & {
+  screens: Record<string, string | Screen>;
+  container: Container;
   colors: Record<string, string | Record<string, string>>;
   fontSize: Record<string, string | [string, string]>;
   dropShadow: Record<string, string | [string, string]>;
-  keyframes: Record<string, Keyframes>;
 };
 
 export type ThemeValueCallbackOptions = {
-  theme: (
-    key: Exclude<ThemeKey, "dropShadow" | "keyframes">,
-  ) => Record<string, string>;
+  theme: {
+    (key: Exclude<ThemeKey, "container" | "dropShadow">): Record<
+      string,
+      string
+    >;
+    (key: "screens"): Record<string, Screen>;
+  };
+};
+
+export type Screen = { min?: string; max?: string };
+type Container = {
+  center?: boolean;
+  padding?: string | Record<string, string>;
 };
 
 export type ThemeKey =
@@ -137,6 +147,7 @@ export type ThemeKey =
   | "transitionProperty"
   | "transitionTimingFunction"
   | "translate"
+  | "verticalAlign"
   | "width"
   | "willChange"
   | "zIndex";

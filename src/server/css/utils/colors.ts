@@ -3,6 +3,7 @@
  * https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/color.js
  * https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/withAlphaVariable.js
  */
+import { CSSEntries, CSSEntry } from "../types";
 
 const HEX = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
 const SHORT_HEX = /^#([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i;
@@ -76,4 +77,25 @@ export const withAlphaValue = (
 ) => {
   const parsed = parseColor(color);
   return parsed ? formatColor({ ...parsed, alpha }) : defaultValue;
+};
+
+export const withAlphaVariable = ({
+  color,
+  variable,
+  enabled,
+  properties,
+}: {
+  color: string;
+  variable: string;
+  enabled: boolean;
+  properties: string[];
+}): CSSEntries => {
+  if (!enabled) return properties.map((p) => [p, color]);
+  const parsed = parseColor(color);
+  if (!parsed || parsed.alpha) return properties.map((p) => [p, color]);
+  const colorWithAlpha = formatColor({ ...parsed, alpha: `var(${variable})` });
+  return [
+    [variable, "1"],
+    ...properties.map((p): CSSEntry => [p, colorWithAlpha]),
+  ];
 };

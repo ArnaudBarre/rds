@@ -51,7 +51,7 @@ export const buildDependencies = async () => {
       const cacheSet = new Set(Object.keys(metadata.deps));
       if (cacheSet.size >= deps.length && deps.every((d) => cacheSet.has(d))) {
         log.debug(
-          `Pre-bundling skipped in ${Math.round(performance.now() - start)}ms`,
+          `Pre-bundling skipped in ${(performance.now() - start).toFixed(2)}ms`,
         );
         return;
       }

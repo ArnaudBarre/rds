@@ -34,8 +34,12 @@ theme.colors = Object.fromEntries(
         ]),
   ),
 );
+theme.screens = mapObjectValue(theme.screens, (stringOrObj) =>
+  typeof stringOrObj === "string" ? { min: stringOrObj } : stringOrObj,
+);
 const themeValueCallbackOptions: ThemeValueCallbackOptions = {
   theme: (key) => {
+    if (key === "screens") return theme.screens as any;
     if (key === "fontSize") {
       return mapObjectValue(theme.fontSize, (v) =>
         typeof v === "string" ? v : v[0],
@@ -63,4 +67,4 @@ export const cssConfig: ResolvedCSSConfig = {
   ...config,
   theme: theme as ResolvedTheme,
 };
-log.debug(`Load CSS config: ${Math.round(performance.now() - start)}ms`);
+log.debug(`Load CSS config: ${(performance.now() - start).toFixed(2)}ms`);

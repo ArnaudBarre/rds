@@ -3,3 +3,8 @@ dist/
 *.local
 .swc/
 bun.lockb
+
+# testing
+result.css
+test.js
+rds-profile.cpuprofile

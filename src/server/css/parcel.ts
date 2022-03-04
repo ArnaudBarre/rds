@@ -2,9 +2,9 @@ import { transform } from "@parcel/css";
 
 import { cache, readFileSync } from "../utils";
 import { CSSModule, GraphNode } from "../types";
-import { getRuleIndexMatch, getRuleMeta, matchToCSSObject } from "./matcher";
+import { getRuleIndexMatch, matchToCSSEntries } from "./matcher";
 import { CSSEntries } from "./types";
-import { rules } from "./rules";
+import { getRuleMeta, rules } from "./rules";
 
 const applyRE = /\s@apply ([^;}\n]+)[;}\n]/g;
 
@@ -37,7 +37,7 @@ export const parcelCache = cache(
               `${url}: Complex utils like ${token} are not supported`,
             );
           }
-          cssEntries.push(...Object.entries(matchToCSSObject([index, token])));
+          cssEntries.push(...matchToCSSEntries([index, token]));
         }
         const css = cssEntries
           .map(([key, value]) => `${key}: ${value};`)

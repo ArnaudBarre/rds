@@ -15,5 +15,5 @@ export const dependenciesHash = getHash(
   readFileSync(content) + (patchesDir ? fs.statSync(patchesDir).mtimeMs : ""),
 );
 log.debug(
-  `Dependencies hash generated in ${Math.round(performance.now() - start)}ms`,
+  `Dependencies hash generated in ${(performance.now() - start).toFixed(2)}ms`,
 );

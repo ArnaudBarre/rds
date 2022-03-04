@@ -1,3 +1,4 @@
+import { mapObject } from "../../utils";
 import { BaseTheme } from "./types";
 import { baseColors } from "./baseColors";
 
@@ -492,32 +493,11 @@ export const baseTheme: BaseTheme = {
     full: "100%",
   }),
   keyframes: {
-    spin: {
-      to: {
-        transform: "rotate(360deg)",
-      },
-    },
-    ping: {
-      "75%, 100%": {
-        transform: "scale(2)",
-        opacity: "0",
-      },
-    },
-    pulse: {
-      "50%": {
-        opacity: ".5",
-      },
-    },
-    bounce: {
-      "0%, 100%": {
-        transform: "translateY(-25%)",
-        animationTimingFunction: "cubic-bezier(0.8,0,1,1)",
-      },
-      "50%": {
-        transform: "none",
-        animationTimingFunction: "cubic-bezier(0,0,0.2,1)",
-      },
-    },
+    spin: "to { transform: rotate(360deg) }",
+    ping: "75%, 100% { transform: scale(2); opacity: 0 }",
+    pulse: "0%, 100% { opacity: 1 } 50% { opacity: .5 }",
+    bounce:
+      "0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1) } 50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1) }",
   },
   letterSpacing: {
     tighter: "-0.05em",
@@ -560,7 +540,7 @@ export const baseTheme: BaseTheme = {
     max: "max-content",
     fit: "fit-content",
   }),
-  maxWidth: () => ({
+  maxWidth: ({ theme }) => ({
     none: "none",
     0: "0rem",
     xs: "20rem",
@@ -579,7 +559,10 @@ export const baseTheme: BaseTheme = {
     max: "max-content",
     fit: "fit-content",
     prose: "65ch",
-    // ...breakpoints(theme("screens")),
+    ...mapObject(theme("screens"), ([key, value]) => [
+      `screen-${key}`,
+      value.min ?? value.max,
+    ]),
   }),
   minHeight: {
     0: "0px",
@@ -815,6 +798,16 @@ export const baseTheme: BaseTheme = {
     "3/4": "75%",
     full: "100%",
   }),
+  verticalAlign: {
+    baseline: "baseline",
+    top: "top",
+    middle: "middle",
+    bottom: "bottom",
+    "text-top": "text-top",
+    "text-bottom": "text-bottom",
+    sub: "sub",
+    super: "super",
+  },
   width: ({ theme }) => ({
     auto: "auto",
     ...theme("spacing"),
