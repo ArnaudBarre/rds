@@ -28,7 +28,9 @@ export type ThemeCallback = {
   (key: "screens"): Record<string, Screen>;
 };
 
-export type Screen = { min?: string; max?: string };
+export type Screen =
+  | { min: string; max?: string }
+  | { min?: string; max: string };
 type Container = {
   center?: boolean;
   padding?: string | Record<string, string>;

@@ -9,11 +9,12 @@ import { matchToken, ruleEntryToCSSEntries } from "./matcher";
 import { CSSDefault, cssDefaults } from "./defaults";
 import { cssConfig } from "./cssConfig";
 import { CSSEntries } from "./types";
+import { Variant } from "./variants";
 
 let ready = false;
 const blockList = new Set<string>();
 const contentMap = new Map<string, Set<string>>();
-type RuleMatch = { token: string; ruleEntry: RuleEntry };
+type RuleMatch = { token: string; ruleEntry: RuleEntry; variants: Variant[] };
 const allMatches: RuleMatch[] = [];
 const allClasses = new Set<string>();
 
@@ -53,7 +54,6 @@ const generatorCache = cache("generator", (_: null) => {
     (a, b) => a.ruleEntry.order - b.ruleEntry.order,
   )) {
     const meta = getRuleMeta(match.ruleEntry.rule);
-    const rewrite = meta?.selectorRewrite ?? ((v) => v);
     if (meta?.addContainer) {
       addContainer = true;
       continue;
@@ -64,8 +64,14 @@ const generatorCache = cache("generator", (_: null) => {
       const name = animationProperty.slice(0, animationProperty.indexOf(" "));
       if (cssConfig.theme.keyframes[name]) keyframes.add(name);
     }
+    let selector = escapeSelector(match.token);
+    if (meta?.selectorRewrite) selector = meta.selectorRewrite(selector);
+    for (let i = match.variants.length - 1; i >= 0; i--) {
+      const variant = match.variants[i];
+      if (variant.selectorRewrite) selector = variant.selectorRewrite(selector);
+    }
     utilsOutput += printBlock(
-      `.${escapeSelector(rewrite(match.token))}`,
+      `.${selector}`,
       ruleEntryToCSSEntries(match.ruleEntry),
     );
   }
@@ -104,11 +110,15 @@ const scanCode = (code: string) => {
   const localMatches = new Set<string>();
   for (const token of tokens) {
     if (localMatches.has(token) || blockList.has(token)) continue;
-    const ruleEntry = matchToken(token);
-    if (ruleEntry === undefined) {
+    const match = matchToken(token);
+    if (match === undefined) {
       blockList.add(token);
     } else {
-      matches.push({ token, ruleEntry });
+      matches.push({
+        token,
+        ruleEntry: match.ruleEntry,
+        variants: match.variants,
+      });
       localMatches.add(token);
     }
   }

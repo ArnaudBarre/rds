@@ -25,12 +25,13 @@ export const parcelCache = cache(
         let output = "";
         for (let token of utils.split(" ")) {
           if (!token) continue;
-          const ruleEntry = matchToken(token);
-          if (ruleEntry === undefined) {
+          const match = matchToken(token);
+          if (match === undefined) {
             throw new Error(`No rule matching ${token} in ${url}`);
           }
-          const meta = getRuleMeta(ruleEntry.rule);
+          const meta = getRuleMeta(match.ruleEntry.rule);
           if (
+            match.variants || // TODO: Use nesting if not media query
             meta?.selectorRewrite || // TODO: Use nesting if not media query
             meta?.addDefault || // TODO: Maybe it works if added in main
             meta?.addKeyframes || // TODO: Maybe it works if added in main
@@ -40,7 +41,7 @@ export const parcelCache = cache(
               `${url}: Complex utils like ${token} are not supported`,
             );
           }
-          for (const cssEntry of ruleEntryToCSSEntries(ruleEntry)) {
+          for (const cssEntry of ruleEntryToCSSEntries(match.ruleEntry)) {
             output += `${cssEntry[0]}:${cssEntry[1]};`;
           }
         }
