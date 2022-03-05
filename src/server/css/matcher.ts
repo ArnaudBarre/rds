@@ -1,22 +1,20 @@
 import { CSSEntries } from "./types";
-import {
-  isDirectionRule,
-  isThemeRule,
-  rulesEntries,
-  rules,
-  RuleEntry,
-} from "./rules";
+import { isDirectionRule, isThemeRule, rulesEntries, RuleEntry } from "./rules";
 
 export const ruleEntryToCSSEntries = (ruleEntry: RuleEntry): CSSEntries => {
-  const rule = rules[ruleEntry[0]];
+  const rule = ruleEntry.rule;
   if (isThemeRule(rule)) {
     return rule[2](
-      ruleEntry[3] ? `-${rule[1][ruleEntry[1]]}` : rule[1][ruleEntry[1]],
+      ruleEntry.negative
+        ? `-${rule[1][ruleEntry.key]}`
+        : rule[1][ruleEntry.key],
     );
   } else if (isDirectionRule(rule)) {
     return rule[3](
-      ruleEntry[2],
-      ruleEntry[3] ? `-${rule[2][ruleEntry[1]]}` : rule[2][ruleEntry[1]],
+      ruleEntry.direction,
+      ruleEntry.negative
+        ? `-${rule[2][ruleEntry.key]}`
+        : rule[2][ruleEntry.key],
     );
   } else {
     return rule[1];

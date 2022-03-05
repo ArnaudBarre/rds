@@ -37,46 +37,46 @@ export const rules = components.concat(coreRules, utils);
 log.debug(`Loaded rules: ${(performance.now() - start).toFixed(2)}ms`);
 
 const start2 = performance.now();
-export type RuleEntry = [
-  ruleIndex: number,
-  key: string,
-  direction: string,
-  negative: boolean,
-  order: number,
-];
+export type RuleEntry = {
+  rule: Rule;
+  key: string;
+  direction: string;
+  negative: boolean;
+  order: number;
+};
 export const rulesEntries = new Map<string, RuleEntry>();
 
 let order = 0;
 const allowNegativeRE = /^[1-9]/;
 const addTheme = (
+  rule: Rule,
   prefix: string,
   themeMap: Record<string, unknown>,
-  index: number,
   direction: string,
   meta: ThemeRuleMeta | undefined,
 ) => {
   const addThemeEntry = (
     fullPrefix: string,
-    themeKey: string,
+    key: string,
     negative: boolean,
   ) => {
-    if (themeKey === "DEFAULT") {
+    if (key === "DEFAULT") {
       if (meta?.filterDefault) return;
-      rulesEntries.set(fullPrefix, [
-        index,
-        themeKey,
+      rulesEntries.set(fullPrefix, {
+        rule,
+        key,
         direction,
         negative,
-        order++,
-      ]);
+        order: order++,
+      });
     } else {
-      rulesEntries.set(`${fullPrefix}-${themeKey}`, [
-        index,
-        themeKey,
+      rulesEntries.set(`${fullPrefix}-${key}`, {
+        rule,
+        key,
         direction,
         negative,
-        order++,
-      ]);
+        order: order++,
+      });
     }
   };
 
@@ -93,20 +93,26 @@ const addTheme = (
   }
 };
 
-for (const [index, rule] of rules.entries()) {
+for (const rule of rules) {
   if (isThemeRule(rule)) {
-    addTheme(rule[0], rule[1], index, "", rule[3]);
+    addTheme(rule, rule[0], rule[1], "", rule[3]);
   } else if (isDirectionRule(rule)) {
     if (!rule[4]?.mandatory) {
-      addTheme(rule[0], rule[2], index, "all", rule[4]);
+      addTheme(rule, rule[0], rule[2], "all", rule[4]);
     }
     const omitHyphen = rule[4]?.omitHyphen;
     for (const direction of rule[1]) {
       const prefix = `${rule[0]}${omitHyphen ? "" : "-"}${direction}`;
-      addTheme(prefix, rule[2], index, direction, rule[4]);
+      addTheme(rule, prefix, rule[2], direction, rule[4]);
     }
   } else {
-    rulesEntries.set(rule[0], [index, "", "", false, order++]);
+    rulesEntries.set(rule[0], {
+      rule,
+      key: "",
+      direction: "",
+      negative: false,
+      order: order++,
+    });
   }
 }
 

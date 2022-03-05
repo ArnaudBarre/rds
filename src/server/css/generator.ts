@@ -4,7 +4,7 @@ import { cache, getHashedUrl, readFile } from "../utils";
 import { ws } from "../ws";
 import { log } from "../logger";
 import { colors } from "../colors";
-import { getRuleMeta, RuleEntry, rules } from "./rules";
+import { getRuleMeta, RuleEntry } from "./rules";
 import { matchToken, ruleEntryToCSSEntries } from "./matcher";
 import { CSSDefault, cssDefaults } from "./defaults";
 import { cssConfig } from "./cssConfig";
@@ -13,7 +13,7 @@ import { CSSEntries } from "./types";
 let ready = false;
 const blockList = new Set<string>();
 const contentMap = new Map<string, Set<string>>();
-type RuleMatch = [string, RuleEntry];
+type RuleMatch = { token: string; ruleEntry: RuleEntry };
 const allMatches: RuleMatch[] = [];
 const allClasses = new Set<string>();
 
@@ -25,15 +25,15 @@ const scanContentCache = cache("scanContent", async (url: string) => {
   if (
     actual &&
     actual.size >= matches.length &&
-    matches.every((m) => actual.has(m[0]))
+    matches.every((m) => actual.has(m.token))
   ) {
     return;
   }
-  contentMap.set(url, new Set(matches.map((m) => m[0])));
+  contentMap.set(url, new Set(matches.map((m) => m.token)));
   let hasNew = true;
   for (const match of matches) {
-    if (allClasses.has(match[0])) continue;
-    allClasses.add(match[0]);
+    if (allClasses.has(match.token)) continue;
+    allClasses.add(match.token);
     allMatches.push(match);
     hasNew = true;
   }
@@ -49,9 +49,10 @@ const generatorCache = cache("generator", (_: null) => {
   const defaults = new Set<CSSDefault>();
   let output = "";
   let utilsOutput = "";
-  for (const match of allMatches.sort((a, b) => a[1][4] - b[1][4])) {
-    const ruleEntry = match[1];
-    const meta = getRuleMeta(rules[ruleEntry[0]]);
+  for (const match of allMatches.sort(
+    (a, b) => a.ruleEntry.order - b.ruleEntry.order,
+  )) {
+    const meta = getRuleMeta(match.ruleEntry.rule);
     const rewrite = meta?.selectorRewrite ?? ((v) => v);
     if (meta?.addContainer) {
       addContainer = true;
@@ -59,13 +60,13 @@ const generatorCache = cache("generator", (_: null) => {
     }
     if (meta?.addDefault) defaults.add(meta.addDefault);
     if (meta?.addKeyframes) {
-      const animationProperty = cssConfig.theme.animation[ruleEntry[1]];
+      const animationProperty = cssConfig.theme.animation[match.ruleEntry.key];
       const name = animationProperty.slice(0, animationProperty.indexOf(" "));
       if (cssConfig.theme.keyframes[name]) keyframes.add(name);
     }
     utilsOutput += printBlock(
-      `.${escapeSelector(rewrite(match[0]))}`,
-      ruleEntryToCSSEntries(ruleEntry),
+      `.${escapeSelector(rewrite(match.token))}`,
+      ruleEntryToCSSEntries(match.ruleEntry),
     );
   }
 
@@ -107,7 +108,7 @@ const scanCode = (code: string) => {
     if (ruleEntry === undefined) {
       blockList.add(token);
     } else {
-      matches.push([token, ruleEntry]);
+      matches.push({ token, ruleEntry });
       localMatches.add(token);
     }
   }

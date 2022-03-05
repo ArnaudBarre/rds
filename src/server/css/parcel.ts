@@ -3,7 +3,7 @@ import { transform } from "@parcel/css";
 import { cache, readFileSync } from "../utils";
 import { CSSModule, GraphNode } from "../types";
 import { matchToken, ruleEntryToCSSEntries } from "./matcher";
-import { getRuleMeta, rules } from "./rules";
+import { getRuleMeta } from "./rules";
 
 const applyRE = /\s@apply ([^;}\n]+)[;}\n]/g;
 
@@ -29,7 +29,7 @@ export const parcelCache = cache(
           if (ruleEntry === undefined) {
             throw new Error(`No rule matching ${token} in ${url}`);
           }
-          const meta = getRuleMeta(rules[ruleEntry[0]]);
+          const meta = getRuleMeta(ruleEntry.rule);
           if (
             meta?.selectorRewrite || // TODO: Use nesting if not media query
             meta?.addDefault || // TODO: Maybe it works if added in main
