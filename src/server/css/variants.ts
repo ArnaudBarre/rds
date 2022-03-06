@@ -1,6 +1,6 @@
+import { SelectorRewrite } from "../../types";
 import { log } from "../logger";
 import { cssConfig } from "./cssConfig";
-import { SelectorRewrite } from "./types";
 
 const start = performance.now();
 

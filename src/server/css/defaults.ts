@@ -1,15 +1,6 @@
+import { CSSDefault, CSSEntries } from "../../types";
 import { withAlphaValue } from "./utils/colors";
 import { cssConfig } from "./cssConfig";
-import { CSSEntries } from "./types";
-
-export type CSSDefault =
-  | "transform"
-  | "touch-action"
-  | "scroll-snap-type"
-  | "font-variant-numeric"
-  | "ring-width"
-  | "filter"
-  | "backdrop-filter";
 
 const { theme } = cssConfig;
 const ringOpacityDefault = theme.ringOpacity.DEFAULT ?? "0.5";

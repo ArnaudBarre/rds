@@ -1,4 +1,4 @@
-import { CSSEntries } from "./types";
+import { CSSEntries } from "../../types";
 import { isDirectionRule, isThemeRule, rulesEntries, RuleEntry } from "./rules";
 import { Variant, variantsMap } from "./variants";
 

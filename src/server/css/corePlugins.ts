@@ -3,13 +3,13 @@ import {
   CSSEntries,
   CSSEntry,
   DirectionThemeRule,
-  ResolvedCSSConfig,
   Rule,
   SelectorRewrite,
   ThemeRule,
   ThemeRuleMeta,
-} from "./types";
+} from "../../types";
 import { withAlphaValue, withAlphaVariable } from "./utils/colors";
+import { ResolvedCSSConfig } from "./cssConfig";
 
 export type RuleOrRules = Rule | Rule[];
 

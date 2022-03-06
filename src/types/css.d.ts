@@ -1,11 +1,4 @@
-import { BaseTheme, ResolvedTheme } from "./theme/types";
-import { CSSDefault } from "./defaults";
-
-export type ResolvedCSSConfig = {
-  theme: ResolvedTheme;
-  corePlugins: Partial<Record<CorePlugin, boolean>>;
-  plugins: Rule[];
-};
+import { BaseTheme, ResolvedTheme } from "./theme";
 
 export type CSSConfig = Partial<{
   theme: Partial<BaseTheme & { extend: Partial<BaseTheme> }>;
@@ -42,6 +35,15 @@ export type ThemeRuleMeta = RuleMeta & {
 export type SelectorRewrite = (value: string) => string;
 export type CSSEntries = CSSEntry[];
 export type CSSEntry = [string, string];
+
+export type CSSDefault =
+  | "transform"
+  | "touch-action"
+  | "scroll-snap-type"
+  | "font-variant-numeric"
+  | "ring-width"
+  | "filter"
+  | "backdrop-filter";
 
 export type CorePlugin =
   | "container"

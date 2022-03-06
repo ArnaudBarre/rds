@@ -1,5 +1,3 @@
-import { split } from "../utils";
-import { log } from "../logger";
 import {
   CorePlugin,
   DirectionThemeRule,
@@ -7,7 +5,9 @@ import {
   RuleMeta,
   ThemeRule,
   ThemeRuleMeta,
-} from "./types";
+} from "../../types";
+import { split } from "../utils";
+import { log } from "../logger";
 import { getCorePlugins, RuleOrRules } from "./corePlugins";
 import { cssConfig } from "./cssConfig";
 

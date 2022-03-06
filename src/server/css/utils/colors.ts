@@ -3,7 +3,7 @@
  * https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/color.js
  * https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/withAlphaVariable.js
  */
-import { CSSEntries, CSSEntry } from "../types";
+import { CSSEntries, CSSEntry } from "../../../types";
 
 const HEX = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
 const SHORT_HEX = /^#([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i;

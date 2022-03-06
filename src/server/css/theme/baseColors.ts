@@ -1,4 +1,4 @@
-import { BaseTheme } from "./types";
+import { BaseTheme } from "../../../types";
 
 // https://github.com/tailwindlabs/tailwindcss/blob/master/src/public/colors.js
 export const baseColors: BaseTheme["colors"] = {

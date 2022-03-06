@@ -1,5 +1,5 @@
+import { BaseTheme } from "../../../types";
 import { mapObject } from "../../utils";
-import { BaseTheme } from "./types";
 import { baseColors } from "./baseColors";
 
 // https://github.com/tailwindlabs/tailwindcss/blob/master/stubs/defaultConfig.stub.js

@@ -1,14 +1,16 @@
+import {
+  BaseTheme,
+  CorePlugin,
+  CSSConfig,
+  ResolvedTheme,
+  Rule,
+  ThemeCallback,
+  ThemeKey,
+} from "../../types";
 import { log } from "../logger";
 import { getConfig } from "../bundleConfig";
 import { mapObjectValue } from "../utils";
-import { CSSConfig, ResolvedCSSConfig } from "./types";
 import { baseTheme } from "./theme/baseTheme";
-import {
-  BaseTheme,
-  ResolvedTheme,
-  ThemeCallback,
-  ThemeKey,
-} from "./theme/types";
 
 const start = performance.now();
 
@@ -59,6 +61,11 @@ for (const key in theme) {
   }
 }
 
+export type ResolvedCSSConfig = {
+  theme: ResolvedTheme;
+  corePlugins: Partial<Record<CorePlugin, boolean>>;
+  plugins: Rule[];
+};
 export const cssConfig: ResolvedCSSConfig = {
   theme: theme as ResolvedTheme,
   corePlugins: config?.corePlugins ?? {},

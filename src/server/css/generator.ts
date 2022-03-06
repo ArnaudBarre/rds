@@ -1,14 +1,13 @@
+import { CSSDefault, CSSEntries } from "../../types";
 import { RDS_CSS_UTILS } from "../consts";
 import { cache, getHashedUrl, readFile } from "../utils";
-
 import { ws } from "../ws";
 import { log } from "../logger";
 import { colors } from "../colors";
 import { getRuleMeta } from "./rules";
 import { matchToken, ruleEntryToCSSEntries, RuleMatch } from "./matcher";
-import { CSSDefault, cssDefaults } from "./defaults";
+import { cssDefaults } from "./defaults";
 import { cssConfig } from "./cssConfig";
-import { CSSEntries } from "./types";
 import { variantsMap } from "./variants";
 
 let ready = false;
