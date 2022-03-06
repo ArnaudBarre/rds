@@ -25,6 +25,7 @@ for (let screen in cssConfig.theme.screens) {
   }
 }
 
+// Non-compliant: Only support class dark mode
 variantsMap.set("dark", {
   selectorRewrite: (v) => `dark .${v}`,
 });
@@ -32,12 +33,12 @@ variantsMap.set("dark", {
 [
   "first-letter",
   "first-line",
-  "marker",
-  "selection",
+  "marker", // Non-compliant: No children selector
+  "selection", // Non-compliant: No children selector
   ["file", "file-selector-button"],
   "placeholder",
-  "before",
-  "after",
+  "before", // Non-compliant: Don't add content property if not present
+  "after", // Non-compliant: Don't add content property if not present
 ].forEach((value) => {
   const [prefix, suffix] = Array.isArray(value) ? value : [value, value];
   variantsMap.set(prefix, {
@@ -57,7 +58,7 @@ variantsMap.set("dark", {
   "only-of-type",
 
   // State
-  "visited",
+  "visited", // Non-compliant: Don't remove opacity modifiers
   "target",
   ["open", "[open]"],
 
@@ -90,6 +91,7 @@ variantsMap.set("dark", {
   variantsMap.set(prefix, {
     selectorRewrite: (value) => `${value}${suffix}`,
   });
+  // Non-compliant: Don't support complex stacked variants
   variantsMap.set(`group-${prefix}`, {
     selectorRewrite: (value) => `group${suffix} .${value}`,
   });
