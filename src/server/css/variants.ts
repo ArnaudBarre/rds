@@ -5,9 +5,8 @@ import { SelectorRewrite } from "./types";
 const start = performance.now();
 
 export type Variant =
-  | { selectorRewrite: SelectorRewrite; media?: never }
+  | { selectorRewrite: SelectorRewrite; media?: never; screen?: never }
   | { selectorRewrite?: never; media: string; screen?: string };
-
 export const variantsMap = new Map<string, Variant>();
 
 for (let screen in cssConfig.theme.screens) {

@@ -4,18 +4,22 @@ import { cache, getHashedUrl, readFile } from "../utils";
 import { ws } from "../ws";
 import { log } from "../logger";
 import { colors } from "../colors";
-import { getRuleMeta, RuleEntry } from "./rules";
-import { matchToken, ruleEntryToCSSEntries } from "./matcher";
+import { getRuleMeta } from "./rules";
+import { matchToken, ruleEntryToCSSEntries, RuleMatch } from "./matcher";
 import { CSSDefault, cssDefaults } from "./defaults";
 import { cssConfig } from "./cssConfig";
 import { CSSEntries } from "./types";
-import { Variant } from "./variants";
+import { variantsMap } from "./variants";
 
 let ready = false;
 const blockList = new Set<string>();
 const contentMap = new Map<string, Set<string>>();
-type RuleMatch = { token: string; ruleEntry: RuleEntry; variants: Variant[] };
-const allMatches: RuleMatch[] = [];
+const allMatches = new Map<string, RuleMatch[]>([
+  ["", [] as RuleMatch[]],
+  ...Object.keys(cssConfig.theme.screens).map(
+    (screen): [string, RuleMatch[]] => [screen, []],
+  ),
+]);
 const allClasses = new Set<string>();
 
 const scanContentCache = cache("scanContent", async (url: string) => {
@@ -35,7 +39,7 @@ const scanContentCache = cache("scanContent", async (url: string) => {
   for (const match of matches) {
     if (allClasses.has(match.token)) continue;
     allClasses.add(match.token);
-    allMatches.push(match);
+    allMatches.get(match.screen)!.push(match);
     hasNew = true;
   }
   if (!ready || !hasNew) return;
@@ -50,31 +54,45 @@ const generatorCache = cache("generator", (_: null) => {
   const defaults = new Set<CSSDefault>();
   let output = "";
   let utilsOutput = "";
-  for (const match of allMatches.sort(
-    (a, b) => a.ruleEntry.order - b.ruleEntry.order,
-  )) {
-    const meta = getRuleMeta(match.ruleEntry.rule);
-    if (meta?.addContainer) {
-      addContainer = true;
-      continue;
+  allMatches.forEach((matches, screen) => {
+    if (!matches.length) return;
+    if (screen) utilsOutput += `\n@media ${variantsMap.get(screen)!.media} {\n`;
+    for (const match of matches.sort(
+      (a, b) => a.ruleEntry.order - b.ruleEntry.order,
+    )) {
+      const meta = getRuleMeta(match.ruleEntry.rule);
+      if (meta?.addContainer) {
+        addContainer = true;
+        continue;
+      }
+      if (meta?.addDefault) defaults.add(meta.addDefault);
+      if (meta?.addKeyframes) {
+        const animationProperty =
+          cssConfig.theme.animation[match.ruleEntry.key];
+        const name = animationProperty.slice(0, animationProperty.indexOf(" "));
+        if (cssConfig.theme.keyframes[name]) keyframes.add(name);
+      }
+      let mediaWrapper: string | undefined;
+      let selector = escapeSelector(match.token);
+      if (meta?.selectorRewrite) selector = meta.selectorRewrite(selector);
+      for (let i = match.variants.length - 1; i >= 0; i--) {
+        const variant = match.variants[i];
+        if (variant.selectorRewrite)
+          selector = variant.selectorRewrite(selector);
+        else {
+          if (mediaWrapper) mediaWrapper += ` and ${variant.media}`;
+          else mediaWrapper = variant.media;
+        }
+      }
+      if (mediaWrapper) utilsOutput += `@media ${mediaWrapper} {\n`;
+      utilsOutput += printBlock(
+        `.${selector}`,
+        ruleEntryToCSSEntries(match.ruleEntry),
+      );
+      if (mediaWrapper) utilsOutput += `}\n`;
     }
-    if (meta?.addDefault) defaults.add(meta.addDefault);
-    if (meta?.addKeyframes) {
-      const animationProperty = cssConfig.theme.animation[match.ruleEntry.key];
-      const name = animationProperty.slice(0, animationProperty.indexOf(" "));
-      if (cssConfig.theme.keyframes[name]) keyframes.add(name);
-    }
-    let selector = escapeSelector(match.token);
-    if (meta?.selectorRewrite) selector = meta.selectorRewrite(selector);
-    for (let i = match.variants.length - 1; i >= 0; i--) {
-      const variant = match.variants[i];
-      if (variant.selectorRewrite) selector = variant.selectorRewrite(selector);
-    }
-    utilsOutput += printBlock(
-      `.${selector}`,
-      ruleEntryToCSSEntries(match.ruleEntry),
-    );
-  }
+    if (screen) utilsOutput += `}\n`;
+  });
 
   if (defaults.size) {
     output += printBlock(
@@ -114,11 +132,7 @@ const scanCode = (code: string) => {
     if (match === undefined) {
       blockList.add(token);
     } else {
-      matches.push({
-        token,
-        ruleEntry: match.ruleEntry,
-        variants: match.variants,
-      });
+      matches.push(match);
       localMatches.add(token);
     }
   }

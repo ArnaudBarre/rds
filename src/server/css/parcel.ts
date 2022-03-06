@@ -31,6 +31,7 @@ export const parcelCache = cache(
           }
           const meta = getRuleMeta(match.ruleEntry.rule);
           if (
+            match.screen || // TODO: Find a way to make it working
             match.variants || // TODO: Use nesting if not media query
             meta?.selectorRewrite || // TODO: Use nesting if not media query
             meta?.addDefault || // TODO: Maybe it works if added in main

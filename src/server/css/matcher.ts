@@ -22,18 +22,27 @@ export const ruleEntryToCSSEntries = (ruleEntry: RuleEntry): CSSEntries => {
   }
 };
 
-export const matchToken = (
-  token: string,
-): { ruleEntry: RuleEntry; variants: Variant[] } | undefined => {
-  let index;
+export type RuleMatch = {
+  token: string;
+  ruleEntry: RuleEntry;
+  variants: Variant[];
+  screen: string;
+};
+export const matchToken = (token: string): RuleMatch | undefined => {
+  const initialToken = token;
+  let index: number;
+  let screen = "";
   const variants: Variant[] = [];
   while ((index = token.indexOf(":")) !== -1) {
     const prefix = token.slice(0, index);
     const variant = variantsMap.get(prefix);
     if (!variant) return;
-    variants.push(variant);
+    if (variant.screen) screen = variant.screen;
+    else variants.push(variant);
     token = token.slice(index + 1);
   }
   const ruleEntry = rulesEntries.get(token);
-  return ruleEntry ? { ruleEntry, variants } : undefined;
+  return ruleEntry
+    ? { token: initialToken, ruleEntry, variants, screen }
+    : undefined;
 };
