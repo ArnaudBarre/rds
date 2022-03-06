@@ -211,4 +211,5 @@ export type CorePlugin =
   | "transitionDuration"
   | "transitionTimingFunction"
   | "willChange"
-  | "content";
+  | "content"
+  | "lineClamp";

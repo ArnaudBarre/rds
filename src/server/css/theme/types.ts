@@ -101,6 +101,7 @@ export type ThemeKey =
   | "inset"
   | "keyframes"
   | "letterSpacing"
+  | "lineClamp"
   | "lineHeight"
   | "listStyleType"
   | "margin"

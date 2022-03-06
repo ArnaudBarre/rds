@@ -997,6 +997,16 @@ export const getCorePlugins = ({
   ),
   willChange: themeRule("will-change", theme.willChange, "will-change"),
   content: themeRule("content", theme.content, "content"),
+  // https://github.com/tailwindlabs/tailwindcss-line-clamp/blob/master/src/index.js
+  lineClamp: [
+    themeRule("line-clamp", theme.lineClamp, [
+      ["overflow", "hidden"],
+      ["display", "-webkit-box"],
+      ["-webkit-box-orient", "vertical"],
+      "-webkit-line-clamp",
+    ]),
+    ["line-clamp-none", [["-webkit-line-clamp", "unset"]]],
+  ],
 });
 
 const themeRule = (

@@ -507,6 +507,14 @@ export const baseTheme: BaseTheme = {
     wider: "0.05em",
     widest: "0.1em",
   },
+  lineClamp: {
+    1: "1",
+    2: "2",
+    3: "3",
+    4: "4",
+    5: "5",
+    6: "6",
+  },
   lineHeight: {
     none: "1",
     tight: "1.25",
