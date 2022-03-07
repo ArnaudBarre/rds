@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { start } from "./start";
-import { join } from "path";
+import { join, resolve } from "path";
 import os from "os";
 import { exec } from "child_process";
+import { Worker } from "worker_threads";
 
 import { colors } from "./colors";
 import { initWS } from "./ws";
@@ -32,6 +33,7 @@ export const startServer = async () => {
     watchFile: (path) => srcWatcher.add(path),
   });
 
+  new Worker(resolve(__dirname, "./tscWorker"));
   await importsTransform.get(ENTRY_POINT);
   await buildDependencies();
   const ws = initWS();

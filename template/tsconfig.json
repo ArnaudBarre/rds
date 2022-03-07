@@ -3,7 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "types": ["../src/client"],
+    "types": ["../src/types/client"],
     "allowJs": false,
     "skipLibCheck": false,
     "esModuleInterop": false,
