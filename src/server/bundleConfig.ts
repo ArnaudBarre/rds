@@ -1,13 +1,15 @@
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
-import { buildSync } from "esbuild";
+import { build } from "esbuild";
 
 import { cacheDir, getHash, jsonCacheSync } from "./utils";
 import { log } from "./logger";
 
 type ConfigHashesCache = { files: [path: string, hash: string][] };
 
-export const getConfig = <Config>(name: string): Config | undefined => {
+export const getConfig = async <Config>(
+  name: string,
+): Promise<Config | undefined> => {
   const path = `${name}.config.ts`;
   const output = join(cacheDir, `${name}-config.js`);
   if (!existsSync(path)) {
@@ -21,7 +23,7 @@ export const getConfig = <Config>(name: string): Config | undefined => {
     files.some(([path, hash]) => getHash(readFileSync(path)) !== hash)
   ) {
     if (files) log.debug(`${name} config files changed`);
-    const result = buildSync({
+    const result = await build({
       entryPoints: [path],
       outfile: output,
       metafile: true,

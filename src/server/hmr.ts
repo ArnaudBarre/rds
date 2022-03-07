@@ -1,30 +1,52 @@
+import { FSWatcher } from "chokidar";
+
 import { GraphNode } from "./types";
 import { log } from "./logger";
 import { colors } from "./colors";
 import { swcCache } from "./swc";
 import { resolveExtensionCache } from "./resolve";
-import { graph, transformSrcImports } from "./transform";
+import { ImportsTransform } from "./importsTransform";
 import { isCSS, isJS, isSVG } from "./utils";
-import { parcelCache } from "./css/parcel";
+import { CSSTransform } from "./css/cssTransform";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
-import { ws } from "./ws";
-import { srcWatcher } from "./srcWatcher";
-import { cssGenerator } from "./css/generator";
+import { WS } from "./ws";
+import { CSSGenerator } from "./css/generator";
 
-export const setupHmr = () => {
+export const setupHmr = ({
+  importsTransform,
+  cssGenerator,
+  cssTransform,
+  srcWatcher,
+  ws,
+}: {
+  importsTransform: ImportsTransform;
+  cssTransform: CSSTransform;
+  cssGenerator: CSSGenerator;
+  srcWatcher: FSWatcher;
+  ws: WS;
+}) => {
   const invalidate = (node: GraphNode) => {
-    transformSrcImports.delete(node.url);
+    importsTransform.delete(node.url);
     for (const importer of node.importers) {
       invalidate(importer);
     }
+  };
+
+  const clearCache = (path: string) => {
+    if (isJS(path)) {
+      cssGenerator.scanContentCache.delete(path);
+      swcCache.delete(path);
+    } else if (isCSS(path)) cssTransform.delete(path);
+    else if (isSVG(path)) svgCache.delete(path);
+    else assetsCache.delete(path);
   };
 
   srcWatcher
     .on("change", async (path) => {
       log.debug(`change ${path}`);
       clearCache(path);
-      const graphNode = graph.get(path);
+      const graphNode = importsTransform.graph.get(path);
       if (graphNode) {
         invalidate(graphNode);
         const updates = new Set<string>();
@@ -39,7 +61,7 @@ export const setupHmr = () => {
           ws.send({
             type: "update",
             paths: await Promise.all(
-              [...updates].map(transformSrcImports.toHashedUrl),
+              [...updates].map(importsTransform.toHashedUrl),
             ),
           });
         }
@@ -51,18 +73,9 @@ export const setupHmr = () => {
         resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
       }
       clearCache(path);
-      transformSrcImports.delete(path);
+      importsTransform.delete(path);
       // TODO: Update importers if exists. Will throws and trigger the overlay
     });
-};
-
-const clearCache = (path: string) => {
-  if (isJS(path)) {
-    cssGenerator.scanContentCache.delete(path);
-    swcCache.delete(path);
-  } else if (isCSS(path)) parcelCache.delete(path);
-  else if (isSVG(path)) svgCache.delete(path);
-  else assetsCache.delete(path);
 };
 
 const propagateUpdate = (

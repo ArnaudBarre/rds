@@ -1,6 +1,6 @@
 import { watch } from "chokidar";
 
-import { ws } from "./ws";
+import { WS } from "./ws";
 
 import { cache, readFile } from "./utils";
 
@@ -8,17 +8,18 @@ export const publicFiles = new Set<string>();
 export const publicFilesCache = cache("publicFiles", (url) =>
   readFile(`public/${url}`),
 );
-const clearCacheAndReload = (path: string) => {
-  if (publicFilesCache.has(path)) {
-    publicFilesCache.delete(path);
-    ws.send({ type: "reload" });
-  }
+export const initPublicWatcher = (ws: WS) => {
+  const clearCacheAndReload = (path: string) => {
+    if (publicFilesCache.has(path)) {
+      publicFilesCache.delete(path);
+      ws.send({ type: "reload" });
+    }
+  };
+  return watch(".", { cwd: "public" })
+    .on("add", (path) => publicFiles.add(path))
+    .on("change", clearCacheAndReload)
+    .on("unlink", (path) => {
+      clearCacheAndReload(path);
+      publicFiles.delete(path);
+    });
 };
-
-export const publicWatcher = watch(".", { cwd: "public" })
-  .on("add", (path) => publicFiles.add(path))
-  .on("change", clearCacheAndReload)
-  .on("unlink", (path) => {
-    clearCacheAndReload(path);
-    publicFiles.delete(path);
-  });

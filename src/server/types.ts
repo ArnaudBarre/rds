@@ -1,4 +1,3 @@
-import { HMRPayload } from "../hmrPayload";
 import { mimeTypes } from "./mimeTypes";
 
 export type LoadedFile = {
@@ -6,8 +5,6 @@ export type LoadedFile = {
   type: keyof typeof mimeTypes;
   browserCache: boolean;
 };
-
-export type HMRWebSocket = { send(payload: HMRPayload): void; close(): void };
 
 export type GraphNode = {
   url: string;

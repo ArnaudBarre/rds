@@ -1,9 +1,16 @@
 #!/usr/bin/env tnode
 import fs from "fs";
 import process from "process";
-import { cssGenerator } from "../src/server/css/generator";
+import { getCSSGenerator } from "../src/server/css/generator";
+import { getCSSConfig } from "../src/server/css/cssConfig";
+import { getVariants } from "../src/server/css/variants";
+import { getTokenParser } from "../src/server/css/tokenParser";
 
 const main = async () => {
+  const cssConfig = await getCSSConfig();
+  const variantsMap = getVariants(cssConfig);
+  const tokenParser = getTokenParser({ cssConfig, variantsMap });
+  const cssGenerator = getCSSGenerator({ cssConfig, variantsMap, tokenParser });
   const start = performance.now();
   await cssGenerator.scanContentCache.get("local/test.js");
   console.log((performance.now() - start).toFixed(2));

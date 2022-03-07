@@ -1,20 +1,22 @@
 import { join } from "path";
 import { build } from "esbuild";
+import fs from "fs";
 
 import {
   cache,
   cacheDir,
+  getHash,
   getHashedUrl,
   jsonCacheSync,
+  lookup,
   readCacheFile,
+  readFileSync,
 } from "./utils";
 import { colors } from "./colors";
 import { log } from "./logger";
 import { DEPENDENCY_PREFIX, RDS_CSS_UTILS, RDS_PREFIX } from "./consts";
 import { AnalyzedImport } from "./swc";
-import { dependenciesHash } from "./dependenciesHash";
-import { ws } from "./ws";
-import { cssGenerator } from "./css/generator";
+import { CSSGenerator } from "./css/generator";
 
 const dependencies = new Set<string>();
 
@@ -23,26 +25,48 @@ type Metadata = {
   deps: { [name: string]: { needInterop: boolean } };
 };
 let metadata: Metadata | undefined;
-
-let initialLoad = true;
 let reBundlePromise: Promise<void> | undefined;
 
-export const addDependency = (dep: string) => {
+export const addDependency = (
+  dep: string,
+  onNewDep: (() => void) | undefined,
+) => {
   if (dep.startsWith(RDS_PREFIX)) return;
   if (dependencies.has(dep)) return;
   dependencies.add(dep);
-  if (initialLoad) return;
+  if (!onNewDep) return;
   if (!reBundlePromise) {
     reBundlePromise = buildDependencies().finally(() => {
       reBundlePromise = undefined;
-      ws.send({ type: "reload" });
+      onNewDep();
     });
+  }
+};
+
+let dependenciesHash: string;
+const initDependencyHash = () => {
+  if (!dependenciesHash) {
+    const lockPath = lookup([
+      "package-lock.json",
+      "yarn.lock",
+      "pnpm-lock.yaml",
+    ]);
+    if (!lockPath) {
+      throw new Error(
+        "Unable to find dependencies lockfile. This is required to ensure cache invalidation.",
+      );
+    }
+    const patchesDir = lookup(["patches"]);
+    dependenciesHash = getHash(
+      readFileSync(lockPath) +
+        (patchesDir ? fs.statSync(patchesDir).mtimeMs : ""),
+    );
   }
 };
 
 export const buildDependencies = async () => {
   const start = performance.now();
-  initialLoad = false;
+  initDependencyHash();
   const deps = Array.from(dependencies);
   const metadataCache = jsonCacheSync<Metadata>("dependencies", 1);
   metadata = metadataCache.read();
@@ -90,11 +114,16 @@ export const buildDependencies = async () => {
   log.info(`  ✔ Bundled in ${Math.round(performance.now() - start)}ms`);
 };
 
-export const transformDependenciesImports = async (
-  code: string,
-  depImports: AnalyzedImport[],
-) => {
-  for (const dep of depImports) {
+export const transformDependenciesImports = async ({
+  code,
+  depsImports,
+  cssGenerator,
+}: {
+  code: string;
+  depsImports: AnalyzedImport[];
+  cssGenerator: CSSGenerator;
+}) => {
+  for (const dep of depsImports) {
     if (dep.source.startsWith(RDS_PREFIX)) {
       if (dep.source === RDS_CSS_UTILS) {
         code = code.replace(
