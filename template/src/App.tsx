@@ -23,7 +23,7 @@ export const App = () => {
         <Logo className="rotate-45 h-44" />
         <img alt="Logo" src={logoUrl} className="animate-spin-slow h-44" />
         <div className="logo-bg" />
-        <p className="space-x-4">
+        <p className="space-x-12">
           <a
             className="text-gray-500"
             href="https://reactjs.org"
@@ -32,9 +32,9 @@ export const App = () => {
           >
             Learn React
           </a>
-          {" | "}
+          <span>|</span>
           <a
-            className={styles.someClass2}
+            className={styles.someClass}
             href="https://vitejs.dev/guide/features.html"
             target="_blank"
             rel="noopener noreferrer"

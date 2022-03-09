@@ -1,5 +1,7 @@
 #!/usr/bin/env tnode
 import { build } from "esbuild";
+import { Worker } from "worker_threads";
+
 import { dependencies } from "../package.json";
 
 build({
@@ -26,3 +28,6 @@ build({
   legalComments: "inline",
   watch: true,
 });
+
+// eslint-disable-next-line no-new
+new Worker("./dist/server/tscWorker");

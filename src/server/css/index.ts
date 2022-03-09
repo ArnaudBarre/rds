@@ -10,7 +10,7 @@ export const initCSS = async () => {
   const tokenParser = getTokenParser({ cssConfig, variantsMap });
 
   return {
-    cssTransform: getCSSTransform(tokenParser),
+    cssTransform: getCSSTransform({ tokenParser, variantsMap }),
     cssGenerator: getCSSGenerator({ cssConfig, variantsMap, tokenParser }),
   };
 };

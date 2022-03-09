@@ -107,6 +107,7 @@ export const updateStyle = (id: string, content: string) => {
   } else {
     const newStyle = document.createElement("style");
     newStyle.setAttribute("type", "text/css");
+    newStyle.setAttribute("data-id", id);
     newStyle.innerHTML = content;
     document.head.appendChild(newStyle);
     stylesMap.set(id, newStyle);

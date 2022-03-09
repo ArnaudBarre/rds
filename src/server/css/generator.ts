@@ -132,7 +132,7 @@ export const getCSSGenerator = ({
   });
   const generate = () => generatorCache.get("");
 
-  const validSelectorRe = /^[a-z0-9:/[]#-]+$/;
+  const validSelectorRe = /^[a-z0-9:/[\]#-]+$/;
   const scanCode = (code: string) => {
     const matches: RuleMatch[] = [];
     const tokens = code
@@ -187,7 +187,7 @@ export const getCSSGenerator = ({
 };
 
 const escapeSelector = (selector: string) =>
-  selector.replace(/[:/[]]/g, (c) => `\\${c}`);
+  selector.replace(/[:/[\]]/g, (c) => `\\${c}`);
 
 const printBlock = (selector: string, entries: CSSEntries) => {
   let output = `${selector} {\n`;

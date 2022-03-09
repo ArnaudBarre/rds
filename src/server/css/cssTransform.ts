@@ -3,12 +3,20 @@ import { transform } from "@parcel/css";
 import { cache, readFileSync } from "../utils";
 import { CSSModule, GraphNode } from "../types";
 import { toCSSEntries, getRuleMeta, TokenParser } from "./tokenParser";
+import { VariantsMap } from "./variants";
 
 const applyRE = /\s@apply ([^;}\n]+)[;}\n]/g;
+const screenRE = /@screen ([^{]+){/g;
 
 export type CSSTransform = ReturnType<typeof getCSSTransform>;
 
-export const getCSSTransform = (tokenParser: TokenParser) =>
+export const getCSSTransform = ({
+  tokenParser,
+  variantsMap,
+}: {
+  tokenParser: TokenParser;
+  variantsMap: VariantsMap;
+}) =>
   cache(
     "css",
     (
@@ -41,7 +49,7 @@ export const getCSSTransform = (tokenParser: TokenParser) =>
               meta?.addContainer
             ) {
               throw new Error(
-                `${url}: Complex utils like ${token} are not supported`,
+                `${url}: Complex utils like ${token} are not supported. You can use @screen for media variants.`,
               );
             }
             for (const cssEntry of toCSSEntries(match.ruleEntry)) {
@@ -49,6 +57,21 @@ export const getCSSTransform = (tokenParser: TokenParser) =>
             }
           }
           return `${substring[0]}${output}${substring.at(-1)!}`;
+        });
+      }
+
+      const hasScreen = content.includes("@screen ");
+      if (hasScreen) {
+        content = content.replace(screenRE, (_, rawValue: string) => {
+          const value = rawValue.trim();
+          const variant = variantsMap.get(value);
+          if (variant === undefined) {
+            throw new Error(`No variant matching ${value} in ${url}`);
+          }
+          if (!variant.media) {
+            throw new Error(`${url}: ${value} is not a screen variant`);
+          }
+          return `@media ${variant.media} {`;
         });
       }
 
