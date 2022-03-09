@@ -1,5 +1,5 @@
 {
-  "include": ["src"],
+  "include": ["src", "scripts"],
   "compilerOptions": {
     "module": "ES2020",
     "target": "ES2021",

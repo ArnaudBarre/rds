@@ -37,9 +37,9 @@ export const setupHmr = ({
     if (isJS(path)) {
       cssGenerator.scanContentCache.delete(path);
       swcCache.delete(path);
-    } else if (isCSS(path)) cssTransform.delete(path);
-    else if (isSVG(path)) svgCache.delete(path);
-    else assetsCache.delete(path);
+    } else if (isCSS(path)) {cssTransform.delete(path);}
+    else if (isSVG(path)) {svgCache.delete(path);}
+    else {assetsCache.delete(path);}
   };
 
   srcWatcher

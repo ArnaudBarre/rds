@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { BaseTheme } from "../../../types";
 import { mapObject } from "../../utils";
 import { baseColors } from "./baseColors";
@@ -155,6 +156,7 @@ export const baseTheme: BaseTheme = {
   },
   borderColor: (theme) => ({
     ...theme("colors"),
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     DEFAULT: theme("colors")["gray-200"] ?? "currentColor",
   }),
   borderOpacity: (theme) => theme("opacity"),
@@ -651,6 +653,7 @@ export const baseTheme: BaseTheme = {
     8: "8px",
   },
   ringColor: (theme) => ({
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     DEFAULT: theme("colors")["blue-500"] ?? "#3b82f6",
     ...theme("colors"),
   }),

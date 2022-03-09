@@ -110,9 +110,7 @@ const getRulesEntries = (rules: Rule[]) => {
     if (isThemeRule(rule)) {
       addTheme(rule, rule[0], rule[1], "", rule[3]);
     } else if (isDirectionRule(rule)) {
-      if (!rule[4]?.mandatory) {
-        addTheme(rule, rule[0], rule[2], "all", rule[4]);
-      }
+      if (!rule[4]?.mandatory) addTheme(rule, rule[0], rule[2], "all", rule[4]);
       const omitHyphen = rule[4]?.omitHyphen;
       for (const direction of rule[1]) {
         const prefix = `${rule[0]}${omitHyphen ? "" : "-"}${direction}`;
@@ -145,8 +143,7 @@ export const getRules = (cssConfig: ResolvedCSSConfig) => {
   const start = performance.now();
   const corePlugins = getCorePlugins(cssConfig);
   const coreRules: Rule[] = [];
-  const isRules = (v: RuleOrRules): v is Rule[] =>
-    Array.isArray(v[0]) || v[0] === undefined;
+  const isRules = (v: RuleOrRules): v is Rule[] => Array.isArray(v[0]);
   for (const corePlugin in corePlugins) {
     if (cssConfig.corePlugins[corePlugin as CorePlugin] !== false) {
       const value = corePlugins[corePlugin as CorePlugin];
@@ -167,19 +164,18 @@ export const toCSSEntries = (ruleEntry: RuleEntry): CSSEntries => {
   if (isThemeRule(rule)) {
     return rule[2](
       ruleEntry.negative
-        ? `-${rule[1][ruleEntry.key]}`
-        : rule[1][ruleEntry.key],
+        ? `-${(rule[1] as Record<string, string>)[ruleEntry.key]}`
+        : rule[1][ruleEntry.key]!,
     );
   } else if (isDirectionRule(rule)) {
     return rule[3](
       ruleEntry.direction,
       ruleEntry.negative
-        ? `-${rule[2][ruleEntry.key]}`
-        : rule[2][ruleEntry.key],
+        ? `-${rule[2][ruleEntry.key]!}`
+        : rule[2][ruleEntry.key]!,
     );
-  } else {
-    return rule[1];
   }
+  return rule[1];
 };
 
 export const getRuleMeta = (rule: Rule): RuleMeta | undefined =>

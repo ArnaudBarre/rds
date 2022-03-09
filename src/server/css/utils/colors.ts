@@ -7,9 +7,9 @@ import { CSSEntries, CSSEntry } from "../../../types";
 
 const HEX = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
 const SHORT_HEX = /^#([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i;
-const VALUE = `(?:\\d+|\\d*\\.\\d+)%?`;
-const SEP = `(?:\\s*,\\s*|\\s+)`;
-const ALPHA_SEP = `\\s*[,/]\\s*`;
+const VALUE = "(?:\\d+|\\d*\\.\\d+)%?";
+const SEP = "(?:\\s*,\\s*|\\s+)";
+const ALPHA_SEP = "\\s*[,/]\\s*";
 const RGB = new RegExp(
   `^rgba?\\(\\s*(${VALUE})${SEP}(${VALUE})${SEP}(${VALUE})(?:${ALPHA_SEP}(${VALUE}))?\\s*\\)$`,
 );
@@ -29,7 +29,7 @@ export const parseColor = (value: string): ParsedColor | null => {
   }
 
   const hex = value
-    .replace(SHORT_HEX, (_, r, g, b, a) =>
+    .replace(SHORT_HEX, (_, r, g, b, a: string | undefined) =>
       ["#", r, r, g, g, b, b, a ? a + a : ""].join(""),
     )
     .match(HEX);
@@ -51,7 +51,7 @@ export const parseColor = (value: string): ParsedColor | null => {
     return {
       mode: "rgb",
       color: [rgbMatch[1], rgbMatch[2], rgbMatch[3]],
-      alpha: rgbMatch[4]?.toString(),
+      alpha: (rgbMatch[4] as string | undefined)?.toString(),
     };
   }
 
@@ -60,7 +60,7 @@ export const parseColor = (value: string): ParsedColor | null => {
     return {
       mode: "hsl",
       color: [hslMatch[1], hslMatch[2], hslMatch[3]],
-      alpha: hslMatch[4]?.toString(),
+      alpha: (hslMatch[4] as string | undefined)?.toString(),
     };
   }
 

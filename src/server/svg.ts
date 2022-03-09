@@ -2,7 +2,7 @@ import { Options, transform } from "@swc/core";
 
 import { cache, readFile } from "./utils";
 
-export const svgCache = cache("svg", async (url: string) => {
+export const svgCache = cache("svg", async (url) => {
   const { code } = await transform(svgToJSX(await readFile(url)), options);
   return code;
 });

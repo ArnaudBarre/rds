@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { CSSDefault, CSSEntries } from "../../types";
 import { withAlphaValue } from "./utils/colors";
 import { ResolvedCSSConfig } from "./cssConfig";

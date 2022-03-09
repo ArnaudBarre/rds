@@ -22,7 +22,7 @@ const dependencies = new Set<string>();
 
 type Metadata = {
   dependenciesHash: string;
-  deps: { [name: string]: { needInterop: boolean } };
+  deps: { [name: string]: { needInterop: boolean } | undefined };
 };
 let metadata: Metadata | undefined;
 let reBundlePromise: Promise<void> | undefined;
@@ -59,7 +59,7 @@ const initDependencyHash = () => {
     const patchesDir = lookup(["patches"]);
     dependenciesHash = getHash(
       readFileSync(lockPath) +
-        (patchesDir ? fs.statSync(patchesDir).mtimeMs : ""),
+        (patchesDir ? fs.statSync(patchesDir).mtimeMs.toString() : ""),
     );
   }
 };
@@ -79,14 +79,14 @@ export const buildDependencies = async () => {
         );
         return;
       }
-      log.debug(`Skipping dependencies cache (new used deps)`);
+      log.debug("Skipping dependencies cache (new used deps)");
     } else {
-      log.debug(`Skipping dependencies cache (dependenciesHash change)`);
+      log.debug("Skipping dependencies cache (dependenciesHash change)");
     }
   }
   const listed = 5;
   const depsString = colors.yellow(
-    deps.slice(0, listed).join(`\n  `) +
+    deps.slice(0, listed).join("\n  ") +
       (deps.length > listed ? `\n  (...and ${deps.length - listed} more)` : ""),
   );
   log.info(colors.green(`Pre-bundling dependencies:\n  ${depsString}`));
@@ -100,8 +100,9 @@ export const buildDependencies = async () => {
     sourcemap: true,
     outdir: cacheDir,
   });
+  // eslint-disable-next-line require-atomic-updates
   metadata = { dependenciesHash, deps: {} };
-  const output = result.metafile!["outputs"];
+  const output = result.metafile.outputs;
   for (const dep of deps) {
     const { exports } = output[join(cacheDir, getFileName(dep))];
     metadata.deps[dep] = {
@@ -134,22 +135,19 @@ export const transformDependenciesImports = async ({
       }
       throw new Error(`Unhandled entry ${dep.source}`);
     }
-    if (!metadata!.deps[dep.source]) {
-      throw new Error(`Unbundled dependency ${dep.source}`);
-    }
-    const { needInterop } = metadata!.deps[dep.source];
+    const depMetadata = metadata!.deps[dep.source];
+    if (!depMetadata) throw new Error(`Unbundled dependency ${dep.source}`);
     const hashedUrl = getHashedUrl(
       `${DEPENDENCY_PREFIX}/${dep.source}`,
       await getDependency(dep.source),
     );
-    if (needInterop && dep.specifiers.length) {
+    if (depMetadata.needInterop && dep.specifiers.length) {
       const defaultImportName = `__rds_${dep.source.replace(/[-@/]/g, "_")}`;
       code = code.replace(
-        new RegExp(`import \{[^\}]+\}\\s+from\\s+['"]${dep.source}['"];`),
-        `import ${defaultImportName} from "${hashedUrl}";` +
-          dep.specifiers
-            .map((s) => `const ${s.local} = ${defaultImportName}["${s.name}"];`)
-            .join(""),
+        new RegExp(`import {[^}]+}\\s+from\\s+['"]${dep.source}['"];`),
+        `import ${defaultImportName} from "${hashedUrl}";${dep.specifiers
+          .map((s) => `const ${s.local} = ${defaultImportName}["${s.name}"];`)
+          .join("")}`,
       );
     } else {
       code = code.replace(
@@ -161,16 +159,15 @@ export const transformDependenciesImports = async ({
   return code;
 };
 
-export const getDependency = cache<string, Promise<string>>(
+export const getDependency = cache<Promise<string>>(
   "getDependency",
   async (dependency) => {
     if (dependency.endsWith(".js")) {
       return readCacheFile(dependency);
     } else if (dependencies.has(dependency)) {
       return readCacheFile(getFileName(dependency));
-    } else {
-      throw new Error(`Unbundled dependency ${dependency}`);
     }
+    throw new Error(`Unbundled dependency ${dependency}`);
   },
 ).get;
 

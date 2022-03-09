@@ -62,25 +62,26 @@ export const jsonCacheSync = <T extends Record<string, any>>(
 export const cacheDir = "node_modules/.rds";
 export const readCacheFile = (path: string) => readFile(join(cacheDir, path));
 
-export const cache = <Key, Value>(name: string, load: (key: Key) => Value) => {
-  const cache = new Map<Key, Value>();
+export const cache = <Value>(name: string, load: (key: string) => Value) => {
+  const map = new Map<string, Value>();
   return {
-    has: (key: Key) => {
+    has: (key: string) => {
       log.debug(`${name}: has - ${key}`);
-      return cache.has(key);
+      return map.has(key);
     },
-    delete: (key: Key) => {
+    delete: (key: string) => {
       log.debug(`${name}: delete - ${key}`);
-      cache.delete(key);
+      map.delete(key);
     },
-    get: (key: Key) => {
+    get: (key: string) => {
       log.debug(`${name}: get - ${key}`);
-      const cached = cache.get(key);
+      const cached = map.get(key);
       if (cached) return cached;
       const start = performance.now();
       const value = load(key);
       if (isDebug) {
         (async () => {
+          // eslint-disable-next-line @typescript-eslint/await-thenable
           await value;
           log.debug(
             `${name}: load - ${key}: ${Math.round(
@@ -89,7 +90,7 @@ export const cache = <Key, Value>(name: string, load: (key: Key) => Value) => {
           );
         })();
       }
-      cache.set(key, value);
+      map.set(key, value);
       return value;
     },
   };
@@ -112,7 +113,7 @@ export const lookup = (formats: string[], dir = "."): string | undefined => {
 };
 
 export const notNull = <T>(value: T | null | undefined): value is T =>
-  value != null;
+  value !== null && value !== undefined;
 
 export const mapObject = <K extends string, V, K2 extends string, V2>(
   object: Record<K, V>,
@@ -125,4 +126,4 @@ export const mapObject = <K extends string, V, K2 extends string, V2>(
 export const mapObjectValue = <K extends string, V, R>(
   object: Record<K, V>,
   fn: (v: V) => R,
-) => mapObject(object, ([key, v]) => [key, fn(v as V)]);
+) => mapObject(object, ([key, v]) => [key, fn(v)]);

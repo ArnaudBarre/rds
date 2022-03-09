@@ -1,11 +1,11 @@
 export type ResolvedTheme = Record<
   Exclude<ThemeKey, "screens" | "container" | "fontSize" | "dropShadow">,
-  Record<string, string>
+  Record<string, string | undefined>
 > & {
-  screens: Record<string, Screen>;
+  screens: Record<string, Screen | undefined>;
   container: Container;
-  fontSize: Record<string, string | [string, string]>;
-  dropShadow: Record<string, string | [string, string]>;
+  fontSize: Record<string, string | [string, string] | undefined>;
+  dropShadow: Record<string, string | [string, string] | undefined>;
 };
 
 export type BaseTheme = {

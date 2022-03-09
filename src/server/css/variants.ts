@@ -11,8 +11,8 @@ export const getVariants = (cssConfig: ResolvedCSSConfig) => {
   const start = performance.now();
   const variantsMap: VariantsMap = new Map();
 
-  for (let screen in cssConfig.theme.screens) {
-    const values = cssConfig.theme.screens[screen];
+  for (const screen in cssConfig.theme.screens) {
+    const values = cssConfig.theme.screens[screen]!;
     if (values.min) {
       if (values.max) {
         variantsMap.set(screen, {
@@ -26,7 +26,7 @@ export const getVariants = (cssConfig: ResolvedCSSConfig) => {
         });
       }
     } else {
-      variantsMap.set(screen, { media: `(max-width: ${values.max})`, screen });
+      variantsMap.set(screen, { media: `(max-width: ${values.max!})`, screen });
     }
   }
 
@@ -47,7 +47,7 @@ export const getVariants = (cssConfig: ResolvedCSSConfig) => {
   ].forEach((value) => {
     const [prefix, suffix] = Array.isArray(value) ? value : [value, value];
     variantsMap.set(prefix, {
-      selectorRewrite: (value) => `${value}::${suffix}`,
+      selectorRewrite: (sel) => `${sel}::${suffix}`,
     });
   });
 
@@ -96,14 +96,14 @@ export const getVariants = (cssConfig: ResolvedCSSConfig) => {
       : [value, `:${value}`];
 
     variantsMap.set(prefix, {
-      selectorRewrite: (value) => `${value}${suffix}`,
+      selectorRewrite: (sel) => `${sel}${suffix}`,
     });
     // Non-compliant: Don't support complex stacked variants
     variantsMap.set(`group-${prefix}`, {
-      selectorRewrite: (value) => `group${suffix} .${value}`,
+      selectorRewrite: (sel) => `group${suffix} .${sel}`,
     });
     variantsMap.set(`peer-${prefix}`, {
-      selectorRewrite: (value) => `peer${suffix} ~ .${value}`,
+      selectorRewrite: (sel) => `peer${suffix} ~ .${sel}`,
     });
   });
 

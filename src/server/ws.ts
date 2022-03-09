@@ -21,14 +21,14 @@ export const initWS = () => {
 
   wss.on("error", (e: Error & { code: string }) => {
     if (e.code !== "EADDRINUSE") {
-      log.info(colors.red(`WebSocket server error:\n${e.stack || e.message}`));
+      log.info(colors.red(`WebSocket server error:\n${e.stack ?? e.message}`));
     }
   });
 
   return {
-    handleUpgrade: (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+    handleUpgrade: (req: IncomingMessage, duplex: Duplex, head: Buffer) => {
       if (req.headers["sec-websocket-protocol"] === HMR_HEADER) {
-        wss.handleUpgrade(req, socket, head, (socket) => {
+        wss.handleUpgrade(req, duplex, head, (socket) => {
           const connectedPayload: HMRPayload = { type: "connected" };
           socket.send(JSON.stringify(connectedPayload));
           if (bufferedError) {

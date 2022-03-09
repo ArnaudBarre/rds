@@ -23,7 +23,7 @@ declare module "*.svg?inline" {
   export default data;
 }
 
-// images
+// Images
 declare module "*.jpg" {
   const src: string;
   export default src;
@@ -45,7 +45,7 @@ declare module "*.avif" {
   export default src;
 }
 
-// media
+// Media
 declare module "*.mp3" {
   const src: string;
   export default src;
@@ -67,7 +67,7 @@ declare module "*.webm" {
   export default src;
 }
 
-// fonts
+// Fonts
 declare module "*.woff" {
   const src: string;
   export default src;
@@ -85,7 +85,7 @@ declare module "*.otf" {
   export default src;
 }
 
-// others
+// Others
 declare module "*.txt" {
   const src: string;
   export default src;

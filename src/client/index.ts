@@ -5,6 +5,7 @@ import { ErrorOverlay, overlayId } from "./overlay";
 import * as RefreshRuntime from "./refresh-runtime";
 
 RefreshRuntime.injectIntoGlobalHook(window);
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 window.$RefreshReg$ = () => {};
 window.$RefreshSig$ = () => (type) => type;
 
@@ -12,15 +13,18 @@ export { RefreshRuntime };
 
 console.log("[rds] connecting....");
 
-const socket = new WebSocket(location.origin.replace("http", "ws"), HMR_HEADER);
+const socket = new WebSocket(
+  window.location.origin.replace("http", "ws"),
+  HMR_HEADER,
+);
 
 let isFirstUpdate = true;
 
-socket.addEventListener("message", async ({ data }) => {
+socket.addEventListener("message", ({ data }) => {
   const payload: HMRPayload = JSON.parse(data);
   switch (payload.type) {
     case "connected":
-      console.log(`[rds] Connected`);
+      console.log("[rds] Connected");
       // proxy(nginx, docker) hmr ws maybe caused timeout,
       // so send ping package let ws keep alive.
       setInterval(() => socket.send(HMR_PING), 30_000);
@@ -33,10 +37,9 @@ socket.addEventListener("message", async ({ data }) => {
       if (isFirstUpdate && document.querySelectorAll(overlayId).length) {
         window.location.reload();
         return;
-      } else {
-        clearErrorOverlay();
-        isFirstUpdate = false;
       }
+      clearErrorOverlay();
+      isFirstUpdate = false;
 
       for (const path of payload.paths) {
         // dynamic import are not re-evaluated when cached
@@ -52,9 +55,7 @@ socket.addEventListener("message", async ({ data }) => {
             console.log(`[rds] Hot updated: ${path}`);
           })
           .catch((err) => {
-            if (!(err as Error).message.includes("fetch")) {
-              console.error(err);
-            }
+            if (!(err as Error).message.includes("fetch")) console.error(err);
             console.error(
               `[hmr] Failed to reload ${path}. This could be due to syntax errors. (see errors above)`,
             );
@@ -62,7 +63,7 @@ socket.addEventListener("message", async ({ data }) => {
       }
       break;
     case "reload":
-      location.reload();
+      window.location.reload();
       break;
     case "prune-css":
       payload.paths.forEach(removeStyle);
@@ -80,18 +81,18 @@ const clearErrorOverlay = () =>
 // ping server
 socket.addEventListener("close", async ({ wasClean }) => {
   if (wasClean) return;
-  console.log(`[rds] Server connection lost. Polling for restart...`);
+  console.log("[rds] Server connection lost. Polling for restart...");
   await waitForSuccessfulPing();
-  location.reload();
+  window.location.reload();
 });
 
 const waitForSuccessfulPing = async () => {
-  // eslint-disable-next-line no-constant-condition
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     try {
       await fetch(CLIENT_PING);
       break;
-    } catch (e) {
+    } catch {
       await new Promise((resolve) => setTimeout(resolve, 3_000));
     }
   }

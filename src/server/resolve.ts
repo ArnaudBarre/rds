@@ -12,14 +12,11 @@ const testExtensions = (path: string) => {
     if (existsSync(url)) return url;
   }
 };
-export const resolveExtensionCache = cache(
-  "resolveExtension",
-  (path: string) => {
-    const url = testExtensions(path) ?? testExtensions(`${path}/index`);
-    if (!url) throw new Error(`Unresolved import: ${path}`);
-    return url;
-  },
-);
+export const resolveExtensionCache = cache("resolveExtension", (path) => {
+  const url = testExtensions(path) ?? testExtensions(`${path}/index`);
+  if (!url) throw new Error(`Unresolved import: ${path}`);
+  return url;
+});
 
 const withExtension = (url: string) => {
   const ext = extname(url);

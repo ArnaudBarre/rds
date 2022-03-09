@@ -8,11 +8,11 @@ const applyRE = /\s@apply ([^;}\n]+)[;}\n]/g;
 
 export type CSSTransform = ReturnType<typeof getCSSTransform>;
 
-export const getCSSTransform = (tokenParser: TokenParser) => {
-  return cache(
+export const getCSSTransform = (tokenParser: TokenParser) =>
+  cache(
     "css",
     (
-      url: string,
+      url,
     ): {
       code: string;
       imports: GraphNode["imports"];
@@ -23,9 +23,9 @@ export const getCSSTransform = (tokenParser: TokenParser) => {
       let content = readFileSync(url);
       const hasApply = content.includes("@apply ");
       if (hasApply) {
-        content = content.replace(applyRE, (match, utils: string) => {
+        content = content.replace(applyRE, (substring, utils: string) => {
           let output = "";
-          for (let token of utils.split(" ")) {
+          for (const token of utils.split(" ")) {
             if (!token) continue;
             const match = tokenParser(token);
             if (match === undefined) {
@@ -48,7 +48,7 @@ export const getCSSTransform = (tokenParser: TokenParser) => {
               output += `${cssEntry[0]}:${cssEntry[1]};`;
             }
           }
-          return `${match[0]}${output}${match[match.length - 1]}`;
+          return `${substring[0]}${output}${substring.at(-1)!}`;
         });
       }
 
@@ -58,11 +58,11 @@ export const getCSSTransform = (tokenParser: TokenParser) => {
         analyzeDependencies: true,
         cssModules: cssModule,
         drafts: { nesting: true },
-        targets: { safari: 13 << 16 },
+        targets: { safari: 13 << 16 }, // eslint-disable-line no-bitwise
       });
       return {
         code: code.toString(),
-        imports: dependencies!.map((i) => [
+        imports: dependencies.map((i) => [
           i.url,
           i.type === "url" ? i.placeholder : i.url,
         ]),
@@ -75,4 +75,3 @@ export const getCSSTransform = (tokenParser: TokenParser) => {
       };
     },
   );
-};

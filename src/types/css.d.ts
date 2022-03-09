@@ -10,14 +10,14 @@ export type Rule = StaticRule | ThemeRule<any> | DirectionThemeRule;
 export type StaticRule = [string, CSSEntries, RuleMeta?];
 export type ThemeRule<T> = [
   string,
-  Record<string, T>,
+  Record<string, T | undefined>,
   (value: T) => CSSEntries,
   ThemeRuleMeta?,
 ];
 export type DirectionThemeRule = [
   string,
   string[],
-  Record<string, string>,
+  Record<string, string | undefined>,
   (direction: string, value: string) => CSSEntries,
   (ThemeRuleMeta & { omitHyphen?: boolean; mandatory?: boolean })?,
 ];

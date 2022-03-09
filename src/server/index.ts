@@ -27,6 +27,7 @@ export const startServer = async () => {
     ignoreInitial: true,
     disableGlobbing: true,
   });
+  // eslint-disable-next-line no-new
   new Worker(resolve(__dirname, "./tscWorker"));
   const eslintWorker = config.eslint
     ? new Worker(resolve(__dirname, "./eslintWorker"), {
@@ -61,12 +62,12 @@ export const startServer = async () => {
   server.on("upgrade", ws.handleUpgrade);
 
   const port = await listen(server, config);
-  log.info(colors.cyan(`Dev server running at:`));
+  log.info(colors.cyan("Dev server running at:"));
   const localUrl = `http://localhost:${port}`;
   if (config.server.host) {
     Object.values(os.networkInterfaces())
       .flatMap((nInterface) => nInterface ?? [])
-      .filter((detail) => detail?.address && detail.family === "IPv4")
+      .filter((detail) => detail.address && detail.family === "IPv4")
       .map((detail) =>
         detail.address.includes("127.0.0.1")
           ? `  > Local:   ${localUrl}`

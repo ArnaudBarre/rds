@@ -39,7 +39,6 @@ export const initImportsTransform = ({
   let cssPruneCallback: ((paths: string[]) => void) | undefined;
 
   const transformSrcImportsCache = cache<
-    string,
     Promise<{ code: string; depsImports: AnalyzedImport[] }>
   >("transform", async (url) => {
     const graphNode = graph.get(url)!;
@@ -170,6 +169,7 @@ RefreshRuntime.enqueueUpdate();
 const hasCycle = (node: GraphNode, to: string): boolean => {
   for (const importer of node.importers) {
     if (importer.url === to) return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     if (hasCycle(importer, to)) return true;
   }
   return false;

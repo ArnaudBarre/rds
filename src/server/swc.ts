@@ -7,7 +7,6 @@ import { cache, getExtension } from "./utils";
 const importReactRE = /(^|\n)import\s+(\*\s+as\s+)?React(,|\s+)/;
 
 export const swcCache = cache<
-  string,
   Promise<{ code: string; imports: AnalyzedImport[]; hasFastRefresh: boolean }>
 >("swc", async (url) => {
   const visitor = new ImportsVisitor();

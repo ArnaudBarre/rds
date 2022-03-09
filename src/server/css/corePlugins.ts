@@ -166,7 +166,7 @@ export const getCorePlugins = ({
   rotate: themeRule(
     "rotate",
     theme.rotate,
-    [`--tw-rotate`, ["transform", cssTransformValue]],
+    ["--tw-rotate", ["transform", cssTransformValue]],
     { supportsNegativeValues: true, addDefault: "transform" },
   ),
   skew: directionThemeRule(
@@ -710,9 +710,8 @@ export const getCorePlugins = ({
         ["font-size", value[0]],
         ["line-height", value[1]],
       ];
-    } else {
-      return [["font-size", value]];
     }
+    return [["font-size", value]];
   }),
   fontWeight: themeRule("font", theme.fontWeight, "font-weight"),
   textTransform: enumRule(
@@ -870,7 +869,7 @@ export const getCorePlugins = ({
       (value) => [
         [
           "--tw-ring-offset-shadow",
-          `var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)`,
+          "var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)",
         ],
         [
           "--tw-ring-shadow",
@@ -973,9 +972,9 @@ export const getCorePlugins = ({
             ["transition-property", value],
             [
               "transition-timing-function",
-              theme.transitionTimingFunction.DEFAULT,
+              theme.transitionTimingFunction.DEFAULT!,
             ],
-            ["transition-duration", theme.transitionDuration.DEFAULT],
+            ["transition-duration", theme.transitionDuration.DEFAULT!],
           ],
   ),
   transitionDelay: themeRule(
@@ -1011,7 +1010,7 @@ export const getCorePlugins = ({
 
 const themeRule = (
   prefix: string,
-  themeMap: Record<string, string>,
+  themeMap: Record<string, string | undefined>,
   properties: string | Properties | ((value: string) => CSSEntries),
   options?: ThemeRuleMeta,
 ): ThemeRule<string> => [
@@ -1028,7 +1027,7 @@ const themeRule = (
 
 const complexThemeRule = <T>(
   prefix: string,
-  themeMap: Record<string, T>,
+  themeMap: Record<string, T | undefined>,
   properties: (value: T) => CSSEntries,
   options?: ThemeRuleMeta,
 ): ThemeRule<T> => [prefix, themeMap, properties, options];
@@ -1040,7 +1039,7 @@ const directionThemeRule = <
 >(
   prefix: string,
   directions: Direction[] | readonly Direction[],
-  themeMap: Record<string, string>,
+  themeMap: Record<string, string | undefined>,
   properties: (
     direction: Mandatory extends true ? Direction : Direction | "all",
     value: string,
@@ -1074,7 +1073,7 @@ const touchActionRule = (name: string, variable: string): Rule => [
 
 const filterRule = (
   name: string,
-  themeMap: Record<string, string>,
+  themeMap: Record<string, string | undefined>,
 ): ThemeRule<string> => [
   name,
   themeMap,
@@ -1087,7 +1086,7 @@ const filterRule = (
 
 const backdropFilterRule = (
   name: `backdrop-${string}`,
-  themeMap: Record<string, string>,
+  themeMap: Record<string, string | undefined>,
 ): ThemeRule<string> => [
   name,
   themeMap,

@@ -124,12 +124,10 @@ export class ErrorOverlay extends HTMLElement {
     const message = hasFrame
       ? err.message.replace(codeFrameRE, "")
       : err.message;
-    if (err.plugin) {
-      this.text(".plugin", `[plugin:${err.plugin}] `);
-    }
+    if (err.plugin) this.text(".plugin", `[plugin:${err.plugin}] `);
     this.text(".message-body", message.trim());
 
-    const [file] = (err.loc?.file || err.id || "unknown file").split(`?`);
+    const [file] = (err.loc?.file ?? err.id ?? "unknown file").split("?");
     if (err.loc) {
       this.text(".file", `${file}:${err.loc.line}:${err.loc.column}`, true);
     } else if (err.id) {
@@ -149,26 +147,24 @@ export class ErrorOverlay extends HTMLElement {
 
   text(selector: string, text: string, linkFiles = false): void {
     const el = this.root.querySelector(selector)!;
-    if (!linkFiles) {
-      el.textContent = text;
-    } else {
+    if (linkFiles) {
       let curIndex = 0;
       let match: RegExpExecArray | null;
       while ((match = fileRE.exec(text))) {
         const { 0: file, index } = match;
-        if (index != null) {
-          const frag = text.slice(curIndex, index);
-          el.appendChild(document.createTextNode(frag));
-          const link = document.createElement("a");
-          link.textContent = file;
-          link.className = "file-link";
-          link.onclick = () => {
-            fetch("/__open-in-editor?file=" + encodeURIComponent(file));
-          };
-          el.appendChild(link);
-          curIndex += frag.length + file.length;
-        }
+        const frag = text.slice(curIndex, index);
+        el.appendChild(document.createTextNode(frag));
+        const link = document.createElement("a");
+        link.textContent = file;
+        link.className = "file-link";
+        link.onclick = () => {
+          fetch(`/__open-in-editor?file=${encodeURIComponent(file)}`);
+        };
+        el.appendChild(link);
+        curIndex += frag.length + file.length;
       }
+    } else {
+      el.textContent = text;
     }
   }
 
@@ -179,6 +175,6 @@ export class ErrorOverlay extends HTMLElement {
 
 export const overlayId = "rds-error-overlay";
 
-if (customElements && !customElements.get(overlayId)) {
+if (!customElements.get(overlayId)) {
   customElements.define(overlayId, ErrorOverlay);
 }

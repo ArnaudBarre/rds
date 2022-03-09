@@ -71,10 +71,10 @@ export const initHttpServer = ({
       if (url.endsWith(".map")) {
         const content = await readCacheFile(path);
         return { type: "json", content, browserCache: false }; // TODO: enable browser cache
-      } else {
+      } 
         const code = await getDependency(path);
         return { type: "js", content: code, browserCache: true };
-      }
+      
     }
     if (isJS(url)) {
       const { code, depsImports } = await importsTransform.get(url);

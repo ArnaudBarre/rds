@@ -35,7 +35,7 @@ export const getCSSGenerator = ({
   ]);
   const allClasses = new Set<string>();
 
-  const scanContentCache = cache("scanContent", async (url: string) => {
+  const scanContentCache = cache("scanContent", async (url) => {
     const code = await readFile(url);
     if (!(url.endsWith("x") || code.includes("@css-scan"))) return;
     const matches = scanCode(code);
@@ -48,7 +48,7 @@ export const getCSSGenerator = ({
       return;
     }
     contentMap.set(url, new Set(matches.map((m) => m.token)));
-    let hasNew = true;
+    let hasNew = false;
     for (const match of matches) {
       if (allClasses.has(match.token)) continue;
       allClasses.add(match.token);
@@ -56,11 +56,11 @@ export const getCSSGenerator = ({
       hasNew = true;
     }
     if (!updateCallback || !hasNew) return;
-    generatorCache.delete(null);
+    generatorCache.delete("");
     updateCallback();
   });
 
-  const generatorCache = cache("generator", (_: null) => {
+  const generatorCache = cache("generator", (_: string) => {
     let addContainer = false;
     const keyframes = new Set<string>();
     const defaults = new Set<CSSDefault>();
@@ -68,8 +68,9 @@ export const getCSSGenerator = ({
     let utilsOutput = "";
     allMatches.forEach((matches, screen) => {
       if (!matches.length) return;
-      if (screen)
-        utilsOutput += `\n@media ${variantsMap.get(screen)!.media} {\n`;
+      if (screen) {
+        utilsOutput += `\n@media ${variantsMap.get(screen)!.media!} {\n`;
+      }
       for (const match of matches.sort(
         (a, b) => a.ruleEntry.order - b.ruleEntry.order,
       )) {
@@ -81,7 +82,7 @@ export const getCSSGenerator = ({
         if (meta?.addDefault) defaults.add(meta.addDefault);
         if (meta?.addKeyframes) {
           const animationProperty =
-            cssConfig.theme.animation[match.ruleEntry.key];
+            cssConfig.theme.animation[match.ruleEntry.key]!;
           const name = animationProperty.slice(
             0,
             animationProperty.indexOf(" "),
@@ -93,9 +94,9 @@ export const getCSSGenerator = ({
         if (meta?.selectorRewrite) selector = meta.selectorRewrite(selector);
         for (let i = match.variants.length - 1; i >= 0; i--) {
           const variant = match.variants[i];
-          if (variant.selectorRewrite)
+          if (variant.selectorRewrite) {
             selector = variant.selectorRewrite(selector);
-          else {
+          } else {
             if (mediaWrapper) mediaWrapper += ` and ${variant.media}`;
             else mediaWrapper = variant.media;
           }
@@ -105,9 +106,9 @@ export const getCSSGenerator = ({
           `.${selector}`,
           toCSSEntries(match.ruleEntry),
         );
-        if (mediaWrapper) utilsOutput += `}\n`;
+        if (mediaWrapper) utilsOutput += "}\n";
       }
-      if (screen) utilsOutput += `}\n`;
+      if (screen) utilsOutput += "}\n";
     });
 
     if (defaults.size) {
@@ -118,16 +119,20 @@ export const getCSSGenerator = ({
       output += "\n";
     }
     keyframes.forEach((name) => {
-      output += `@keyframes ${name} {\n  ${cssConfig.theme.keyframes[name]}\n}\n`;
+      output += `@keyframes ${name} {\n  ${cssConfig.theme.keyframes[
+        name
+      ]!}\n}\n`;
     });
     if (keyframes.size) output += "\n";
+    // Issue with TS flow control
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (addContainer) output += printContainer();
 
     return output + utilsOutput;
   });
-  const generate = () => generatorCache.get(null);
+  const generate = () => generatorCache.get("");
 
-  const validSelectorRe = /^[a-z0-9:/\[\]#-]+$/;
+  const validSelectorRe = /^[a-z0-9:/[]#-]+$/;
   const scanCode = (code: string) => {
     const matches: RuleMatch[] = [];
     const tokens = code
@@ -159,18 +164,18 @@ export const getCSSGenerator = ({
     };
     let output = `.container { width: 100%; ${
       cssConfig.theme.container.center
-        ? `margin-right: auto; margin-left: auto; `
+        ? "margin-right: auto; margin-left: auto; "
         : ""
     }${getPadding(defaultPadding)}}\n`;
     for (const name in cssConfig.theme.screens) {
-      const { min } = cssConfig.theme.screens[name];
+      const { min } = cssConfig.theme.screens[name]!;
       if (!min) continue;
       output += `@media (min-width: ${min}) {
   .container { max-width: ${min}; ${getPadding(
         typeof paddingConfig === "string" ? undefined : paddingConfig?.[name],
       )}}\n}\n`;
     }
-    return output + "\n";
+    return `${output}\n`;
   };
 
   return {
@@ -182,13 +187,13 @@ export const getCSSGenerator = ({
 };
 
 const escapeSelector = (selector: string) =>
-  selector.replace(/[:/\[\]]/g, (c) => `\\${c}`);
+  selector.replace(/[:/[]]/g, (c) => `\\${c}`);
 
 const printBlock = (selector: string, entries: CSSEntries) => {
-  selector += ` {\n`;
-  for (let entry of entries) {
-    selector += `  ${entry[0]}: ${entry[1]};\n`;
+  let output = `${selector} {\n`;
+  for (const entry of entries) {
+    output += `  ${entry[0]}: ${entry[1]};\n`;
   }
-  selector += `}\n`;
-  return selector;
+  output += "}\n";
+  return output;
 };

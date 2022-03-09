@@ -29,7 +29,7 @@ parentPort.on("message", (path: string) => {
       if (e.messageTemplate === "file-not-found" && e.messageData?.pattern) {
         // Can happen when the file is deleted or moved
         console.log(
-          `${chalk.yellow(`[eslint] File not found`)} ${chalk.dim(
+          `${chalk.yellow("[eslint] File not found")} ${chalk.dim(
             e.messageData.pattern,
           )}`,
         );
