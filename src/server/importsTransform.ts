@@ -15,10 +15,12 @@ export type ImportsTransform = ReturnType<typeof initImportsTransform>;
 export const initImportsTransform = ({
   cssGenerator,
   cssTransform,
+  lintFile,
   watchFile,
 }: {
   cssGenerator: CSSGenerator;
   cssTransform: CSSTransform;
+  lintFile: (path: string) => void;
   watchFile: (path: string) => void;
 }) => {
   const graph: Graph = new Map([
@@ -53,6 +55,7 @@ export const initImportsTransform = ({
       graphNode.imports = imports;
       content = cssToHMR(url, code, cssModule);
     } else {
+      lintFile(url);
       const [{ code, imports, hasFastRefresh }] = await Promise.all([
         swcCache.get(url),
         cssGenerator.scanContentCache.get(url),

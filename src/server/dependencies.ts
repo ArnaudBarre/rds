@@ -14,7 +14,7 @@ import {
 } from "./utils";
 import { colors } from "./colors";
 import { log } from "./logger";
-import { DEPENDENCY_PREFIX, RDS_CSS_UTILS, RDS_PREFIX } from "./consts";
+import { DEPENDENCY_PREFIX, RDS_CSS_UTILS, RDS_VIRTUAL_PREFIX } from "./consts";
 import { AnalyzedImport } from "./swc";
 import { CSSGenerator } from "./css/generator";
 
@@ -31,7 +31,7 @@ export const addDependency = (
   dep: string,
   onNewDep: (() => void) | undefined,
 ) => {
-  if (dep.startsWith(RDS_PREFIX)) return;
+  if (dep.startsWith(RDS_VIRTUAL_PREFIX)) return;
   if (dependencies.has(dep)) return;
   dependencies.add(dep);
   if (!onNewDep) return;
@@ -124,7 +124,7 @@ export const transformDependenciesImports = async ({
   cssGenerator: CSSGenerator;
 }) => {
   for (const dep of depsImports) {
-    if (dep.source.startsWith(RDS_PREFIX)) {
+    if (dep.source.startsWith(RDS_VIRTUAL_PREFIX)) {
       if (dep.source === RDS_CSS_UTILS) {
         code = code.replace(
           new RegExp(`import\\s+['"]${dep.source}['"]`),

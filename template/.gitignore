@@ -3,6 +3,7 @@ dist/
 *.local
 .swc/
 bun.lockb
+.eslintcache
 
 # testing
 result.css

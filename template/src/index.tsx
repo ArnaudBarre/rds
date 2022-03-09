@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import "@rds/css-utils";
+import "virtual:@rds/css-utils";
 
 import { App } from "./App";
 

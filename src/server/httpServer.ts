@@ -16,6 +16,7 @@ import {
   RDS_CLIENT,
   RDS_CSS_UTILS,
   RDS_PREFIX,
+  RDS_VIRTUAL_PREFIX,
 } from "./consts";
 import { join } from "path";
 import { cssToHMR } from "./css/utils/hmr";
@@ -47,6 +48,9 @@ export const initHttpServer = ({
           browserCache: false, // TODO: use caching based on rds version
         };
       }
+      throw new Error(`Unexpect entry point: ${url}`);
+    }
+    if (url.startsWith(RDS_VIRTUAL_PREFIX)) {
       if (url === RDS_CSS_UTILS) {
         return {
           content: cssToHMR(url, cssGenerator.generate(), false),
@@ -146,12 +150,12 @@ export const initHttpServer = ({
 
 export const listen = async (httpServer: HttpServer, config: ResolvedConfig) =>
   new Promise<number>((resolve, reject) => {
-    const host = config.host ? undefined : "127.0.0.1";
-    let port = config.port;
+    const host = config.server.host ? undefined : "127.0.0.1";
+    let port = config.server.port;
 
     const onError = (e: Error & { code?: string }) => {
       if (e.code === "EADDRINUSE") {
-        if (config.strictPort) {
+        if (config.server.strictPort) {
           httpServer.removeListener("error", onError);
           reject(new Error(`Port ${port} is already in use`));
         } else {

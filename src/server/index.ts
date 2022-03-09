@@ -27,13 +27,19 @@ export const startServer = async () => {
     ignoreInitial: true,
     disableGlobbing: true,
   });
+  new Worker(resolve(__dirname, "./tscWorker"));
+  const eslintWorker = config.eslint
+    ? new Worker(resolve(__dirname, "./eslintWorker"), {
+        workerData: config.eslint,
+      })
+    : undefined;
   const importsTransform = initImportsTransform({
     cssTransform,
     cssGenerator,
+    lintFile: (path) => eslintWorker?.postMessage(path),
     watchFile: (path) => srcWatcher.add(path),
   });
 
-  new Worker(resolve(__dirname, "./tscWorker"));
   await importsTransform.get(ENTRY_POINT);
   await buildDependencies();
   const ws = initWS();
@@ -57,7 +63,7 @@ export const startServer = async () => {
   const port = await listen(server, config);
   log.info(colors.cyan(`Dev server running at:`));
   const localUrl = `http://localhost:${port}`;
-  if (config.host) {
+  if (config.server.host) {
     Object.values(os.networkInterfaces())
       .flatMap((nInterface) => nInterface ?? [])
       .filter((detail) => detail?.address && detail.family === "IPv4")

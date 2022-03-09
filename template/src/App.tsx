@@ -13,10 +13,7 @@ export const App = () => {
       <header className="App-header">
         <p>Hello Vite + React!</p>
         <p>
-          <button
-            type="button"
-            onClick={() => setCount((count) => add(count, 1))}
-          >
+          <button type="button" onClick={() => setCount(add(count, 1))}>
             count is: {count}
           </button>
         </p>
@@ -24,7 +21,7 @@ export const App = () => {
           Edit <code>App.tsx</code> and save to test HMR updates.
         </p>
         <Logo className="rotate-45 h-44" />
-        <img src={logoUrl} className="animate-spin-slow h-44" />
+        <img alt="Logo" src={logoUrl} className="animate-spin-slow h-44" />
         <div className="logo-bg" />
         <p className="space-x-4">
           <a

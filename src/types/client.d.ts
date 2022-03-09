@@ -1,7 +1,7 @@
 // Virtual entrypoint for on-demand CSS utils
-declare module "@rds/css-utils";
+declare module "virtual:@rds/css-utils";
 // Virtual entrypoint for CSS reset
-declare module "@rds/css-reset";
+declare module "virtual:@rds/css-reset";
 
 // CSS modules
 declare module "*.module.css" {
