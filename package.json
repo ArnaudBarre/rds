@@ -7,7 +7,8 @@
     "postinstall": "patch-package",
     "start": "scripts/start.ts",
     "lint": "yarn lint-ci --fix --cache",
-    "lint-ci": "eslint src scripts --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint-ci": "eslint src scripts --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "prettier": "prettier --write '**/*.{ts,tsx,json,md}'"
   },
   "prettier": {
     "trailingComma": "all"

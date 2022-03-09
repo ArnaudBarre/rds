@@ -1,5 +1,5 @@
 {
-  "include": ["src", "scripts"],
+  "include": ["src", "scripts", "template/css-test.ts"],
   "compilerOptions": {
     "module": "ES2020",
     "target": "ES2021",

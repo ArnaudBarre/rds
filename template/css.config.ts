@@ -1,4 +1,5 @@
-import type { CSSConfig } from "../src/server/css/types";
+/* eslint-disable @typescript-eslint/naming-convention */
+import type { CSSConfig } from "../src/types";
 import { colors } from "./src/colors";
 
 export const config: CSSConfig = {

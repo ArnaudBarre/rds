@@ -40,7 +40,8 @@ export const getConfig = async <Config>(
   }
 
   const module = require(join(process.cwd(), output));
-  if (!module.config)
-    {throw new Error(`${entryPoint} doesn't have a "config" export`);}
+  if (!module.config) {
+    throw new Error(`${entryPoint} doesn't have a "config" export`);
+  }
   return module.config;
 };

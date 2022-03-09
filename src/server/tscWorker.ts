@@ -22,6 +22,6 @@ createWatchProgram(
         console.log(message);
       }
     },
-    () => undefined // Don't report file watcher status (Starting incremental, Watching for file changes, ...)
-  )
+    () => undefined, // Don't report file watcher status (Starting incremental, Watching for file changes, ...)
+  ),
 );
