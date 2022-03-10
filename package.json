@@ -20,7 +20,8 @@
     "prettier-ci": "prettier --ignore-path .gitignore --check '**/*.{js,ts,json,md}'"
   },
   "prettier": {
-    "trailingComma": "all"
+    "trailingComma": "all",
+    "quoteProps": "consistent"
   },
   "dependencies": {
     "@parcel/css": "^1.4.0",

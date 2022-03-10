@@ -14,7 +14,7 @@ export const getCSSDefaults = ({
   );
 
   return {
-    transform: [
+    "transform": [
       ["--tw-translate-x", "0"],
       ["--tw-translate-y", "0"],
       ["--tw-rotate", "0"],
@@ -44,7 +44,7 @@ export const getCSSDefaults = ({
       ["--tw-ring-offset-shadow", "0 0 #0000"],
       ["--tw-ring-shadow", "0 0 #0000"],
     ],
-    filter: [
+    "filter": [
       ["--tw-blur", " "],
       ["--tw-brightness", " "],
       ["--tw-contrast", " "],
