@@ -3,7 +3,7 @@ import { useColors, colors } from "./colors";
 
 export const isDebug = process.argv.includes("--debug");
 
-export const log: {
+export const logger: {
   debug: (message: string) => void;
   info: (message: string) => void;
   warn: (message: string) => void;

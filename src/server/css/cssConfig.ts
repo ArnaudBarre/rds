@@ -7,7 +7,7 @@ import {
   ThemeCallback,
   ThemeKey,
 } from "../../types";
-import { log } from "../logger";
+import { logger } from "../logger";
 import { getConfig } from "../bundleConfig";
 import { mapObjectValue } from "../utils";
 import { baseTheme } from "./theme/baseTheme";
@@ -75,6 +75,6 @@ export const getCSSConfig = async () => {
         ? config.plugins(theme as ResolvedTheme)
         : config?.plugins ?? [],
   };
-  log.debug(`Load CSS config: ${(performance.now() - start).toFixed(2)}ms`);
+  logger.debug(`Load CSS config: ${(performance.now() - start).toFixed(2)}ms`);
   return cssConfig;
 };

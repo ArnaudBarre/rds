@@ -8,7 +8,7 @@ import {
   ThemeRuleMeta,
 } from "../../types";
 import { split } from "../utils";
-import { log } from "../logger";
+import { logger } from "../logger";
 import { getCorePlugins, RuleOrRules } from "./corePlugins";
 import { ResolvedCSSConfig } from "./cssConfig";
 import { Variant, VariantsMap } from "./variants";
@@ -128,10 +128,10 @@ const getRulesEntries = (rules: Rule[]) => {
   }
 
   if (rulesEntries.size !== order) {
-    log.warn(`Collision happened for ${order - rulesEntries.size} rule(s)`);
+    logger.warn(`Collision happened for ${order - rulesEntries.size} rule(s)`);
   }
 
-  log.debug(
+  logger.debug(
     `${rulesEntries.size} rules entries created in ${(
       performance.now() - startRulesEntries
     ).toFixed(2)}ms`,
@@ -155,7 +155,7 @@ export const getRules = (cssConfig: ResolvedCSSConfig) => {
     (r) => getRuleMeta(r)?.components ?? false,
   );
   const rules = components.concat(coreRules, utils);
-  log.debug(`Loaded rules: ${(performance.now() - start).toFixed(2)}ms`);
+  logger.debug(`Loaded rules: ${(performance.now() - start).toFixed(2)}ms`);
   return rules;
 };
 

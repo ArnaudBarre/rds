@@ -1,8 +1,9 @@
-export const mimeTypes: Record<string, string> = {
-  js: "application/javascript",
-  css: "text/css",
+export const mimeTypes = {
   html: "text/html",
+  css: "text/css",
+  js: "application/javascript",
   json: "application/json",
+  map: "application/json",
 
   // images
   svg: "image/svg+xml",
@@ -28,4 +29,28 @@ export const mimeTypes: Record<string, string> = {
   // other
   txt: "text/plain",
   pdf: "application/pdf",
+};
+export type Extension = keyof typeof mimeTypes;
+
+/* eslint-disable @typescript-eslint/naming-convention */
+export const esbuildFilesLoaders: Record<
+  `.${Exclude<Extension, "html" | "css" | "js" | "json" | "map" | "svg">}`,
+  "file"
+> = {
+  ".jpg": "file",
+  ".png": "file",
+  ".gif": "file",
+  ".webp": "file",
+  ".avif": "file",
+  ".mp3": "file",
+  ".acc": "file",
+  ".wav": "file",
+  ".mp4": "file",
+  ".webm": "file",
+  ".woff": "file",
+  ".woff2": "file",
+  ".ttf": "file",
+  ".otf": "file",
+  ".txt": "file",
+  ".pdf": "file",
 };

@@ -1,10 +1,10 @@
-import { mimeTypes } from "./mimeTypes";
+import { Extension } from "./mimeTypes";
 
 export type LoadedFile = {
   content: string | Buffer;
-  type: keyof typeof mimeTypes;
+  type: Extension;
   browserCache: boolean;
-};
+} | null;
 
 export type GraphNode = {
   url: string;

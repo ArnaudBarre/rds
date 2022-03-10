@@ -6,7 +6,7 @@ import { HMR_HEADER } from "../consts";
 import { HMRError, HMRPayload } from "../hmrPayload";
 
 import { colors } from "./colors";
-import { log } from "./logger";
+import { logger } from "./logger";
 
 export type WS = ReturnType<typeof initWS>;
 
@@ -21,7 +21,9 @@ export const initWS = () => {
 
   wss.on("error", (e: Error & { code: string }) => {
     if (e.code !== "EADDRINUSE") {
-      log.info(colors.red(`WebSocket server error:\n${e.stack ?? e.message}`));
+      logger.info(
+        colors.red(`WebSocket server error:\n${e.stack ?? e.message}`),
+      );
     }
   });
 

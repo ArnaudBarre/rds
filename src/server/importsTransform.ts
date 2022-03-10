@@ -49,7 +49,7 @@ export const initImportsTransform = ({
 
     const isCSSFile = isCSS(url);
     if (isCSSFile) {
-      const { code, imports, cssModule } = cssTransform.get(url);
+      const { code, imports, cssModule } = await cssTransform.get(url);
       graphNode.selfUpdate = !cssModule; // Can't self accept because of modules exports
       graphNode.imports = imports;
       content = cssToHMR(url, code, cssModule);

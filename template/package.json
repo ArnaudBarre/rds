@@ -2,7 +2,9 @@
   "name": "template",
   "private": true,
   "scripts": {
-    "start": "../dist/server/index.js --debug"
+    "start": "./node_modules/rds/server/dev.js --debug",
+    "build": "./node_modules/rds/server/build.js",
+    "serve": "./node_modules/rds/server/serve.js"
   },
   "dependencies": {
     "react": "^17.0.2",

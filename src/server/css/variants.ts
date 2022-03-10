@@ -1,5 +1,5 @@
 import { SelectorRewrite } from "../../types";
-import { log } from "../logger";
+import { logger } from "../logger";
 import { ResolvedCSSConfig } from "./cssConfig";
 
 export type VariantsMap = Map<string, Variant>;
@@ -117,7 +117,7 @@ export const getVariants = (cssConfig: ResolvedCSSConfig) => {
     variantsMap.set(prefix, { media });
   });
 
-  log.debug(
+  logger.debug(
     `${variantsMap.size} variants added in ${(
       performance.now() - start
     ).toFixed(2)}ms`,

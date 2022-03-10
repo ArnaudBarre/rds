@@ -1,7 +1,7 @@
 import { FSWatcher } from "chokidar";
 
 import { GraphNode } from "./types";
-import { log } from "./logger";
+import { logger } from "./logger";
 import { colors } from "./colors";
 import { swcCache } from "./swc";
 import { resolveExtensionCache } from "./resolve";
@@ -48,17 +48,17 @@ export const setupHmr = ({
 
   srcWatcher
     .on("change", async (path) => {
-      log.debug(`change ${path}`);
+      logger.debug(`change ${path}`);
       clearCache(path);
       const graphNode = importsTransform.graph.get(path);
       if (graphNode) {
         invalidate(graphNode);
         const updates = new Set<string>();
         if (propagateUpdate(graphNode, updates)) {
-          log.info(colors.green("page reload ") + colors.dim(path));
+          logger.info(colors.green("page reload ") + colors.dim(path));
           ws.send({ type: "reload" });
         } else {
-          log.info(
+          logger.info(
             colors.green("hmr update ") +
               [...updates].map((update) => colors.dim(update)).join(", "),
           );
@@ -72,7 +72,7 @@ export const setupHmr = ({
       }
     })
     .on("unlink", (path) => {
-      log.debug(`unlink ${path}`);
+      logger.debug(`unlink ${path}`);
       if (isJS(path)) {
         resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
       }

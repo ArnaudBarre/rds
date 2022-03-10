@@ -13,7 +13,7 @@ import {
   readFileSync,
 } from "./utils";
 import { colors } from "./colors";
-import { log } from "./logger";
+import { logger } from "./logger";
 import { DEPENDENCY_PREFIX, RDS_CSS_UTILS, RDS_VIRTUAL_PREFIX } from "./consts";
 import { AnalyzedImport } from "./swc";
 import { CSSGenerator } from "./css/generator";
@@ -74,14 +74,14 @@ export const buildDependencies = async () => {
     if (metadata.dependenciesHash === dependenciesHash) {
       const cacheSet = new Set(Object.keys(metadata.deps));
       if (cacheSet.size >= deps.length && deps.every((d) => cacheSet.has(d))) {
-        log.debug(
+        logger.debug(
           `Pre-bundling skipped in ${(performance.now() - start).toFixed(2)}ms`,
         );
         return;
       }
-      log.debug("Skipping dependencies cache (new used deps)");
+      logger.debug("Skipping dependencies cache (new used deps)");
     } else {
-      log.debug("Skipping dependencies cache (dependenciesHash change)");
+      logger.debug("Skipping dependencies cache (dependenciesHash change)");
     }
   }
   const listed = 5;
@@ -89,7 +89,7 @@ export const buildDependencies = async () => {
     deps.slice(0, listed).join("\n  ") +
       (deps.length > listed ? `\n  (...and ${deps.length - listed} more)` : ""),
   );
-  log.info(colors.green(`Pre-bundling dependencies:\n  ${depsString}`));
+  logger.info(colors.green(`Pre-bundling dependencies:\n  ${depsString}`));
   const result = await build({
     entryPoints: deps,
     bundle: true,
@@ -112,7 +112,7 @@ export const buildDependencies = async () => {
     };
   }
   metadataCache.write(metadata);
-  log.info(`  ✔ Bundled in ${Math.round(performance.now() - start)}ms`);
+  logger.info(`  ✔ Bundled in ${Math.round(performance.now() - start)}ms`);
 };
 
 export const transformDependenciesImports = async ({

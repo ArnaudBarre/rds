@@ -1,6 +1,6 @@
 import { Config } from "../types";
 import { getConfig } from "./bundleConfig";
-import { log } from "./logger";
+import { logger } from "./logger";
 
 export type ResolvedConfig = Awaited<ReturnType<typeof loadConfig>>;
 
@@ -15,6 +15,6 @@ export const loadConfig = async () => {
         : { cache: true, fix: false, ...config?.eslint },
     server: { host: false, port: 3000, strictPort: false, ...config?.server },
   };
-  log.debug(`Load config: ${(performance.now() - start).toFixed(2)}ms`);
+  logger.debug(`Load config: ${(performance.now() - start).toFixed(2)}ms`);
   return resolvedConfig;
 };

@@ -1,6 +1,6 @@
 import { CSSDefault, CSSEntries } from "../../types";
 import { RDS_CSS_UTILS } from "../consts";
-import { cache, getHashedUrl, readFile } from "../utils";
+import { cache, getHashedUrl, readFile, run } from "../utils";
 import {
   getRuleMeta,
   RuleMatch,
@@ -37,7 +37,12 @@ export const getCSSGenerator = ({
 
   const scanContentCache = cache("scanContent", async (url) => {
     const code = await readFile(url);
-    if (!(url.endsWith("x") || code.includes("@css-scan"))) return;
+    const shouldScan = run(() => {
+      if (url.endsWith("x")) return true;
+      if (url.startsWith("dist")) return true;
+      return code.includes("@css-scan");
+    });
+    if (!shouldScan) return;
     const matches = scanCode(code);
     const actual = contentMap.get(url);
     if (

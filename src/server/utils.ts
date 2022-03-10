@@ -2,7 +2,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { dirname, extname, join } from "path";
 
-import { isDebug, log } from "./logger";
+import { isDebug, logger } from "./logger";
 
 export const isCSS = (path: string) => path.endsWith(".css");
 export const isJS = (path: string) => /\.[jt]sx?$/.test(path);
@@ -44,12 +44,12 @@ export const jsonCacheSync = <T extends Record<string, any>>(
     read: (): T | undefined => {
       const content = readMaybeFileSync(path);
       if (!content) {
-        log.debug(`${name} cache not found`);
+        logger.debug(`${name} cache not found`);
         return;
       }
       const json = JSON.parse(content) as T & { version: number };
       if (json.version !== version) {
-        log.info(`Skipping ${name} cache (version change)`);
+        logger.info(`Skipping ${name} cache (version change)`);
         return;
       }
       return json;
@@ -66,15 +66,15 @@ export const cache = <Value>(name: string, load: (key: string) => Value) => {
   const map = new Map<string, Value>();
   return {
     has: (key: string) => {
-      log.debug(`${name}: has - ${key}`);
+      logger.debug(`${name}: has - ${key}`);
       return map.has(key);
     },
     delete: (key: string) => {
-      log.debug(`${name}: delete - ${key}`);
+      logger.debug(`${name}: delete - ${key}`);
       map.delete(key);
     },
     get: (key: string) => {
-      log.debug(`${name}: get - ${key}`);
+      logger.debug(`${name}: get - ${key}`);
       const cached = map.get(key);
       if (cached) return cached;
       const start = performance.now();
@@ -83,7 +83,7 @@ export const cache = <Value>(name: string, load: (key: string) => Value) => {
         (async () => {
           // eslint-disable-next-line @typescript-eslint/await-thenable
           await value;
-          log.debug(
+          logger.debug(
             `${name}: load - ${key}: ${Math.round(
               performance.now() - start,
             )}ms`,
@@ -95,6 +95,8 @@ export const cache = <Value>(name: string, load: (key: string) => Value) => {
     },
   };
 };
+
+export const run = <T>(cb: () => T) => cb();
 
 export const split = <T>(array: T[], predicate: (value: T) => boolean) => {
   const positive: T[] = [];
@@ -126,4 +128,10 @@ export const mapObject = <K extends string, V, K2 extends string, V2>(
 export const mapObjectValue = <K extends string, V, R>(
   object: Record<K, V>,
   fn: (v: V) => R,
-) => mapObject(object, ([key, v]) => [key, fn(v)]);
+) => {
+  const result = {} as Record<K, R>;
+  for (const key in object) {
+    result[key] = fn(object[key]);
+  }
+  return result;
+};

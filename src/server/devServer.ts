@@ -1,15 +1,14 @@
-import { createServer, Server as HttpServer } from "http";
-import { mimeTypes } from "./mimeTypes";
+import { join } from "path";
+
+import { Extension } from "./mimeTypes";
 import {
   getExtension,
-  getHash,
   isCSS,
   isJS,
   isSVG,
   readCacheFile,
   readFileSync,
 } from "./utils";
-import { LoadedFile } from "./types";
 import {
   DEPENDENCY_PREFIX,
   ENTRY_POINT,
@@ -18,7 +17,6 @@ import {
   RDS_PREFIX,
   RDS_VIRTUAL_PREFIX,
 } from "./consts";
-import { join } from "path";
 import { cssToHMR } from "./css/utils/hmr";
 import { publicFiles, publicFilesCache } from "./public";
 import { getDependency, transformDependenciesImports } from "./dependencies";
@@ -26,20 +24,16 @@ import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
 import { CSSGenerator } from "./css/generator";
 import { ImportsTransform } from "./importsTransform";
-import { ResolvedConfig } from "./loadConfig";
-import { log } from "./logger";
+import { createServer } from "./createServer";
 
-export const initHttpServer = ({
+export const createDevServer = ({
   importsTransform,
   cssGenerator,
 }: {
   importsTransform: ImportsTransform;
   cssGenerator: CSSGenerator;
-}) => {
-  const handleRequest = async (
-    url: string,
-    _query: URLSearchParams,
-  ): Promise<LoadedFile> => {
+}) =>
+  createServer(async (url) => {
     if (url.startsWith(RDS_PREFIX)) {
       if (url === RDS_CLIENT) {
         return {
@@ -63,7 +57,11 @@ export const initHttpServer = ({
 
     if (publicFiles.has(url)) {
       const content = await publicFilesCache.get(url);
-      return { type: getExtension(url), content, browserCache: false };
+      return {
+        type: getExtension(url) as Extension,
+        content,
+        browserCache: false,
+      };
     }
 
     if (url.startsWith(DEPENDENCY_PREFIX)) {
@@ -98,8 +96,12 @@ export const initHttpServer = ({
       return { type: "js", content, browserCache: true };
     }
     if (url.includes(".")) {
-      const content = await assetsCache.get(url);
-      return { type: getExtension(url), content, browserCache: true };
+      if (!assetsCache.has(url)) return null;
+      return {
+        type: getExtension(url) as Extension,
+        content: await assetsCache.get(url),
+        browserCache: true,
+      };
     }
 
     const content = await publicFilesCache.get("index.html");
@@ -107,6 +109,7 @@ export const initHttpServer = ({
     return {
       type: "html",
       content: content
+        .toString()
         .replace(
           "<head>",
           `<head>\n    <script type="module" src="/${RDS_CLIENT}"></script>`,
@@ -117,60 +120,4 @@ export const initHttpServer = ({
         ),
       browserCache: false,
     };
-  };
-
-  return createServer(async (req, res) => {
-    const [url, query] = req.url!.split("?") as [string, string | undefined];
-    const { content, type, browserCache } = await handleRequest(
-      url.slice(1),
-      new URLSearchParams(query),
-    );
-
-    res.setHeader("Content-Type", mimeTypes[type]);
-    if (browserCache) {
-      res.setHeader("Cache-Control", "public, max-age=604800, immutable");
-      res.writeHead(200);
-      res.end(content);
-    } else {
-      const etag = `"${getHash(content)}"`;
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Etag", etag);
-
-      if (req.headers["if-none-match"] === etag) {
-        res.writeHead(304);
-        res.end();
-      } else {
-        res.writeHead(200);
-        res.end(content);
-      }
-    }
-  });
-};
-
-export const listen = async (httpServer: HttpServer, config: ResolvedConfig) =>
-  new Promise<number>((resolve, reject) => {
-    const host = config.server.host ? undefined : "127.0.0.1";
-    let port = config.server.port;
-
-    const onError = (e: Error & { code?: string }) => {
-      if (e.code === "EADDRINUSE") {
-        if (config.server.strictPort) {
-          httpServer.removeListener("error", onError);
-          reject(new Error(`Port ${port} is already in use`));
-        } else {
-          log.info(`Port ${port} is in use, trying another one...`);
-          httpServer.listen(++port, host);
-        }
-      } else {
-        httpServer.removeListener("error", onError);
-        reject(e);
-      }
-    };
-
-    httpServer.on("error", onError);
-
-    httpServer.listen(port, host, () => {
-      httpServer.removeListener("error", onError);
-      resolve(port);
-    });
   });
