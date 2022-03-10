@@ -1,14 +1,7 @@
 import { join } from "path";
 
 import { Extension } from "./mimeTypes";
-import {
-  getExtension,
-  isCSS,
-  isJS,
-  isSVG,
-  readCacheFile,
-  readFileSync,
-} from "./utils";
+import { getExtension, isCSS, isJS, isSVG, readCacheFile } from "./utils";
 import {
   DEPENDENCY_PREFIX,
   ENTRY_POINT,
@@ -25,6 +18,7 @@ import { assetsCache } from "./assets";
 import { CSSGenerator } from "./css/generator";
 import { ImportsTransform } from "./importsTransform";
 import { createServer } from "./createServer";
+import { readFileSync } from "fs";
 
 export const createDevServer = ({
   importsTransform,

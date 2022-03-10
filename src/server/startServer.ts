@@ -1,26 +1,22 @@
 import { join } from "path";
 import { Server as HttpServer } from "http";
 import { exec } from "child_process";
-import os from "os";
+import { networkInterfaces } from "os";
 
 import { ResolvedConfig } from "./loadConfig";
 import { logger } from "./logger";
 import { colors } from "./colors";
+import { stopProfiler } from "./stopProfiler";
 
-export const startServer = async ({
-  server,
-  config,
-  start,
-}: {
-  server: HttpServer;
-  config: ResolvedConfig;
-  start: number;
-}) => {
+export const startServer = async (
+  server: HttpServer,
+  config: ResolvedConfig,
+) => {
   const port = await listen(server, config);
   logger.info(colors.cyan("Dev server running at:"));
   const localUrl = `http://localhost:${port}`;
   if (config.server.host) {
-    Object.values(os.networkInterfaces())
+    Object.values(networkInterfaces())
       .flatMap((nInterface) => nInterface ?? [])
       .filter((detail) => detail.address && detail.family === "IPv4")
       .map((detail) =>
@@ -35,13 +31,16 @@ export const startServer = async ({
   }
 
   logger.info(
-    colors.green(`Ready in ${(performance.now() - start).toFixed(0)} ms`),
+    colors.green(
+      `Ready in ${(performance.now() - global.__rds_start).toFixed(0)} ms`,
+    ),
   );
   if (process.platform === "darwin" && config.open) {
     exec(`osascript openChrome.applescript ${localUrl}`, {
-      cwd: join(__dirname, "../bin"),
+      cwd: join(__dirname, "../../bin"),
     });
   }
+  stopProfiler();
 };
 
 const listen = async (httpServer: HttpServer, config: ResolvedConfig) =>

@@ -1,6 +1,6 @@
+import { statSync, readFileSync } from "fs";
 import { join } from "path";
 import { build } from "esbuild";
-import fs from "fs";
 
 import {
   cache,
@@ -10,7 +10,6 @@ import {
   jsonCacheSync,
   lookup,
   readCacheFile,
-  readFileSync,
 } from "./utils";
 import { colors } from "./colors";
 import { logger } from "./logger";
@@ -58,8 +57,8 @@ const initDependencyHash = () => {
     }
     const patchesDir = lookup(["patches"]);
     dependenciesHash = getHash(
-      readFileSync(lockPath) +
-        (patchesDir ? fs.statSync(patchesDir).mtimeMs.toString() : ""),
+      readFileSync(lockPath, "utf-8") +
+        (patchesDir ? statSync(patchesDir).mtimeMs.toString() : ""),
     );
   }
 };

@@ -1,13 +1,23 @@
 {
   "name": "rds",
   "description": "React development server",
-  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
   "author": "Arnaud Barré (https://github.com/ArnaudBarre)",
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "bin": {
+    "rds": "dist/server/index.js"
+  },
   "scripts": {
-    "start": "scripts/start.ts",
+    "start": "scripts/bundle.ts --dev",
+    "build": "scripts/bundle.ts",
     "lint": "yarn lint-ci --fix --cache",
     "lint-ci": "eslint src scripts --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "prettier": "prettier --write '**/*.{ts,tsx,json,md}'"
+    "prettier": "yarn prettier-ci --write",
+    "prettier-ci": "prettier --ignore-path .gitignore --check '**/*.{js,ts,json,md}'"
   },
   "prettier": {
     "trailingComma": "all"

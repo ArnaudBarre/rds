@@ -1,26 +1,19 @@
 {
-  "include": ["src", "scripts", "template/css-test.ts"],
+  "include": ["src", "scripts"],
   "compilerOptions": {
-    "module": "ES2020",
-    "target": "ES2021",
-
-    /* Compile via esbuild */
-    "noEmit": true,
-    "isolatedModules": true,
+    "target": "ES2021", // Target node 16
+    "noEmit": true, // Compile via esbuild
 
     /* Imports */
     "moduleResolution": "node", // Allow `index` imports
     "resolveJsonModule": true, // Allow json import
     "forceConsistentCasingInFileNames": true, // Avoid difference in case between file name and import
-    "allowSyntheticDefaultImports": true, // Allow import fs from "fs"
 
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "useUnknownInCatchVariables": true,
-
-    "skipLibCheck": true // Report mostly false positive
+    "useUnknownInCatchVariables": true
   }
 }

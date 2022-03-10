@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { start } from "./start";
 import { promises as fs } from "fs";
 
 import { loadConfig } from "./loadConfig";
@@ -23,7 +22,7 @@ const main = async () => {
       throw err;
     }
   });
-  await startServer({ server, config, start });
+  await startServer(server, config);
 };
 
 main();

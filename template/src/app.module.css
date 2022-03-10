@@ -1,9 +1,0 @@
-.someClass {
-  color: blue;
-}
-
-@screen lg {
-  .someClass {
-    @apply text-sky-700;
-  }
-}

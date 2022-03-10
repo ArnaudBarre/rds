@@ -1,25 +1,27 @@
 #!/usr/bin/env node
 /* eslint-disable @typescript-eslint/naming-convention */
-import { start } from "./start";
-import fs, { writeFileSync } from "fs";
+import { rmSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
-import esbuild, { BuildResult, Metafile } from "esbuild";
+import { build, BuildResult, Metafile } from "esbuild";
 import { execSync } from "child_process";
 
 import { svgToJSX } from "./svgToJSX";
 import { colors } from "./colors";
-import { getHash, readFile, readFileSync } from "./utils";
+import { getHash, readFile } from "./utils";
 import { esbuildFilesLoaders } from "./mimeTypes";
 import { isDebug } from "./logger";
 import { initCSS } from "./css";
 import { cssModuleToJS } from "./css/utils/hmr";
 import { ENTRY_POINT } from "./consts";
 import { parcel } from "./css/parcel";
+import { stopProfiler } from "./stopProfiler";
 
 const log = (step: string) => {
   if (!isDebug) return;
   console.log(
-    `${colors.green((performance.now() - start).toFixed(2))} ${step}`,
+    `${colors.green(
+      (performance.now() - global.__rds_start).toFixed(2),
+    )} ${step}`,
   );
 };
 
@@ -37,7 +39,7 @@ const main = async () => {
   let hasCSSUtils = false;
   let bundleResult: BuildResult & { metafile: Metafile };
   try {
-    bundleResult = await esbuild.build({
+    bundleResult = await build({
       entryPoints: [ENTRY_POINT],
       bundle: true,
       outdir: "dist/assets",
@@ -57,16 +59,16 @@ const main = async () => {
       plugins: [
         {
           name: "css",
-          setup: (build) => {
-            build.onResolve({ filter: /^transpiled:/ }, ({ path }) => ({
+          setup: (pluginBuild) => {
+            pluginBuild.onResolve({ filter: /^transpiled:/ }, ({ path }) => ({
               path: path.slice(11),
               namespace: "css-transpiled",
             }));
-            build.onLoad(
+            pluginBuild.onLoad(
               { filter: /./, namespace: "css-transpiled" },
               ({ path }) => ({ contents: cssModulesMap[path], loader: "css" }),
             );
-            build.onLoad({ filter: /\.css$/ }, async ({ path }) => {
+            pluginBuild.onLoad({ filter: /\.css$/ }, async ({ path }) => {
               const { code, cssModule } = parcel({
                 url: path,
                 code: await cssPreTransform(path),
@@ -81,40 +83,46 @@ const main = async () => {
         },
         {
           name: "virtual",
-          setup: (build) => {
-            build.onResolve({ filter: /^virtual:@rds\// }, (args) => ({
+          setup: (pluginBuild) => {
+            pluginBuild.onResolve({ filter: /^virtual:@rds\// }, (args) => ({
               path: args.path.slice(13),
               namespace: "virtual",
             }));
-            build.onLoad({ filter: /./, namespace: "virtual" }, (args) => {
-              switch (args.path) {
-                case "css-utils":
-                  hasCSSUtils = true;
-                  return { contents: CSS_UTILS_PLACEHOLDER, loader: "css" };
-                case "css-reset":
-                  // TODO
-                  return { contents: "" };
-                default:
-                  throw new Error(`Unexpected virtual entry: ${args.path}`);
-              }
-            });
+            pluginBuild.onLoad(
+              { filter: /./, namespace: "virtual" },
+              (args) => {
+                switch (args.path) {
+                  case "css-utils":
+                    hasCSSUtils = true;
+                    return { contents: CSS_UTILS_PLACEHOLDER, loader: "css" };
+                  case "css-reset":
+                    // TODO
+                    return { contents: "" };
+                  default:
+                    throw new Error(`Unexpected virtual entry: ${args.path}`);
+                }
+              },
+            );
           },
         },
         {
           name: "svg",
-          setup: (build) => {
-            build.onResolve({ filter: /\.svg/ }, (args) => {
+          setup: (pluginBuild) => {
+            pluginBuild.onResolve({ filter: /\.svg/ }, (args) => {
               const [path, namespace] = args.path.split("?");
               return { path: join(args.resolveDir, path), namespace };
             });
-            build.onLoad({ filter: /\.svg$/u }, async ({ path, namespace }) => {
-              const contents = await readFile(path);
-              if (namespace === "inline") {
-                return { contents, loader: "dataurl" };
-              }
-              if (namespace === "url") return { contents, loader: "file" };
-              return { contents: svgToJSX(contents), loader: "jsx" };
-            });
+            pluginBuild.onLoad(
+              { filter: /\.svg$/u },
+              async ({ path, namespace }) => {
+                const contents = await readFile(path);
+                if (namespace === "inline") {
+                  return { contents, loader: "dataurl" };
+                }
+                if (namespace === "url") return { contents, loader: "file" };
+                return { contents: svgToJSX(contents), loader: "jsx" };
+              },
+            );
           },
         },
       ],
@@ -129,7 +137,7 @@ const main = async () => {
   const jsPath = paths.find((p) => p.endsWith(".js"))!;
   const esbuildCSSPath = paths.find((p) => p.endsWith(".css"))!;
 
-  let cssOutput = readFileSync(esbuildCSSPath);
+  let cssOutput = readFileSync(esbuildCSSPath, "utf-8");
 
   // Issue with TS flow control
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -150,13 +158,13 @@ const main = async () => {
   log("Minify CSS");
   const parcelCSSPath = `dist/assets/index.${getHash(minifiedCSS)}.css`;
   writeFileSync(parcelCSSPath, minifiedCSS);
-  fs.rmSync(esbuildCSSPath);
-  fs.rmSync(`${esbuildCSSPath}.map`);
+  rmSync(esbuildCSSPath);
+  rmSync(`${esbuildCSSPath}.map`);
   log("Write CSS");
 
   writeFileSync(
     "dist/index.html",
-    readFileSync("dist/index.html").replace(
+    readFileSync("dist/index.html", "utf-8").replace(
       "</head>",
       `  <link rel="stylesheet" href="${parcelCSSPath.slice(4)}">
     <script type="module" src="${jsPath.slice(4)}"></script>
@@ -164,8 +172,11 @@ const main = async () => {
     ),
   );
   console.log(
-    colors.green(`Done in ${Math.ceil(performance.now() - start)}ms`),
+    colors.green(
+      `Done in ${Math.ceil(performance.now() - global.__rds_start)}ms`,
+    ),
   );
+  stopProfiler();
 };
 
 main();

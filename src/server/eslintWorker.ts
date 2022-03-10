@@ -1,12 +1,11 @@
 import { promises as fs } from "fs";
+import { parentPort, workerData } from "worker_threads";
 import { ESLint } from "eslint";
-import { Chalk } from "chalk"; // chalk is used by eslint
-const chalk = require("chalk") as Chalk; // Hack to avoid esbuild boilerplate
+import { red, yellow, dim } from "chalk"; // chalk is used by eslint
 
-const { workerData, parentPort } = require("worker_threads");
 const eslint = new ESLint(workerData);
 
-parentPort.on("message", (path: string) => {
+parentPort!.on("message", (path: string) => {
   eslint
     .isPathIgnored(path)
     .then(async (ignored) => {
@@ -19,9 +18,7 @@ parentPort.on("message", (path: string) => {
         const location = `${prettyPath}(${m.line},${m.column})`;
         const rule = m.ruleId ? ` ${m.ruleId}` : "";
         console.log(
-          `${location}: ${chalk[m.severity === 2 ? "red" : "yellow"](
-            m.message,
-          )}${rule}`,
+          `${location}: ${(m.severity === 2 ? red : yellow)(m.message)}${rule}`,
         );
       });
     })
@@ -29,9 +26,7 @@ parentPort.on("message", (path: string) => {
       if (e.messageTemplate === "file-not-found" && e.messageData?.pattern) {
         // Can happen when the file is deleted or moved
         console.log(
-          `${chalk.yellow("[eslint] File not found")} ${chalk.dim(
-            e.messageData.pattern,
-          )}`,
+          `${yellow("[eslint] File not found")} ${dim(e.messageData.pattern)}`,
         );
       } else {
         // Otherwise, log the full error

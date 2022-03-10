@@ -1,5 +1,5 @@
-import fs from "fs";
-import crypto from "crypto";
+import { readFileSync, promises as fs, writeFileSync, existsSync } from "fs";
+import { createHash } from "crypto";
 import { dirname, extname, join } from "path";
 
 import { isDebug, logger } from "./logger";
@@ -12,8 +12,7 @@ export const isInnerNode = (path: string) => isJS(path) || isCSS(path);
 export const getExtension = (path: string) => extname(path).slice(1);
 
 export const getHash = (content: string | Buffer) =>
-  crypto
-    .createHash("sha1")
+  createHash("sha1")
     .update(
       // @ts-ignore
       content,
@@ -25,11 +24,10 @@ export const getHash = (content: string | Buffer) =>
 export const getHashedUrl = (base: string, content: string | Buffer) =>
   `/${base}?h=${getHash(content)}`;
 
-export const readFile = (path: string) => fs.promises.readFile(path, "utf-8");
-export const readFileSync = (path: string) => fs.readFileSync(path, "utf-8");
+export const readFile = (path: string) => fs.readFile(path, "utf-8");
 export const readMaybeFileSync = (path: string) => {
   try {
-    return readFileSync(path);
+    return readFileSync(path, "utf-8");
   } catch (err: any) {
     if (err.code === "ENOENT") return;
     throw err;
@@ -55,7 +53,7 @@ export const jsonCacheSync = <T extends Record<string, any>>(
       return json;
     },
     write: (data: T) =>
-      fs.writeFileSync(path, JSON.stringify({ version, ...data })),
+      writeFileSync(path, JSON.stringify({ version, ...data })),
   };
 };
 
@@ -108,7 +106,7 @@ export const split = <T>(array: T[], predicate: (value: T) => boolean) => {
 export const lookup = (formats: string[], dir = "."): string | undefined => {
   for (const format of formats) {
     const fullPath = join(dir, format);
-    if (fs.existsSync(fullPath)) return fullPath;
+    if (existsSync(fullPath)) return fullPath;
   }
   const parentDir = dirname(dir);
   if (parentDir !== dir) return lookup(formats, parentDir);
