@@ -5,11 +5,10 @@ React development server (WIP)
 ## TODO
 
 - proxy
-- async config
 - svg url/inline
 - assets inline
 - define
-- error resilience 
+- error resilience
 - open in editor
 - fs caching (swc, css transform, css scan)
 - js API

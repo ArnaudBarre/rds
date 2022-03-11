@@ -4,10 +4,11 @@ import { build } from "esbuild";
 
 import { cacheDir, getHash, jsonCacheSync } from "./utils";
 import { logger } from "./logger";
+import { DefineConfig } from "../types";
 
 type ConfigHashesCache = { files: [path: string, hash: string][] };
 
-export const getConfig = async <Config>(
+export const getConfig = async <Config extends Record<string, unknown>>(
   name: string,
 ): Promise<Config | undefined> => {
   const entryPoint = `${name}.config.ts`;
@@ -39,9 +40,11 @@ export const getConfig = async <Config>(
     });
   }
 
-  const module = require(join(process.cwd(), output));
+  const module = require(join(process.cwd(), output)) as {
+    config?: DefineConfig<Config>;
+  };
   if (!module.config) {
     throw new Error(`${entryPoint} doesn't have a "config" export`);
   }
-  return module.config;
+  return typeof module.config === "function" ? module.config() : module.config;
 };

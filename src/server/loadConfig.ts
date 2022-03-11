@@ -1,4 +1,4 @@
-import { Config } from "../types";
+import { UserConfig } from "../types";
 import { getConfig } from "./bundleConfig";
 import { logger } from "./logger";
 
@@ -6,7 +6,7 @@ export type ResolvedConfig = Awaited<ReturnType<typeof loadConfig>>;
 
 export const loadConfig = async () => {
   const start = performance.now();
-  const config = await getConfig<Config>("rds");
+  const config = await getConfig<UserConfig>("rds");
   const resolvedConfig = {
     open: config?.open ?? false,
     eslint:
