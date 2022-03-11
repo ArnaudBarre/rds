@@ -837,7 +837,7 @@ export const getCorePlugins = ({
     blendModes,
   ),
   mixBlendMode: enumRule("mix-blend-", "mix-blend-mode", blendModes),
-  // TODO: Non-compliant: doesn't support colored box-shadow  & incompatible with ring
+  // TODO: Non-compliant: doesn't support colored box-shadow & incompatible with ring
   boxShadow: themeRule("shadow", theme.boxShadow, "box-shadow"),
   outlineStyle: [
     [

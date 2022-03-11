@@ -10,7 +10,7 @@ import { getHash, readFile } from "./utils";
 import { esbuildFilesLoaders } from "./mimeTypes";
 import { isDebug } from "./logger";
 import { initCSS } from "./css";
-import { cssModuleToJS } from "./css/utils/hmr";
+import { cssModuleToJS } from "./css/utils/cssModuleToJS";
 import { ENTRY_POINT } from "./consts";
 import { parcel } from "./css/parcel";
 import { stopProfiler } from "./stopProfiler";

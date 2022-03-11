@@ -5,6 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/dist" />
       <excludePattern pattern="yarn.lock" />
       <excludePattern pattern="bun.lockb" />
+      <excludePattern pattern=".eslintcache" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

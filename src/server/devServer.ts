@@ -1,5 +1,3 @@
-import { join } from "path";
-
 import { Extension } from "./mimeTypes";
 import { getExtension, isCSS, isJS, isSVG, readCacheFile } from "./utils";
 import {
@@ -11,7 +9,6 @@ import {
   RDS_PREFIX,
   RDS_VIRTUAL_PREFIX,
 } from "./consts";
-import { cssToHMR } from "./css/utils/hmr";
 import { publicFiles, publicFilesCache } from "./public";
 import { getDependency, transformDependenciesImports } from "./dependencies";
 import { svgCache } from "./svg";
@@ -19,7 +16,7 @@ import { assetsCache } from "./assets";
 import { CSSGenerator } from "./css/generator";
 import { ImportsTransform } from "./importsTransform";
 import { createServer } from "./createServer";
-import { readFileSync } from "fs";
+import { cssToHMR, getClientCode, getClientUrl } from "./getClient";
 
 export const createDevServer = ({
   importsTransform,
@@ -33,11 +30,7 @@ export const createDevServer = ({
   createServer(async (url) => {
     if (url.startsWith(RDS_PREFIX)) {
       if (url === RDS_CLIENT) {
-        return {
-          content: readFileSync(join(__dirname, "../client/index.js")),
-          type: "js",
-          browserCache: false, // TODO: use caching based on rds version
-        };
+        return { content: getClientCode(), type: "js", browserCache: true };
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
@@ -72,7 +65,7 @@ export const createDevServer = ({
       const path = url.slice(DEPENDENCY_PREFIX.length + 1);
       if (url.endsWith(".map")) {
         const content = await readCacheFile(path);
-        return { type: "json", content, browserCache: false }; // TODO: enable browser cache
+        return { type: "json", content, browserCache: false };
       }
       const code = await getDependency(path);
       return { type: "js", content: code, browserCache: true };
@@ -118,7 +111,7 @@ export const createDevServer = ({
         .toString()
         .replace(
           "<head>",
-          `<head>\n    <script type="module" src="/${RDS_CLIENT}"></script>`,
+          `<head>\n    <script type="module" src="${getClientUrl()}"></script>`,
         )
         .replace(
           "</body>",

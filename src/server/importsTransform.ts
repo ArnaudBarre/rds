@@ -1,14 +1,14 @@
 import { cache, getHashedUrl, isCSS, isInnerNode, isSVG, split } from "./utils";
 import { AnalyzedImport, swcCache } from "./swc";
 import { resolve } from "./resolve";
-import { ENTRY_POINT, RDS_CLIENT } from "./consts";
+import { ENTRY_POINT } from "./consts";
 import { Graph, GraphNode } from "./types";
 import { addDependency } from "./dependencies";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
-import { cssToHMR } from "./css/utils/hmr";
 import { CSSGenerator } from "./css/generator";
 import { CSSTransform } from "./css/cssTransform";
+import { cssToHMR, getClientUrl } from "./getClient";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
 
@@ -71,7 +71,7 @@ export const initImportsTransform = ({
       }
 
       content = hasFastRefresh
-        ? `import { RefreshRuntime } from "/${RDS_CLIENT}";
+        ? `import { RefreshRuntime } from "${getClientUrl()}";
 const prevRefreshReg = window.$RefreshReg$;
 const prevRefreshSig = window.$RefreshSig$;
 window.$RefreshReg$ = RefreshRuntime.getRefreshReg("${url}")
