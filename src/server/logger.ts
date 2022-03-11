@@ -1,5 +1,6 @@
 import { BuildResult, formatMessagesSync } from "esbuild";
 import { useColors, colors } from "./colors";
+import { run } from "./utils";
 
 export const isDebug = process.argv.includes("--debug");
 
@@ -9,7 +10,13 @@ export const logger: {
   warn: (message: string) => void;
   esbuildResult: (result: BuildResult) => void;
 } = {
-  debug: isDebug ? console.log : () => undefined,
+  debug: isDebug
+    ? run(() => {
+        const nextArg = process.argv[process.argv.indexOf("--debug") + 1];
+        if (!nextArg || nextArg.startsWith("-")) return console.log;
+        return (message) => message.startsWith(nextArg) && console.log(message);
+      })
+    : () => undefined,
   info: console.log,
   warn: (m) => console.log(colors.yellow(m)),
   esbuildResult: ({ errors, warnings }) => {
