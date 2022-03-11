@@ -9,9 +9,8 @@ if (cmd === "-v" || cmd === "--version") {
 }
 if (cmd === "--help" || cmd === undefined) {
   console.log(`RDS ${version}:`);
-  console.log("  -v, --version: Print version");
   console.log("  start, dev: Starts dev server");
-  console.log("  build: Bundle and minify into /dist");
+  console.log("  build: Bundles and minify into /dist");
   console.log("  serve, preview: Serves build output");
   process.exit();
 }
@@ -28,6 +27,10 @@ const main = () => {
     process.exit(1);
   }
 };
+
+if (process.argv.includes("--force")) {
+  require("fs").rmSync("node_modules/.rds", { recursive: true, force: true });
+}
 
 if (process.argv.includes("--profile")) {
   const inspector = require("inspector");

@@ -44,7 +44,7 @@ export const getCSSPreTransform =
             output += `${cssEntry[0]}:${cssEntry[1]};`;
           }
         }
-        return `${substring[0]}${output}${substring.at(-1)!}`;
+        return `${substring[0]}${output.slice(0, -1)}${substring.at(-1)!}`;
       });
     }
 

@@ -29,10 +29,8 @@ const CSS_UTILS_PLACEHOLDER = "/*! CSS_UTILS */";
 
 const main = async () => {
   log("Load");
-  execSync("rm -rf dist && mkdir dist && cp -r public/ dist", {
-    shell: "/bin/bash",
-  });
-  log("Init dist");
+  rmSync("dist", { recursive: true, force: true });
+  log("Clean dist");
   const { cssPreTransform, cssGenerator } = await initCSS();
   log("Init CSS");
   const cssModulesMap: Record<string, string> = {};
@@ -131,8 +129,8 @@ const main = async () => {
     // esbuild has already logged perfect errors, no need to had anything
     process.exit(1);
   }
-
   log("Assets bundled");
+
   const paths = Object.keys(bundleResult.metafile.outputs);
   const jsPath = paths.find((p) => p.endsWith(".js"))!;
   const esbuildCSSPath = paths.find((p) => p.endsWith(".css"))!;
@@ -161,6 +159,9 @@ const main = async () => {
   rmSync(esbuildCSSPath);
   rmSync(`${esbuildCSSPath}.map`);
   log("Write CSS");
+
+  execSync("cp -r public/ dist", { shell: "/bin/bash" });
+  log("Copy public");
 
   writeFileSync(
     "dist/index.html",

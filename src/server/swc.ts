@@ -1,6 +1,10 @@
 import { ImportDeclaration, transformFile } from "@swc/core";
 import { Visitor } from "@swc/core/Visitor";
-import { NamedImportSpecifier } from "@swc/core/types";
+import {
+  ExportAllDeclaration,
+  ExportNamedDeclaration,
+  NamedImportSpecifier,
+} from "@swc/core/types";
 
 import { cache, getExtension } from "./utils";
 
@@ -61,6 +65,18 @@ class ImportsVisitor extends Visitor {
             name: s.imported?.value ?? s.local.value,
           })),
       });
+    }
+    return declaration;
+  }
+
+  visitExportAllDeclaration(declaration: ExportAllDeclaration) {
+    this.imports.push({ source: declaration.source.value, specifiers: [] });
+    return declaration;
+  }
+
+  visitExportNamedDeclaration(declaration: ExportNamedDeclaration) {
+    if (declaration.source) {
+      this.imports.push({ source: declaration.source.value, specifiers: [] });
     }
     return declaration;
   }
