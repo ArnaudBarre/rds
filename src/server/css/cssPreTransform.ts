@@ -31,7 +31,7 @@ export const getCSSPreTransform =
           if (
             match.screen || // TODO: Find a way to make it working
             match.variants.length || // TODO: Use nesting if not media query
-            meta?.selectorRewrite || // TODO: Use nesting if not media query
+            meta?.selectorRewrite || // TODO: Use nesting
             meta?.addDefault || // TODO: Maybe it works if added in main
             meta?.addKeyframes || // TODO: Maybe it works if added in main
             meta?.addContainer
