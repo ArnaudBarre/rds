@@ -1,16 +1,7 @@
 {
-  "name": "rds",
-  "description": "React development server",
+  "name": "@arnaud-barre/rds",
   "version": "0.0.1",
   "license": "MIT",
-  "author": "Arnaud Barré (https://github.com/ArnaudBarre)",
-  "files": [
-    "bin",
-    "dist"
-  ],
-  "bin": {
-    "rds": "dist/server/index.js"
-  },
   "scripts": {
     "start": "scripts/bundle.ts --dev",
     "build": "scripts/bundle.ts",

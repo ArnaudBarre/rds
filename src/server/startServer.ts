@@ -37,7 +37,7 @@ export const startServer = async (
   );
   if (process.platform === "darwin" && config.open) {
     exec(`osascript openChrome.applescript ${localUrl}`, {
-      cwd: join(__dirname, "../../bin"),
+      cwd: join(__dirname, "../bin"),
     });
   }
   stopProfiler();

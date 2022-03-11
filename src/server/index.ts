@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 global.__rds_start = performance.now();
-const args = process.argv.slice(2) as (string | undefined)[];
-const cmd = args[0];
+const version = "__VERSION__";
+const cmd = process.argv[2] as string | undefined;
 
 if (cmd === "-v" || cmd === "--version") {
-  console.log(require("../../package.json").version);
+  console.log(version);
   process.exit();
 }
 if (cmd === "--help" || cmd === undefined) {
-  const version = require("../../package.json").version as string;
   console.log(`RDS ${version}:`);
   console.log("  -v, --version: Print version");
   console.log("  start, dev: Starts dev server");
