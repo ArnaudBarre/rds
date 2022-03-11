@@ -1,15 +1,35 @@
-import { createServer as createHTTPServer } from "http";
+import { createServer as createHTTPServer, request } from "http";
 
 import { LoadedFile } from "./types";
 import { mimeTypes } from "./mimeTypes";
 import { getHash } from "./utils";
 import { logger } from "./logger";
+import { ResolvedConfig } from "./loadConfig";
 
 export const createServer = (
+  config: ResolvedConfig,
   handleRequest: (url: string, query: URLSearchParams) => Promise<LoadedFile>,
 ) =>
   createHTTPServer(async (req, res) => {
     const [url, query] = req.url!.split("?") as [string, string | undefined];
+    if (config.proxy && url.startsWith("/api/")) {
+      req.pipe(
+        request(
+          {
+            host: config.proxy.target,
+            path: config.proxy.pathRewrite?.(url) ?? url,
+            method: req.method,
+            headers: config.proxy.headersRewrite?.(req.headers) ?? req.headers,
+          },
+          (proxiedRes) => {
+            res.writeHead(proxiedRes.statusCode!, proxiedRes.headers);
+            proxiedRes.pipe(res, { end: true });
+          },
+        ),
+        { end: true },
+      );
+      return;
+    }
     const loadedFile = await handleRequest(
       url.slice(1),
       new URLSearchParams(query),

@@ -4,7 +4,6 @@ React development server (WIP)
 
 ## TODO
 
-- proxy
 - svg url/inline
 - assets inline
 - define

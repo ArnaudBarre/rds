@@ -11,6 +11,13 @@ export type UserConfig = {
     strictPort?: boolean;
   };
   eslint?: false | { cache?: boolean; fix?: boolean };
+  proxy?: {
+    target: string;
+    pathRewrite?: (url: string) => string;
+    headersRewrite?: (
+      headers: Record<string, string | string[] | undefined>,
+    ) => Record<string, string | string[] | undefined>;
+  };
 };
 
 export type DefineCSSConfig = DefineConfig<CSSConfig>;

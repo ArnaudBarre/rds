@@ -17,17 +17,20 @@ import { CSSGenerator } from "./css/generator";
 import { ImportsTransform } from "./importsTransform";
 import { createServer } from "./createServer";
 import { cssToHMR, getClientCode, getClientUrl } from "./getClient";
+import { ResolvedConfig } from "./loadConfig";
 
 export const createDevServer = ({
+  config,
   importsTransform,
   cssGenerator,
   getCSSBase,
 }: {
+  config: ResolvedConfig;
   importsTransform: ImportsTransform;
   cssGenerator: CSSGenerator;
   getCSSBase: () => Promise<string>;
 }) =>
-  createServer(async (url) => {
+  createServer(config, async (url) => {
     if (url.startsWith(RDS_PREFIX)) {
       if (url === RDS_CLIENT) {
         return { content: getClientCode(), type: "js", browserCache: true };

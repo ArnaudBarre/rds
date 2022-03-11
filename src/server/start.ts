@@ -55,6 +55,7 @@ export const main = async () => {
   });
 
   const server = createDevServer({
+    config,
     importsTransform,
     cssGenerator,
     getCSSBase,

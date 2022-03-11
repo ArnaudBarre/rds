@@ -14,6 +14,7 @@ export const loadConfig = async () => {
         ? (false as const)
         : { cache: true, fix: false, ...config?.eslint },
     server: { host: false, port: 3000, strictPort: false, ...config?.server },
+    proxy: config?.proxy,
   };
   logger.debug(`Load config: ${(performance.now() - start).toFixed(2)}ms`);
   return resolvedConfig;
