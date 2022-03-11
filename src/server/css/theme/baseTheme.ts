@@ -2,6 +2,7 @@
 import { BaseTheme } from "../../../types";
 import { mapObject } from "../../utils";
 import { baseColors } from "./baseColors";
+import { baseFonts } from "./baseFonts";
 
 // https://github.com/tailwindlabs/tailwindcss/blob/master/stubs/defaultConfig.stub.js
 export const baseTheme: BaseTheme = {
@@ -281,42 +282,7 @@ export const baseTheme: BaseTheme = {
     0: "0",
     DEFAULT: "1",
   },
-  fontFamily: {
-    sans: [
-      "ui-sans-serif",
-      "system-ui",
-      "-apple-system",
-      "BlinkMacSystemFont",
-      '"Segoe UI"',
-      "Roboto",
-      '"Helvetica Neue"',
-      "Arial",
-      '"Noto Sans"',
-      "sans-serif",
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
-      '"Noto Color Emoji"',
-    ].join(", "),
-    serif: [
-      "ui-serif",
-      "Georgia",
-      "Cambria",
-      '"Times New Roman"',
-      "Times",
-      "serif",
-    ].join(", "),
-    mono: [
-      "ui-monospace",
-      "SFMono-Regular",
-      "Menlo",
-      "Monaco",
-      "Consolas",
-      '"Liberation Mono"',
-      '"Courier New"',
-      "monospace",
-    ].join(", "),
-  },
+  fontFamily: baseFonts,
   fontSize: {
     "xs": ["0.75rem", "1rem"],
     "sm": ["0.875rem", "1.25rem"],

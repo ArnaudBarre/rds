@@ -18,7 +18,8 @@ export type Graph = Map<string, GraphNode>;
 export type CSSModule = false | { [key: string]: string };
 
 declare global {
-  // eslint-disable-next-line no-var
+  /* eslint-disable no-var */
   var __rds_start: number;
   var __rds_profile_session: Session | undefined;
+  /* eslint-enable no-var */
 }

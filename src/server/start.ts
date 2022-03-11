@@ -17,10 +17,8 @@ import { loadConfig } from "./loadConfig";
 import { startServer } from "./startServer";
 
 export const main = async () => {
-  const [{ cssTransform, cssGenerator }, config] = await Promise.all([
-    initCSS(),
-    loadConfig(),
-  ]);
+  const [{ getCSSBase, cssTransform, cssGenerator }, config] =
+    await Promise.all([initCSS(), loadConfig()]);
   const srcWatcher = watch([ENTRY_POINT], {
     ignoreInitial: true,
     disableGlobbing: true,
@@ -56,7 +54,11 @@ export const main = async () => {
     ws.send({ type: "prune-css", paths });
   });
 
-  const server = createDevServer({ importsTransform, cssGenerator });
+  const server = createDevServer({
+    importsTransform,
+    cssGenerator,
+    getCSSBase,
+  });
   server.on("upgrade", ws.handleUpgrade);
 
   await startServer(server, config);

@@ -13,7 +13,12 @@ import {
 } from "./utils";
 import { colors } from "./colors";
 import { logger } from "./logger";
-import { DEPENDENCY_PREFIX, RDS_CSS_UTILS, RDS_VIRTUAL_PREFIX } from "./consts";
+import {
+  DEPENDENCY_PREFIX,
+  RDS_CSS_BASE,
+  RDS_CSS_UTILS,
+  RDS_VIRTUAL_PREFIX,
+} from "./consts";
 import { AnalyzedImport } from "./swc";
 import { CSSGenerator } from "./css/generator";
 
@@ -118,10 +123,12 @@ export const transformDependenciesImports = async ({
   code,
   depsImports,
   cssGenerator,
+  getCSSBase,
 }: {
   code: string;
   depsImports: AnalyzedImport[];
   cssGenerator: CSSGenerator;
+  getCSSBase: () => Promise<string>;
 }) => {
   for (const dep of depsImports) {
     if (dep.source.startsWith(RDS_VIRTUAL_PREFIX)) {
@@ -129,6 +136,13 @@ export const transformDependenciesImports = async ({
         code = code.replace(
           new RegExp(`import\\s+['"]${dep.source}['"]`),
           `import "${cssGenerator.getHashedCSSUtilsUrl()}"`,
+        );
+        continue;
+      }
+      if (dep.source === RDS_CSS_BASE) {
+        code = code.replace(
+          new RegExp(`import\\s+['"]${dep.source}['"]`),
+          `import "${getHashedUrl(RDS_CSS_BASE, await getCSSBase())}"`,
         );
         continue;
       }

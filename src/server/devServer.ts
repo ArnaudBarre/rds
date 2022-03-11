@@ -6,6 +6,7 @@ import {
   DEPENDENCY_PREFIX,
   ENTRY_POINT,
   RDS_CLIENT,
+  RDS_CSS_BASE,
   RDS_CSS_UTILS,
   RDS_PREFIX,
   RDS_VIRTUAL_PREFIX,
@@ -23,9 +24,11 @@ import { readFileSync } from "fs";
 export const createDevServer = ({
   importsTransform,
   cssGenerator,
+  getCSSBase,
 }: {
   importsTransform: ImportsTransform;
   cssGenerator: CSSGenerator;
+  getCSSBase: () => Promise<string>;
 }) =>
   createServer(async (url) => {
     if (url.startsWith(RDS_PREFIX)) {
@@ -39,6 +42,13 @@ export const createDevServer = ({
       throw new Error(`Unexpect entry point: ${url}`);
     }
     if (url.startsWith(RDS_VIRTUAL_PREFIX)) {
+      if (url === RDS_CSS_BASE) {
+        return {
+          content: cssToHMR(url, await getCSSBase(), false),
+          type: "js",
+          browserCache: true,
+        };
+      }
       if (url === RDS_CSS_UTILS) {
         return {
           content: cssToHMR(url, cssGenerator.generate(), false),
@@ -73,6 +83,7 @@ export const createDevServer = ({
         code,
         depsImports,
         cssGenerator,
+        getCSSBase,
       });
       return { type: "js", content, browserCache: true };
     }
@@ -86,6 +97,7 @@ export const createDevServer = ({
         code,
         depsImports: [{ source: "react", specifiers: [] }],
         cssGenerator,
+        getCSSBase,
       });
       return { type: "js", content, browserCache: true };
     }

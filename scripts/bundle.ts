@@ -1,5 +1,5 @@
 #!/usr/bin/env tnode
-import { readFileSync, rmSync, writeFileSync } from "fs";
+import { copyFileSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { execSync } from "child_process";
 import { Worker } from "worker_threads";
 import { build, BuildOptions } from "esbuild";
@@ -61,6 +61,8 @@ Promise.all([
   );
 
   execSync("cp -r src/types bin LICENSE README.md dist/");
+  copyFileSync("src/server/css/base/base.css", "dist/server/base.css");
+
   writeFileSync(
     "dist/client.d.ts",
     readFileSync("src/client.d.ts", "utf-8") +

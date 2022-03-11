@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable @typescript-eslint/naming-convention */
 import { rmSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import { build, BuildResult, Metafile } from "esbuild";
@@ -31,7 +30,7 @@ const main = async () => {
   log("Load");
   rmSync("dist", { recursive: true, force: true });
   log("Clean dist");
-  const { cssPreTransform, cssGenerator } = await initCSS();
+  const { getCSSBase, cssPreTransform, cssGenerator } = await initCSS();
   log("Init CSS");
   const cssModulesMap: Record<string, string> = {};
   let hasCSSUtils = false;
@@ -88,14 +87,13 @@ const main = async () => {
             }));
             pluginBuild.onLoad(
               { filter: /./, namespace: "virtual" },
-              (args) => {
+              async (args) => {
                 switch (args.path) {
+                  case "css-base":
+                    return { contents: await getCSSBase(), loader: "css" };
                   case "css-utils":
                     hasCSSUtils = true;
                     return { contents: CSS_UTILS_PLACEHOLDER, loader: "css" };
-                  case "css-reset":
-                    // TODO
-                    return { contents: "" };
                   default:
                     throw new Error(`Unexpected virtual entry: ${args.path}`);
                 }
