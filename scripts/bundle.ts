@@ -1,14 +1,15 @@
 #!/usr/bin/env tnode
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, rmSync, writeFileSync } from "fs";
 import { execSync } from "child_process";
 import { Worker } from "worker_threads";
 import { build, BuildOptions } from "esbuild";
 
 import { name, version, license, dependencies } from "../package.json";
+import { esbuildFilesLoaders } from "../src/server/mimeTypes";
 
 const dev = process.argv.includes("--dev");
 
-execSync("rm -rf dist/");
+rmSync("dist", { force: true, recursive: true });
 
 const serverOptions: BuildOptions = {
   outdir: "dist/server",
@@ -60,7 +61,16 @@ Promise.all([
   );
 
   execSync("cp -r src/types bin LICENSE README.md dist/");
-  execSync("mv dist/types/client.d.ts dist/");
+  writeFileSync(
+    "dist/client.d.ts",
+    readFileSync("src/client.d.ts", "utf-8") +
+      Object.keys(esbuildFilesLoaders)
+        .map(
+          (ext) =>
+            `declare module "*${ext}" {\n  const src: string;\n  export default src;\n}\n`,
+        )
+        .join(""),
+  );
 
   writeFileSync(
     "dist/package.json",

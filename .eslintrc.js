@@ -8,7 +8,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: "src/types/client.d.ts",
+      files: "src/client.d.ts",
       rules: {
         "import/no-unresolved": "off",
         "import/no-default-export": "off",
