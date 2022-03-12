@@ -7,6 +7,7 @@ import {
   cacheDir,
   getHash,
   getHashedUrl,
+  impSourceToRegex,
   jsonCacheSync,
   lookup,
   readCacheFile,
@@ -134,14 +135,14 @@ export const transformDependenciesImports = async ({
     if (dep.source.startsWith(RDS_VIRTUAL_PREFIX)) {
       if (dep.source === RDS_CSS_UTILS) {
         code = code.replace(
-          new RegExp(`import\\s+['"]${dep.source}['"]`),
+          new RegExp(`import${impSourceToRegex(dep.source)}`),
           `import "${cssGenerator.getHashedCSSUtilsUrl()}"`,
         );
         continue;
       }
       if (dep.source === RDS_CSS_BASE) {
         code = code.replace(
-          new RegExp(`import\\s+['"]${dep.source}['"]`),
+          new RegExp(`import${impSourceToRegex(dep.source)}`),
           `import "${getHashedUrl(RDS_CSS_BASE, await getCSSBase())}"`,
         );
         continue;
@@ -157,14 +158,14 @@ export const transformDependenciesImports = async ({
     if (depMetadata.needInterop && dep.specifiers.length) {
       const defaultImportName = `__rds_${dep.source.replace(/[-@/]/g, "_")}`;
       code = code.replace(
-        new RegExp(`import {[^}]+}\\s+from\\s+['"]${dep.source}['"];`),
+        new RegExp(`import {[^}]+}\\s+from${impSourceToRegex(dep.source)}`),
         `import ${defaultImportName} from "${hashedUrl}";${dep.specifiers
-          .map((s) => `const ${s.local} = ${defaultImportName}["${s.name}"];`)
-          .join("")}`,
+          .map((s) => `const ${s.local} = ${defaultImportName}["${s.name}"]`)
+          .join(";")}`,
       );
     } else {
       code = code.replace(
-        new RegExp(`from\\s+['"]${dep.source}['"]`),
+        new RegExp(`from${impSourceToRegex(dep.source)}`),
         `from "${hashedUrl}"`,
       );
     }

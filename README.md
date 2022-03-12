@@ -4,9 +4,10 @@ React development server (WIP)
 
 ## TODO
 
-- svg url/inline
-- assets inline
+- initial caching issue for css utils
+- check cycles
 - define
+- css imports
 - error resilience
 - open in editor
 - fs caching (swc, css transform, css scan)

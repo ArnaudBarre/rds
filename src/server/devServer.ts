@@ -30,7 +30,7 @@ export const createDevServer = ({
   cssGenerator: CSSGenerator;
   getCSSBase: () => Promise<string>;
 }) =>
-  createServer(config, async (url) => {
+  createServer(config, async (url, searchParams) => {
     if (url.startsWith(RDS_PREFIX)) {
       if (url === RDS_CLIENT) {
         return { content: getClientCode(), type: "js", browserCache: true };
@@ -87,7 +87,7 @@ export const createDevServer = ({
       const { code } = await importsTransform.get(url);
       return { type: "js", content: code, browserCache: true };
     }
-    if (isSVG(url)) {
+    if (isSVG(url) && !searchParams.has("url")) {
       const code = await svgCache.get(url);
       const content = await transformDependenciesImports({
         code,

@@ -67,10 +67,10 @@ Promise.all([
     "dist/client.d.ts",
     readFileSync("src/client.d.ts", "utf-8") +
       Object.keys(esbuildFilesLoaders)
-        .map(
-          (ext) =>
-            `declare module "*${ext}" {\n  const src: string;\n  export default src;\n}\n`,
-        )
+        .flatMap((ext) => [
+          `declare module "*${ext}" {\n  const src: string;\n  export default src;\n}\n`,
+          `declare module "*${ext}?inline" {\n  const data: string;\n  export default data;\n}\n`,
+        ])
         .join(""),
   );
 

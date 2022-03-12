@@ -24,6 +24,12 @@ export const getHash = (content: string | Buffer) =>
 export const getHashedUrl = (base: string, content: string | Buffer) =>
   `/${base}?h=${getHash(content)}`;
 
+export const impSourceToRegex = (source: string) =>
+  `\\s+['"]${escapeRegExp(source)}['"]`;
+
+const escapeRegExp = (string: string) =>
+  string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export const readFile = (path: string) => fs.readFile(path, "utf-8");
 export const readMaybeFileSync = (path: string) => {
   try {

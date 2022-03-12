@@ -17,8 +17,11 @@ declare module "*.svg" {
   >;
   export default ReactComponent;
 }
+declare module "*.svg?url" {
+  const src: string;
+  export default src;
+}
 declare module "*.svg?inline" {
-  // TODO
   const data: string;
   export default data;
 }

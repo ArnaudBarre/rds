@@ -1,4 +1,12 @@
-import { cache, getHashedUrl, isCSS, isInnerNode, isSVG, split } from "./utils";
+import {
+  cache,
+  getHashedUrl,
+  impSourceToRegex,
+  isCSS,
+  isInnerNode,
+  isSVG,
+  split,
+} from "./utils";
 import { AnalyzedImport, swcCache } from "./swc";
 import { resolve } from "./resolve";
 import { ENTRY_POINT } from "./consts";
@@ -64,7 +72,10 @@ export const initImportsTransform = ({
         imp.source.startsWith("."),
       );
       depsImports = _depsImports;
-      graphNode.imports = srcImports.map((i) => [i.source, i.source]);
+      graphNode.imports = srcImports.map((i) => [
+        stripQuery(i.source),
+        i.source,
+      ]);
 
       for (const imp of depsImports) {
         addDependency(imp.source, onNewDepCallback);
@@ -119,7 +130,7 @@ RefreshRuntime.enqueueUpdate();
       if (isCSSFile) {
         if (isCSS(resolvedUrl)) {
           content = content.replace(
-            new RegExp(`@import\\s+['"]${placeholder}['"]`),
+            new RegExp(`@import${impSourceToRegex(placeholder)}`),
             `@import "${await toHashedUrl(resolvedUrl)}"`,
           );
         } else {
@@ -129,15 +140,31 @@ RefreshRuntime.enqueueUpdate();
           );
         }
       } else {
-        if (isInnerNode(resolvedUrl) || isSVG(resolvedUrl)) {
+        if (
+          isInnerNode(resolvedUrl) ||
+          (isSVG(resolvedUrl) &&
+            !placeholder.endsWith("?url") &&
+            !placeholder.endsWith("?inline"))
+        ) {
           content = content.replace(
-            new RegExp(`(import|from)\\s+['"]${placeholder}['"]`),
+            new RegExp(`(import|from)${impSourceToRegex(placeholder)}`),
             `$1 "${await toHashedUrl(resolvedUrl)}"`,
           );
         } else {
           content = content.replace(
-            new RegExp(`import\\s+(\\S+)\\s+from\\s+['"]${placeholder}['"]`),
-            `const $1 = "${await toHashedUrl(resolvedUrl)}"`,
+            new RegExp(
+              `import\\s+(\\S+)\\s+from${impSourceToRegex(placeholder)}`,
+            ),
+            placeholder.endsWith("?inline")
+              ? `const $1 = "data:image/svg+xml;base64,${(
+                  await assetsCache.get(resolvedUrl)
+                ).toString("base64")}"`
+              : isSVG(resolvedUrl)
+              ? `const $1 = "${getHashedUrl(
+                  resolvedUrl,
+                  await assetsCache.get(resolvedUrl),
+                )}&url"`
+              : `const $1 = "${await toHashedUrl(resolvedUrl)}"`,
           );
         }
       }
@@ -164,6 +191,11 @@ RefreshRuntime.enqueueUpdate();
     toHashedUrl,
     graph,
   };
+};
+
+const stripQuery = (url: string) => {
+  const index = url.indexOf("?");
+  return index > -1 ? url.slice(0, index) : url;
 };
 
 const hasCycle = (node: GraphNode, to: string): boolean => {

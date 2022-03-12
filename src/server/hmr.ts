@@ -41,6 +41,7 @@ export const setupHmr = ({
       cssTransform.delete(path);
     } else if (isSVG(path)) {
       svgCache.delete(path);
+      assetsCache.delete(path);
     } else {
       assetsCache.delete(path);
     }
@@ -65,7 +66,7 @@ export const setupHmr = ({
           ws.send({
             type: "update",
             paths: await Promise.all(
-              [...updates].map(importsTransform.toHashedUrl),
+              [...updates].map((url) => importsTransform.toHashedUrl(url)),
             ),
           });
         }
