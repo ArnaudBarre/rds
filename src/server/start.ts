@@ -15,6 +15,7 @@ import { setupHmr } from "./hmr";
 import { createDevServer } from "./devServer";
 import { loadConfig } from "./loadConfig";
 import { startServer } from "./startServer";
+import { initScan } from "./scan";
 
 export const main = async () => {
   const [{ getCSSBase, cssTransform, cssGenerator }, config] =
@@ -30,27 +31,41 @@ export const main = async () => {
         workerData: config.eslint,
       })
     : undefined;
-  const importsTransform = initImportsTransform({
+
+  const scanner = initScan({
     cssTransform,
     cssGenerator,
     lintFile: (path) => eslintWorker?.postMessage(path),
     watchFile: (path) => srcWatcher.add(path),
   });
-
-  await importsTransform.get(ENTRY_POINT);
+  await scanner.get(ENTRY_POINT);
   await buildDependencies();
+
+  const importsTransform = initImportsTransform({
+    scanner,
+    getCSSBase,
+    cssGenerator,
+  });
+  await importsTransform.get(ENTRY_POINT);
+
   const ws = initWS();
   const publicWatcher = initPublicWatcher(ws);
-
-  setupHmr({ importsTransform, cssTransform, cssGenerator, ws, srcWatcher });
+  setupHmr({
+    scanner,
+    importsTransform,
+    cssTransform,
+    cssGenerator,
+    ws,
+    srcWatcher,
+  });
   cssGenerator.onUpdate(() => {
     logger.info(colors.green("hmr update ") + colors.dim(RDS_CSS_UTILS));
     ws.send({ type: "update", paths: [cssGenerator.getHashedCSSUtilsUrl()] });
   });
-  importsTransform.onNewDep(() => {
+  scanner.onNewDep(() => {
     ws.send({ type: "reload" });
   });
-  importsTransform.onCSSPrune((paths) => {
+  scanner.onCSSPrune((paths) => {
     ws.send({ type: "prune-css", paths });
   });
 

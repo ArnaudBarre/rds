@@ -12,14 +12,17 @@ import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
 import { WS } from "./ws";
 import { CSSGenerator } from "./css/generator";
+import { Scanner } from "./scan";
 
 export const setupHmr = ({
+  scanner,
   importsTransform,
   cssGenerator,
   cssTransform,
   srcWatcher,
   ws,
 }: {
+  scanner: Scanner;
   importsTransform: ImportsTransform;
   cssTransform: CSSTransform;
   cssGenerator: CSSGenerator;
@@ -27,6 +30,7 @@ export const setupHmr = ({
   ws: WS;
 }) => {
   const invalidate = (node: GraphNode) => {
+    scanner.delete(node.url);
     importsTransform.delete(node.url);
     for (const importer of node.importers) {
       invalidate(importer);
@@ -51,25 +55,23 @@ export const setupHmr = ({
     .on("change", async (path) => {
       logger.debug(`change ${path}`);
       clearCache(path);
-      const graphNode = importsTransform.graph.get(path);
-      if (graphNode) {
-        invalidate(graphNode);
-        const updates = new Set<string>();
-        if (propagateUpdate(graphNode, updates)) {
-          logger.info(colors.green("page reload ") + colors.dim(path));
-          ws.send({ type: "reload" });
-        } else {
-          logger.info(
-            colors.green("hmr update ") +
-              [...updates].map((update) => colors.dim(update)).join(", "),
-          );
-          ws.send({
-            type: "update",
-            paths: await Promise.all(
-              [...updates].map((url) => importsTransform.toHashedUrl(url)),
-            ),
-          });
-        }
+      const graphNode = scanner.graph.get(path)!;
+      invalidate(graphNode);
+      const updates = new Set<string>();
+      if (propagateUpdate(graphNode, updates)) {
+        logger.info(colors.green("page reload ") + colors.dim(path));
+        ws.send({ type: "reload" });
+      } else {
+        logger.info(
+          colors.green("hmr update ") +
+            [...updates].map((update) => colors.dim(update)).join(", "),
+        );
+        ws.send({
+          type: "update",
+          paths: await Promise.all(
+            [...updates].map((url) => importsTransform.toHashedUrl(url)),
+          ),
+        });
       }
     })
     .on("unlink", (path) => {
@@ -78,6 +80,7 @@ export const setupHmr = ({
         resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
       }
       clearCache(path);
+      scanner.delete(path);
       importsTransform.delete(path);
       // TODO: Update importers if exists. Will throws and trigger the overlay
     });

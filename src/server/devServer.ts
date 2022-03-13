@@ -74,17 +74,11 @@ export const createDevServer = ({
       return { type: "js", content: code, browserCache: true };
     }
     if (isJS(url)) {
-      const { code, depsImports } = await importsTransform.get(url);
-      const content = await transformDependenciesImports({
-        code,
-        depsImports,
-        cssGenerator,
-        getCSSBase,
-      });
-      return { type: "js", content, browserCache: true };
+      const code = await importsTransform.get(url);
+      return { type: "js", content: code, browserCache: true };
     }
     if (isCSS(url)) {
-      const { code } = await importsTransform.get(url);
+      const code = await importsTransform.get(url);
       return { type: "js", content: code, browserCache: true };
     }
     if (isSVG(url) && !searchParams.has("url")) {
