@@ -101,9 +101,11 @@ RefreshRuntime.enqueueUpdate();
       const impGraphNode = graph.get(resolvedUrl);
       if (impGraphNode) {
         if (!impGraphNode.importers.has(graphNode)) {
-          console.log(
-            `TODO: Check has cycle ${graphNode.url} -> ${impGraphNode.url}`,
-          );
+          if (hasCycle(graphNode, impGraphNode.url)) {
+            throw new Error(
+              `Found cycle between ${graphNode.url} & ${impGraphNode.url}`,
+            );
+          }
           impGraphNode.importers.add(graphNode);
         }
       } else {
@@ -138,7 +140,6 @@ const stripQuery = (url: string) => {
 const hasCycle = (node: GraphNode, to: string): boolean => {
   for (const importer of node.importers) {
     if (importer.url === to) return true;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     if (hasCycle(importer, to)) return true;
   }
   return false;

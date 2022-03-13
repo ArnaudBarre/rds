@@ -4,12 +4,12 @@ React development server (WIP)
 
 ## TODO
 
-- check cycles
 - define
 - css imports
 - new dep handling
 - error resilience
 - open in editor
+- css codegen
 - parallel scan/importsTransform
 - fs caching (swc, css transform, css scan)
 - js API
@@ -17,4 +17,5 @@ React development server (WIP)
 - variants in css files
 - TS base url
 - qrCode
+- design in devtool
 - workers
