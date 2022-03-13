@@ -140,8 +140,8 @@ const stripQuery = (url: string) => {
 };
 
 const hasCycle = (node: GraphNode, to: string): boolean => {
+  if (node.url === to) return true;
   for (const importer of node.importers) {
-    if (importer.url === to) return true;
     if (hasCycle(importer, to)) return true;
   }
   return false;
