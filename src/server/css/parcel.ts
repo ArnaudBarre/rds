@@ -1,6 +1,7 @@
-import { transform } from "@parcel/css";
+import { Dependency, transform } from "@parcel/css";
 
 import { mapObjectValue } from "../utils";
+import { CSSModule } from "../types";
 
 export const parcel = ({
   url,
@@ -14,7 +15,7 @@ export const parcel = ({
   nesting?: boolean;
   analyzeDependencies?: boolean;
   minify?: boolean;
-}) => {
+}): { code: string; imports: [string, string][]; cssModule: CSSModule } => {
   const cssModule = url.endsWith(".module.css");
   const {
     code: buffer,
@@ -31,13 +32,14 @@ export const parcel = ({
   });
   return {
     code: buffer.toString(),
-    imports:
-      dependencies?.map((i): [string, string] => [
-        i.url,
-        i.type === "url" ? i.placeholder : i.url,
-      ]) ?? [],
-    cssModule: cssModule
-      ? mapObjectValue(exports!, (v) => v.name)
-      : (false as const),
+    imports: dependencies?.map((d) => [d.url, getPlaceholder(d)]) ?? [],
+    cssModule: cssModule ? mapObjectValue(exports!, (v) => v.name) : false,
   };
+};
+
+const getPlaceholder = (dependency: Dependency) => {
+  if (dependency.type === "import") {
+    throw new Error("CSS imports are not supported");
+  }
+  return dependency.placeholder;
 };

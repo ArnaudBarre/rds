@@ -33,17 +33,7 @@ export const initImportsTransform = ({
     for (const [imp, placeholder] of imports) {
       const resolvedUrl = resolve(url, imp);
       if (isCSSFile) {
-        if (isCSS(resolvedUrl)) {
-          content = content.replace(
-            new RegExp(`@import${impSourceToRegex(placeholder)}`),
-            `@import "${await toHashedUrl(resolvedUrl)}"`,
-          );
-        } else {
-          content = content.replace(
-            placeholder,
-            await toHashedUrl(resolvedUrl),
-          );
-        }
+        content = content.replace(placeholder, await toHashedUrl(resolvedUrl));
       } else {
         if (
           isInnerNode(resolvedUrl) ||
