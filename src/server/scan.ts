@@ -1,5 +1,5 @@
 import { cache, isCSS, isInnerNode, split } from "./utils";
-import { AnalyzedImport, swcCache } from "./swc";
+import { AnalyzedImport, SWCCache } from "./swc";
 import { resolve } from "./resolve";
 import { ENTRY_POINT } from "./consts";
 import { Graph, GraphNode } from "./types";
@@ -13,11 +13,13 @@ export type Scanner = ReturnType<typeof initScan>;
 export const initScan = ({
   cssGenerator,
   cssTransform,
+  swcCache,
   lintFile,
   watchFile,
 }: {
   cssGenerator: CSSGenerator;
   cssTransform: CSSTransform;
+  swcCache: SWCCache;
   lintFile: (path: string) => void;
   watchFile: (path: string) => void;
 }) => {

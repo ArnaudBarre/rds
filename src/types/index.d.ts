@@ -18,6 +18,7 @@ export type UserConfig = {
       headers: Record<string, string | string[] | undefined>,
     ) => Record<string, string | string[] | undefined>;
   };
+  define?: Record<string, string>;
 };
 
 export type DefineCSSConfig = DefineConfig<CSSConfig>;

@@ -3,7 +3,7 @@ import { FSWatcher } from "chokidar";
 import { GraphNode } from "./types";
 import { logger } from "./logger";
 import { colors } from "./colors";
-import { swcCache } from "./swc";
+import { SWCCache } from "./swc";
 import { resolveExtensionCache } from "./resolve";
 import { ImportsTransform } from "./importsTransform";
 import { isCSS, isJS, isSVG } from "./utils";
@@ -15,18 +15,20 @@ import { CSSGenerator } from "./css/generator";
 import { Scanner } from "./scan";
 
 export const setupHmr = ({
+  cssTransform,
+  cssGenerator,
+  srcWatcher,
+  swcCache,
   scanner,
   importsTransform,
-  cssGenerator,
-  cssTransform,
-  srcWatcher,
   ws,
 }: {
-  scanner: Scanner;
-  importsTransform: ImportsTransform;
   cssTransform: CSSTransform;
   cssGenerator: CSSGenerator;
   srcWatcher: FSWatcher;
+  swcCache: SWCCache;
+  scanner: Scanner;
+  importsTransform: ImportsTransform;
   ws: WS;
 }) => {
   const invalidate = (node: GraphNode) => {

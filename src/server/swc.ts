@@ -7,42 +7,51 @@ import {
 } from "@swc/core/types";
 
 import { cache, getExtension } from "./utils";
+import { ResolvedConfig } from "./loadConfig";
 
 const importReactRE = /(^|\n)import\s+(\*\s+as\s+)?React(,|\s+)/;
 
-export const swcCache = cache<
-  Promise<{ code: string; imports: AnalyzedImport[]; hasFastRefresh: boolean }>
->("swc", async (url) => {
-  const visitor = new ImportsVisitor();
+export type SWCCache = ReturnType<typeof initSWC>;
 
-  let { code } = await transformFile(url, {
-    configFile: false,
-    swcrc: false,
-    sourceMaps: "inline",
-    plugin: (p) => visitor.visitProgram(p),
-    jsc: {
-      // https://github.com/swc-project/swc/issues/3297
-      parser: getExtension(url).startsWith("t")
-        ? { syntax: "typescript", tsx: url.endsWith("x") }
-        : { syntax: "ecmascript", jsx: url.endsWith("x") },
-      target: "es2020",
-      transform: {
-        react: { refresh: true, development: true, useBuiltins: true },
+export const initSWC = (config: ResolvedConfig) =>
+  cache<
+    Promise<{
+      code: string;
+      imports: AnalyzedImport[];
+      hasFastRefresh: boolean;
+    }>
+  >("swc", async (url) => {
+    const visitor = new ImportsVisitor();
+
+    let { code } = await transformFile(url, {
+      configFile: false,
+      swcrc: false,
+      sourceMaps: "inline",
+      plugin: (p) => visitor.visitProgram(p),
+      jsc: {
+        // https://github.com/swc-project/swc/issues/3297
+        parser: getExtension(url).startsWith("t")
+          ? { syntax: "typescript", tsx: url.endsWith("x") }
+          : { syntax: "ecmascript", jsx: url.endsWith("x") },
+        target: "es2020",
+        transform: {
+          react: { refresh: true, development: true, useBuiltins: true },
+          optimizer: { globals: { vars: config.define } },
+        },
       },
-    },
+    });
+
+    if (code.includes("React.createElement") && !importReactRE.test(code)) {
+      code = `import React from "react";\n${code}`;
+      visitor.imports.unshift({ source: "react", specifiers: [] });
+    }
+
+    return {
+      code,
+      imports: visitor.imports,
+      hasFastRefresh: code.includes("$RefreshReg$"),
+    };
   });
-
-  if (code.includes("React.createElement") && !importReactRE.test(code)) {
-    code = `import React from "react";\n${code}`;
-    visitor.imports.unshift({ source: "react", specifiers: [] });
-  }
-
-  return {
-    code,
-    imports: visitor.imports,
-    hasFastRefresh: code.includes("$RefreshReg$"),
-  };
-});
 
 export type AnalyzedImport = {
   source: string;

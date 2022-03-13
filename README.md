@@ -4,7 +4,6 @@ React development server (WIP)
 
 ## TODO
 
-- define
 - css imports
 - new dep handling
 - error resilience

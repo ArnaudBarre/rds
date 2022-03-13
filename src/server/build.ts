@@ -14,6 +14,7 @@ import { cssModuleToJS } from "./css/utils/cssModuleToJS";
 import { ENTRY_POINT } from "./consts";
 import { parcel } from "./css/parcel";
 import { stopProfiler } from "./stopProfiler";
+import { loadConfig } from "./loadConfig";
 
 const log = (step: string) => {
   if (!isDebug) return;
@@ -30,8 +31,9 @@ const main = async () => {
   log("Load");
   rmSync("dist", { recursive: true, force: true });
   log("Clean dist");
-  const { getCSSBase, cssPreTransform, cssGenerator } = await initCSS();
-  log("Init CSS");
+  const [{ getCSSBase, cssPreTransform, cssGenerator }, config] =
+    await Promise.all([initCSS(), loadConfig()]);
+  log("Load configs");
   const cssModulesMap: Record<string, string> = {};
   let hasCSSUtils = false;
   let bundleResult: BuildResult & { metafile: Metafile };
@@ -48,6 +50,7 @@ const main = async () => {
       minify: true,
       legalComments: "inline", // Hack for injecting CSS utils at the right place
       inject: [join(__dirname, "inject.js")],
+      define: config.define,
       publicPath: "/assets/",
       assetNames: "[name].[hash]",
       chunkNames: "[name].[hash]",

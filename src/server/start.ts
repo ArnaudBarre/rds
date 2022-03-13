@@ -16,6 +16,7 @@ import { createDevServer } from "./devServer";
 import { loadConfig } from "./loadConfig";
 import { startServer } from "./startServer";
 import { initScan } from "./scan";
+import { initSWC } from "./swc";
 
 export const main = async () => {
   const [{ getCSSBase, cssTransform, cssGenerator }, config] =
@@ -32,9 +33,11 @@ export const main = async () => {
       })
     : undefined;
 
+  const swcCache = initSWC(config);
   const scanner = initScan({
     cssTransform,
     cssGenerator,
+    swcCache,
     lintFile: (path) => eslintWorker?.postMessage(path),
     watchFile: (path) => srcWatcher.add(path),
   });
@@ -51,12 +54,13 @@ export const main = async () => {
   const ws = initWS();
   const publicWatcher = initPublicWatcher(ws);
   setupHmr({
-    scanner,
-    importsTransform,
     cssTransform,
     cssGenerator,
-    ws,
     srcWatcher,
+    swcCache,
+    scanner,
+    importsTransform,
+    ws,
   });
   cssGenerator.onUpdate(() => {
     logger.info(colors.green("hmr update ") + colors.dim(RDS_CSS_UTILS));
