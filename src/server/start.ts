@@ -42,7 +42,7 @@ export const main = async () => {
     watchFile: (path) => srcWatcher.add(path),
   });
   await scanner.get(ENTRY_POINT);
-  await buildDependencies();
+  await buildDependencies(false);
 
   const importsTransform = initImportsTransform({
     scanner,
@@ -66,7 +66,8 @@ export const main = async () => {
     logger.info(colors.green("hmr update ") + colors.dim(RDS_CSS_UTILS));
     ws.send({ type: "update", paths: [cssGenerator.getHashedCSSUtilsUrl()] });
   });
-  scanner.onNewDep(() => {
+  scanner.onReBundleComplete(() => {
+    importsTransform.clear();
     ws.send({ type: "reload" });
   });
   scanner.onCSSPrune((paths) => {

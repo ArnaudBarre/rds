@@ -30,22 +30,47 @@ type Metadata = {
   deps: { [name: string]: { needInterop: boolean } | undefined };
 };
 let metadata: Metadata | undefined;
+
+const newDeps = new Set<string>();
+let reBundleTimeoutId: number | undefined;
 let reBundlePromise: Promise<void> | undefined;
+let reReBundle = false;
 
 export const addDependency = (
   dep: string,
-  onNewDep: (() => void) | undefined,
+  onReBundleComplete: (() => void) | undefined,
 ) => {
   if (dep.startsWith(RDS_VIRTUAL_PREFIX)) return;
   if (dependencies.has(dep)) return;
   dependencies.add(dep);
-  if (!onNewDep) return;
-  if (!reBundlePromise) {
-    reBundlePromise = buildDependencies().finally(() => {
-      reBundlePromise = undefined;
-      onNewDep();
-    });
+  if (onReBundleComplete) {
+    newDeps.add(dep);
+    queueReBundle(onReBundleComplete);
   }
+};
+
+const queueReBundle = (onReBundleComplete: () => void) => {
+  if (reBundlePromise) {
+    reReBundle = true;
+    return;
+  }
+  if (reBundleTimeoutId) clearTimeout(reBundleTimeoutId);
+  setTimeout(() => {
+    reBundle(onReBundleComplete);
+  }, 300);
+};
+
+const reBundle = (onComplete: () => void) => {
+  reBundlePromise = buildDependencies(true).finally(() => {
+    reBundlePromise = undefined;
+    newDeps.clear();
+    if (reReBundle) {
+      reReBundle = false;
+      reBundle(onComplete);
+    } else {
+      onComplete();
+    }
+  });
 };
 
 let dependenciesHash: string;
@@ -69,13 +94,13 @@ const initDependencyHash = () => {
   }
 };
 
-export const buildDependencies = async () => {
+export const buildDependencies = async (isReBundle: boolean) => {
   const start = performance.now();
   initDependencyHash();
   const deps = Array.from(dependencies);
   const metadataCache = jsonCacheSync<Metadata>("dependencies", 1);
   metadata = metadataCache.read();
-  if (metadata) {
+  if (metadata && !isReBundle) {
     if (metadata.dependenciesHash === dependenciesHash) {
       const cacheSet = new Set(Object.keys(metadata.deps));
       if (cacheSet.size >= deps.length && deps.every((d) => cacheSet.has(d))) {
@@ -90,9 +115,12 @@ export const buildDependencies = async () => {
     }
   }
   const listed = 5;
+  const listedDeps = isReBundle ? Array.from(newDeps) : deps;
   const depsString = colors.yellow(
-    deps.slice(0, listed).join("\n  ") +
-      (deps.length > listed ? `\n  (...and ${deps.length - listed} more)` : ""),
+    listedDeps.slice(0, listed).join("\n  ") +
+      (listedDeps.length > listed
+        ? `\n  (...and ${listedDeps.length - listed} more)`
+        : ""),
   );
   logger.info(colors.green(`Pre-bundling dependencies:\n  ${depsString}`));
   const result = await build({
@@ -175,14 +203,10 @@ export const transformDependenciesImports = async ({
 
 export const getDependency = cache<Promise<string>>(
   "getDependency",
-  async (dependency) => {
-    if (dependency.endsWith(".js")) {
-      return readCacheFile(dependency);
-    } else if (dependencies.has(dependency)) {
-      return readCacheFile(getFileName(dependency));
-    }
-    throw new Error(`Unbundled dependency ${dependency}`);
-  },
+  async (dependency) =>
+    dependency.endsWith(".js")
+      ? readCacheFile(dependency)
+      : readCacheFile(getFileName(dependency)),
 ).get;
 
 const getFileName = (dep: string) => `${dep.replaceAll("/", "_")}.js`;

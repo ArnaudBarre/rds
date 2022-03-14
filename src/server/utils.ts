@@ -77,11 +77,15 @@ export const cache = <Value>(name: string, load: (key: string) => Value) => {
       logger.debug(`${name}: delete - ${key}`);
       map.delete(key);
     },
+    clear: () => {
+      logger.debug(`${name}: clear`);
+      map.clear();
+    },
     get: (key: string) => {
       logger.debug(`${name}: get - ${key}`);
       const cached = map.get(key);
       if (cached) return cached;
-      const start = performance.now();
+      const start = isDebug ? performance.now() : 0;
       const value = load(key);
       if (isDebug) {
         (async () => {

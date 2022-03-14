@@ -32,7 +32,6 @@ export const setupHmr = ({
   ws: WS;
 }) => {
   const invalidate = (node: GraphNode) => {
-    scanner.delete(node.url);
     importsTransform.delete(node.url);
     for (const importer of node.importers) {
       invalidate(importer);
@@ -41,9 +40,11 @@ export const setupHmr = ({
 
   const clearCache = (path: string) => {
     if (isJS(path)) {
+      scanner.delete(path);
       cssGenerator.scanContentCache.delete(path);
       swcCache.delete(path);
     } else if (isCSS(path)) {
+      scanner.delete(path);
       cssTransform.delete(path);
     } else if (isSVG(path)) {
       svgCache.delete(path);
@@ -68,12 +69,13 @@ export const setupHmr = ({
           colors.green("hmr update ") +
             [...updates].map((update) => colors.dim(update)).join(", "),
         );
-        ws.send({
-          type: "update",
-          paths: await Promise.all(
-            [...updates].map((url) => importsTransform.toHashedUrl(url)),
-          ),
+        const paths = await Promise.all(
+          [...updates].map((url) => importsTransform.toHashedUrl(url)),
+        ).catch((e) => {
+          console.log("3", e);
+          return [] as string[];
         });
+        if (paths.length) ws.send({ type: "update", paths });
       }
     })
     .on("unlink", (path) => {
