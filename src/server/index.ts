@@ -7,11 +7,16 @@ if (cmd === "-v" || cmd === "--version") {
   console.log(version);
   process.exit();
 }
-if (cmd === "--help" || cmd === undefined) {
+
+const help = () => {
   console.log(`RDS ${version}:`);
   console.log("  start, dev: Starts dev server");
   console.log("  build: Bundles and minify into /dist");
   console.log("  serve, preview: Serves build output");
+};
+
+if (cmd === "--help" || cmd === undefined) {
+  help();
   process.exit();
 }
 
@@ -24,6 +29,7 @@ const main = () => {
     require("./serve");
   } else {
     console.error(`Unsupported command ${cmd}`);
+    help()
     process.exit(1);
   }
 };
