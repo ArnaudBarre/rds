@@ -2,6 +2,7 @@ export const mimeTypes = {
   html: "text/html",
   css: "text/css",
   js: "application/javascript",
+  ico: "image/x-icon",
   json: "application/json",
   map: "application/json",
 
@@ -34,7 +35,7 @@ export type Extension = keyof typeof mimeTypes;
 
 /* eslint-disable @typescript-eslint/naming-convention */
 export const esbuildFilesLoaders: Record<
-  `.${Exclude<Extension, "html" | "css" | "js" | "json" | "map" | "svg">}`,
+  `.${Exclude<Extension, "html" | "css" | "js" | "ico" | "json" | "map" | "svg">}`,
   "file"
 > = {
   ".jpg": "file",
