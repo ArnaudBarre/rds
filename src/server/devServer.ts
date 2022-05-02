@@ -10,7 +10,10 @@ import {
   RDS_VIRTUAL_PREFIX,
 } from "./consts";
 import { publicFiles, publicFilesCache } from "./public";
-import { getDependency, transformDependenciesImports } from "./dependencies";
+import {
+  getDependencyCache,
+  transformDependenciesImports,
+} from "./dependencies";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
 import { CSSGenerator } from "./css/generator";
@@ -70,7 +73,7 @@ export const createDevServer = ({
         const content = await readCacheFile(path);
         return { type: "json", content, browserCache: false };
       }
-      const code = await getDependency(path);
+      const code = await getDependencyCache.get(path);
       return { type: "js", content: code, browserCache: true };
     }
     if (isJS(url)) {

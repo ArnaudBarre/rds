@@ -71,10 +71,7 @@ export const setupHmr = ({
         );
         const paths = await Promise.all(
           [...updates].map((url) => importsTransform.toHashedUrl(url)),
-        ).catch((e) => {
-          console.log("3", e);
-          return [] as string[];
-        });
+        ).catch(() => [] as string[]);
         if (paths.length) ws.send({ type: "update", paths });
       }
     })

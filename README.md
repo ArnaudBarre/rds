@@ -4,7 +4,6 @@ React development server (WIP)
 
 ## TODO
 
-- new dep handling
 - error resilience
 - open in editor
 - css codegen

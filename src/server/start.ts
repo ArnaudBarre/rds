@@ -7,7 +7,7 @@ import { colors } from "./colors";
 import { initWS } from "./ws";
 import { ENTRY_POINT, RDS_CSS_UTILS } from "./consts";
 import { initPublicWatcher } from "./public";
-import { buildDependencies } from "./dependencies";
+import { buildDependencies, getDependencyCache } from "./dependencies";
 import { logger } from "./logger";
 import { initImportsTransform } from "./importsTransform";
 import { initCSS } from "./css";
@@ -68,6 +68,7 @@ export const main = async () => {
   });
   scanner.onReBundleComplete(() => {
     importsTransform.clear();
+    getDependencyCache.clear();
     ws.send({ type: "reload" });
   });
   scanner.onCSSPrune((paths) => {

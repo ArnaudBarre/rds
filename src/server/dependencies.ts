@@ -114,15 +114,22 @@ export const buildDependencies = async (isReBundle: boolean) => {
       logger.debug("Skipping dependencies cache (dependenciesHash change)");
     }
   }
-  const listed = 5;
   const listedDeps = isReBundle ? Array.from(newDeps) : deps;
   const depsString = colors.yellow(
-    listedDeps.slice(0, listed).join("\n  ") +
-      (listedDeps.length > listed
-        ? `\n  (...and ${listedDeps.length - listed} more)`
-        : ""),
+    listedDeps.length > 5
+      ? `${listedDeps.slice(0, 4).join(", ")} (...and ${
+          listedDeps.length - 4
+        } more)`
+      : listedDeps.join(", "),
   );
-  logger.info(colors.green(`Pre-bundling dependencies:\n  ${depsString}`));
+  logger.startLine(
+    "buildDependencies",
+    colors.green(
+      `${
+        isReBundle ? "Bundling new" : "Pre-bundling"
+      } dependencies: ${depsString}`,
+    ),
+  );
   const result = await build({
     entryPoints: deps,
     bundle: true,
@@ -145,7 +152,10 @@ export const buildDependencies = async (isReBundle: boolean) => {
     };
   }
   metadataCache.write(metadata);
-  logger.info(`  ✔ Bundled in ${Math.round(performance.now() - start)}ms`);
+  logger.endLine(
+    "buildDependencies",
+    `  ✔ Bundled in ${Math.round(performance.now() - start)}ms`,
+  );
 };
 
 export const transformDependenciesImports = async ({
@@ -181,7 +191,7 @@ export const transformDependenciesImports = async ({
     if (!depMetadata) throw new Error(`Unbundled dependency ${dep.source}`);
     const hashedUrl = getHashedUrl(
       `${DEPENDENCY_PREFIX}/${dep.source}`,
-      await getDependency(dep.source),
+      await getDependencyCache.get(dep.source),
     );
     if (depMetadata.needInterop && dep.specifiers.length) {
       const defaultImportName = `__rds_${dep.source.replace(/[-@/]/g, "_")}`;
@@ -201,12 +211,12 @@ export const transformDependenciesImports = async ({
   return code;
 };
 
-export const getDependency = cache<Promise<string>>(
+export const getDependencyCache = cache<Promise<string>>(
   "getDependency",
   async (dependency) =>
     dependency.endsWith(".js")
       ? readCacheFile(dependency)
       : readCacheFile(getFileName(dependency)),
-).get;
+);
 
 const getFileName = (dep: string) => `${dep.replaceAll("/", "_")}.js`;

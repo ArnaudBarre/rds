@@ -36,7 +36,15 @@ export const initSWC = (config: ResolvedConfig) =>
         target: "es2020",
         transform: {
           react: { refresh: true, development: true, useBuiltins: true },
-          optimizer: { globals: { vars: config.define } },
+          optimizer: {
+            globals: {
+              vars: {
+                // eslint-disable-next-line @typescript-eslint/naming-convention
+                "process.env.NODE_ENV": '"development"',
+                ...config.define,
+              },
+            },
+          },
         },
       },
     });
