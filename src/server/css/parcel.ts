@@ -1,7 +1,8 @@
-import { Dependency, transform } from "@parcel/css";
+import { Dependency, transform, TransformResult } from "@parcel/css";
 
 import { mapObjectValue } from "../utils";
 import { CSSModule } from "../types";
+import { codeToFrame, RDSError } from "../errors";
 
 export const parcel = ({
   url,
@@ -17,29 +18,60 @@ export const parcel = ({
   minify?: boolean;
 }): { code: string; imports: [string, string][]; cssModule: CSSModule } => {
   const cssModule = url.endsWith(".module.css");
-  const {
-    code: buffer,
-    dependencies,
-    exports,
-  } = transform({
-    filename: url,
-    code: Buffer.from(code),
-    cssModules: cssModule,
-    analyzeDependencies,
-    drafts: { nesting },
-    targets: { safari: 13 << 16 }, // eslint-disable-line no-bitwise
-    minify,
-  });
+  let transformResult: TransformResult | undefined;
+  try {
+    transformResult = transform({
+      filename: url,
+      code: Buffer.from(code),
+      cssModules: cssModule,
+      analyzeDependencies,
+      drafts: { nesting },
+      targets: { safari: 13 << 16 }, // eslint-disable-line no-bitwise
+      minify,
+    });
+  } catch (error) {
+    const e = error as {
+      message: string;
+      source: string;
+      loc: { line: number; column: number };
+    };
+    throw RDSError({
+      message: e.message,
+      file: `${url}:${e.loc.line}:${e.loc.column}`,
+      frame: getFrame(code, e.loc.line),
+    });
+  }
+
   return {
-    code: buffer.toString(),
-    imports: dependencies?.map((d) => [d.url, getPlaceholder(d)]) ?? [],
-    cssModule: cssModule ? mapObjectValue(exports!, (v) => v.name) : false,
+    code: transformResult.code.toString(),
+    imports:
+      transformResult.dependencies?.map((d) => [
+        d.url,
+        getPlaceholder(d, code),
+      ]) ?? [],
+    cssModule: cssModule
+      ? mapObjectValue(transformResult.exports!, (v) => v.name)
+      : false,
   };
 };
 
-const getPlaceholder = (dependency: Dependency) => {
+const getPlaceholder = (dependency: Dependency, code: string) => {
   if (dependency.type === "import") {
-    throw new Error("CSS imports are not supported");
+    throw RDSError({
+      message: "CSS imports are not supported",
+      file: `${dependency.loc.filePath}:${dependency.loc.start.line}:${dependency.loc.start.column}`,
+      frame: getFrame(code, dependency.loc.start.line),
+    });
   }
   return dependency.placeholder;
+};
+
+const getFrame = (code: string, line: number) => {
+  let index = 0;
+  let currentLine = 1;
+  while (currentLine !== line) {
+    index = code.indexOf("\n", index) + 1;
+    currentLine++;
+  }
+  return codeToFrame(code.slice(index, code.indexOf("\n", index)), line);
 };

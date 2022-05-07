@@ -17,6 +17,7 @@ import { loadConfig } from "./loadConfig";
 import { startServer } from "./startServer";
 import { initScan } from "./scan";
 import { initSWC } from "./swc";
+import { isRDSError } from "./errors";
 
 export const main = async () => {
   const [{ getCSSBase, cssTransform, cssGenerator }, config] =
@@ -93,4 +94,8 @@ export const main = async () => {
   };
 };
 
-main();
+main().catch((e) => {
+  if (isRDSError(e)) logger.hmrError(e);
+  else console.error(e);
+  process.exit(1);
+});

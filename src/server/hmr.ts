@@ -1,5 +1,4 @@
 import { FSWatcher } from "chokidar";
-
 import { GraphNode } from "./types";
 import { logger } from "./logger";
 import { colors } from "./colors";
@@ -13,6 +12,7 @@ import { assetsCache } from "./assets";
 import { WS } from "./ws";
 import { CSSGenerator } from "./css/generator";
 import { Scanner } from "./scan";
+import { isRDSError } from "./errors";
 
 export const setupHmr = ({
   cssTransform,
@@ -69,10 +69,18 @@ export const setupHmr = ({
           colors.green("hmr update ") +
             [...updates].map((update) => colors.dim(update)).join(", "),
         );
-        const paths = await Promise.all(
+        Promise.all(
           [...updates].map((url) => importsTransform.toHashedUrl(url)),
-        ).catch(() => [] as string[]);
-        if (paths.length) ws.send({ type: "update", paths });
+        )
+          .then((paths) => ws.send({ type: "update", paths }))
+          .catch((e) => {
+            if (isRDSError(e)) {
+              logger.hmrError(e);
+              ws.send({ type: "error", error: e });
+            } else {
+              console.error(e);
+            }
+          });
       }
     })
     .on("unlink", (path) => {

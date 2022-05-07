@@ -3,7 +3,7 @@ import { WebSocketServer } from "ws";
 import { Duplex } from "stream";
 
 import { HMR_HEADER } from "../consts";
-import { HMRError, HMRPayload } from "../hmrPayload";
+import { RDSErrorPayload, HMRPayload } from "../hmrPayload";
 
 import { colors } from "./colors";
 import { logger } from "./logger";
@@ -17,7 +17,7 @@ export const initWS = () => {
   // sends the error payload before the client connection is established.
   // If we have no open clients, buffer the error and send it to the next
   // connected client.
-  let bufferedError: HMRError | undefined;
+  let bufferedError: RDSErrorPayload | undefined;
 
   wss.on("error", (e: Error & { code: string }) => {
     if (e.code !== "EADDRINUSE") {

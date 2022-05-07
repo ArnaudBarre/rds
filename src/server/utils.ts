@@ -27,7 +27,7 @@ export const getHashedUrl = (base: string, content: string | Buffer) =>
 export const impSourceToRegex = (source: string) =>
   `\\s+['"]${escapeRegExp(source)}['"]`;
 
-const escapeRegExp = (string: string) =>
+export const escapeRegExp = (string: string) =>
   string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const readFile = (path: string) => fs.readFile(path, "utf-8");
@@ -88,7 +88,7 @@ export const cache = <Value>(name: string, load: (key: string) => Value) => {
       const start = isDebug ? performance.now() : 0;
       const value = load(key);
       if (isDebug) {
-        (async () => {
+        run(async () => {
           // eslint-disable-next-line @typescript-eslint/await-thenable
           await value;
           logger.debug(
@@ -96,7 +96,7 @@ export const cache = <Value>(name: string, load: (key: string) => Value) => {
               performance.now() - start,
             )}ms`,
           );
-        })();
+        });
       }
       map.set(key, value);
       return value;
@@ -105,6 +105,8 @@ export const cache = <Value>(name: string, load: (key: string) => Value) => {
 };
 
 export const run = <T>(cb: () => T) => cb();
+
+export const safeCast = <T>(value: T) => value;
 
 export const split = <T>(array: T[], predicate: (value: T) => boolean) => {
   const positive: T[] = [];

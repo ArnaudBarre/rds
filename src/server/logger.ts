@@ -1,6 +1,7 @@
 import { BuildResult, formatMessagesSync } from "esbuild";
 import { useColors, colors } from "./colors";
 import { run } from "./utils";
+import { RDSErrorPayload } from "../hmrPayload";
 
 export const isDebug = process.argv.includes("--debug");
 
@@ -16,6 +17,7 @@ export const logger: {
   startLine: (id: string, message: string) => void;
   endLine: (id: string, message: string) => void;
   warn: (message: string) => void;
+  hmrError: (error: RDSErrorPayload) => void;
   esbuildResult: (result: BuildResult) => void;
 } = {
   debug: isDebug
@@ -45,6 +47,11 @@ export const logger: {
   warn: (message) => {
     ensureNewLine();
     console.log(colors.yellow(message));
+  },
+  hmrError: (error) => {
+    console.log(colors.red(error.message));
+    console.log(colors.cyan(error.file));
+    console.log(colors.yellow(error.frame));
   },
   esbuildResult: ({ errors, warnings }) => {
     ensureNewLine();

@@ -34,7 +34,7 @@ socket.addEventListener("message", ({ data }) => {
       // means the page opened with existing server compile error and the whole
       // module script failed to load (since one of the nested imports is 500).
       // in this case a normal update won't work and a full reload is needed.
-      if (isFirstUpdate && document.querySelectorAll(overlayId).length) {
+      if (isFirstUpdate && document.querySelector(overlayId)) {
         window.location.reload();
         return;
       }
@@ -76,7 +76,7 @@ socket.addEventListener("message", ({ data }) => {
 });
 
 const clearErrorOverlay = () =>
-  (document.getElementById(overlayId) as ErrorOverlay | null)?.close();
+  (document.querySelector(overlayId) as ErrorOverlay | null)?.close();
 
 // ping server
 socket.addEventListener("close", async ({ wasClean }) => {

@@ -8,6 +8,7 @@ import {
 
 import { cache, getExtension } from "./utils";
 import { ResolvedConfig } from "./loadConfig";
+import { RDSError } from "./errors";
 
 const importReactRE = /(^|\n)import\s+(\*\s+as\s+)?React(,|\s+)/;
 
@@ -47,6 +48,17 @@ export const initSWC = (config: ResolvedConfig) =>
           },
         },
       },
+    }).catch((err: Error) => {
+      const fileIndex = err.message.indexOf(" -->");
+      const frameIndex = err.message.indexOf("  |");
+      throw RDSError({
+        message: err.message.slice(6, fileIndex).trim(),
+        file: err.message.slice(fileIndex + 4, frameIndex).trim(),
+        frame: err.message.slice(
+          frameIndex,
+          err.message.lastIndexOf("  |") + 4,
+        ),
+      });
     });
 
     if (code.includes("React.createElement") && !importReactRE.test(code)) {

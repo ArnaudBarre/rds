@@ -3,15 +3,11 @@ export type HMRPayload =
   | { type: "update"; paths: string[] }
   | { type: "prune-css"; paths: string[] }
   | { type: "reload" }
-  | { type: "error"; error: HMRError };
+  | { type: "error"; error: RDSErrorPayload };
 
-export type HMRError = {
-  [name: string]: any;
+export type RDSErrorPayload = {
+  rds: true;
   message: string;
-  stack: string;
-  id?: string;
-  frame?: string;
-  plugin?: string;
-  pluginCode?: string;
-  loc?: { file?: string; line: number; column: number };
+  file: string;
+  frame: string;
 };

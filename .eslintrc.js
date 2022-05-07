@@ -5,6 +5,7 @@ module.exports = {
     "require-unicode-regexp": "off",
     "@typescript-eslint/no-require-imports": "off",
     "no-param-reassign": "off",
+    "unicorn/throw-new-error": "off",
   },
   overrides: [
     {
