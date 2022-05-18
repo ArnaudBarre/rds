@@ -49,9 +49,13 @@ export const logger: {
     console.log(colors.yellow(message));
   },
   hmrError: (error) => {
-    console.log(colors.red(error.message));
-    console.log(colors.cyan(error.file));
-    console.log(colors.yellow(error.frame));
+    console.log(
+      // eslint-disable-next-line prefer-template
+      colors.cyan(error.file.includes(":") ? error.file : `${error.file}:1:1`) +
+        " " +
+        colors.red(error.message),
+    );
+    if (error.frame) console.log(colors.yellow(error.frame));
   },
   esbuildResult: ({ errors, warnings }) => {
     ensureNewLine();

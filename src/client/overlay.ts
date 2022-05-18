@@ -80,7 +80,7 @@ export class ErrorOverlay extends HTMLElement {
     this.root = this.attachShadow({ mode: "open" });
     this.root.innerHTML = template;
     this.root.querySelector(".message")!.textContent = err.message;
-    this.root.querySelector(".frame")!.textContent = err.frame;
+    if (err.frame) this.root.querySelector(".frame")!.textContent = err.frame;
     const fileLink = this.root.querySelector(".file") as HTMLLinkElement;
     fileLink.textContent = err.file;
     fileLink.onclick = () => {

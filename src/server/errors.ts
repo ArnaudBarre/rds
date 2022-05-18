@@ -1,12 +1,14 @@
 import { RDSErrorPayload } from "../hmrPayload";
 
+const rdsErrorSymbol = Symbol("RDS error");
+
 export const isRDSError = (v: any): v is RDSErrorPayload =>
-  typeof v === "object" && v.rds === true;
+  typeof v === "object" && v.rds === rdsErrorSymbol;
 
 export const RDSError = (props: Omit<RDSErrorPayload, "rds">) => ({
-  rds: true,
+  rds: rdsErrorSymbol,
   ...props,
 });
 
-export const codeToFrame = (code: string, line: number) =>
-  `  |\n${line} | ${code}\n  |`;
+export const codeToFrame = (code: string, line: number | null) =>
+  `  |\n${line ?? "?"} | ${code}\n  |`;

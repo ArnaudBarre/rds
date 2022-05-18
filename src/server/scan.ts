@@ -7,6 +7,7 @@ import { addDependency } from "./dependencies";
 import { CSSGenerator } from "./css/generator";
 import { CSSTransform } from "./css/cssTransform";
 import { cssToHMR, getClientUrl } from "./getClient";
+import { RDSError } from "./errors";
 
 export type Scanner = ReturnType<typeof initScan>;
 
@@ -104,9 +105,10 @@ RefreshRuntime.enqueueUpdate();
       if (impGraphNode) {
         if (!impGraphNode.importers.has(graphNode)) {
           if (hasCycle(graphNode, impGraphNode.url)) {
-            throw new Error(
-              `Found cycle between ${graphNode.url} & ${impGraphNode.url}`,
-            );
+            throw RDSError({
+              message: `Found cycle between ${graphNode.url} & ${impGraphNode.url}`,
+              file: impGraphNode.url,
+            });
           }
           impGraphNode.importers.add(graphNode);
         }
