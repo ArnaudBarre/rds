@@ -88,6 +88,7 @@ export const createDevServer = ({
       const code = await svgCache.get(url);
       const content = await transformDependenciesImports({
         code,
+        url,
         depsImports: [{ source: "react", specifiers: [] }],
         cssGenerator,
         getCSSBase,

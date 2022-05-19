@@ -22,6 +22,7 @@ import {
 } from "./consts";
 import { AnalyzedImport } from "./swc";
 import { CSSGenerator } from "./css/generator";
+import { RDSError } from "./errors";
 
 const dependencies = new Set<string>();
 
@@ -31,58 +32,8 @@ type Metadata = {
 };
 let metadata: Metadata | undefined;
 
-let reBundleStart: number | undefined;
-let reBundleTimeoutId: NodeJS.Timeout | undefined;
-let reBundlePromise: Promise<void> | undefined;
-const reReBundleDeps = new Set<string>();
-
-export const addDependency = (
-  dep: string,
-  onReBundleComplete: (() => void) | undefined,
-) => {
-  if (dep.startsWith(RDS_VIRTUAL_PREFIX)) return;
-  if (dependencies.has(dep)) return;
-  dependencies.add(dep);
-  if (onReBundleComplete) queueReBundle([dep], onReBundleComplete);
-};
-
-const queueReBundle = (deps: string[], onReBundleComplete: () => void) => {
-  if (reBundlePromise) {
-    deps.forEach((dep) => reReBundleDeps.add(dep));
-    return;
-  }
-  if (reBundleTimeoutId) {
-    clearTimeout(reBundleTimeoutId);
-    logger.updateLine(
-      "buildDependencies",
-      colors.yellow(`, ${deps.join(", ")}`),
-    );
-  } else {
-    reBundleStart = performance.now();
-    logger.startLine(
-      "buildDependencies",
-      colors.green("Bundling new dependencies: ") +
-        colors.yellow(deps.join(", ")),
-    );
-  }
-  reBundleTimeoutId = setTimeout(() => {
-    reBundleTimeoutId = undefined;
-    reBundle(onReBundleComplete);
-  }, 200);
-};
-
-const reBundle = (onComplete: () => void) => {
-  reBundlePromise = buildDependencies().finally(() => {
-    reBundleStart = undefined;
-    reBundlePromise = undefined;
-    if (reReBundleDeps.size) {
-      const deps = Array.from(reReBundleDeps);
-      reReBundleDeps.clear();
-      queueReBundle(deps, onComplete);
-    } else {
-      onComplete();
-    }
-  });
+export const addDependency = (dep: string) => {
+  if (!dep.startsWith(RDS_VIRTUAL_PREFIX)) dependencies.add(dep);
 };
 
 let dependenciesHash: string;
@@ -112,7 +63,7 @@ export const buildDependencies = async () => {
   const deps = Array.from(dependencies);
   const metadataCache = jsonCacheSync<Metadata>("dependencies", 1);
   metadata = metadataCache.read();
-  if (metadata && !reBundleStart) {
+  if (metadata) {
     if (metadata.dependenciesHash === dependenciesHash) {
       const cacheSet = new Set(Object.keys(metadata.deps));
       if (cacheSet.size >= deps.length && deps.every((d) => cacheSet.has(d))) {
@@ -127,17 +78,15 @@ export const buildDependencies = async () => {
     }
   }
 
-  if (!reBundleStart) {
-    logger.startLine(
-      "buildDependencies",
-      colors.green("Bundling new dependencies: ") +
-        colors.yellow(
-          deps.length > 5
-            ? `${deps.slice(0, 4).join(", ")} (...and ${deps.length - 4} more)`
-            : deps.join(", "),
-        ),
-    );
-  }
+  logger.startLine(
+    "buildDependencies",
+    colors.green("Bundling new dependencies: ") +
+      colors.yellow(
+        deps.length > 5
+          ? `${deps.slice(0, 4).join(", ")} (...and ${deps.length - 4} more)`
+          : deps.join(", "),
+      ),
+  );
 
   const result = await build({
     entryPoints: deps,
@@ -163,19 +112,19 @@ export const buildDependencies = async () => {
   metadataCache.write(metadata);
   logger.endLine(
     "buildDependencies",
-    `  ✔ Bundled in ${Math.round(
-      performance.now() - (reBundleStart ?? start),
-    )}ms`,
+    `  ✔ Bundled in ${Math.round(performance.now() - start)}ms`,
   );
 };
 
 export const transformDependenciesImports = async ({
   code,
+  url,
   depsImports,
   cssGenerator,
   getCSSBase,
 }: {
   code: string;
+  url: string;
   depsImports: AnalyzedImport[];
   cssGenerator: CSSGenerator;
   getCSSBase: () => Promise<string>;
@@ -199,7 +148,12 @@ export const transformDependenciesImports = async ({
       throw new Error(`Unhandled entry ${dep.source}`);
     }
     const depMetadata = metadata!.deps[dep.source];
-    if (!depMetadata) throw new UnbundledDependencyError(dep.source);
+    if (!depMetadata) {
+      throw RDSError({
+        message: `Unbundled dependency ${dep.source}`,
+        file: url,
+      });
+    }
     const hashedUrl = getHashedUrl(
       `${DEPENDENCY_PREFIX}/${dep.source}`,
       await getDependencyCache.get(dep.source),
@@ -221,8 +175,6 @@ export const transformDependenciesImports = async ({
   }
   return code;
 };
-
-export class UnbundledDependencyError extends Error {}
 
 export const getDependencyCache = cache<Promise<string>>(
   "getDependency",

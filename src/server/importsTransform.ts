@@ -67,6 +67,7 @@ export const initImportsTransform = ({
 
     return transformDependenciesImports({
       code: content,
+      url,
       depsImports,
       getCSSBase,
       cssGenerator,

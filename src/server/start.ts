@@ -7,7 +7,7 @@ import { colors } from "./colors";
 import { initWS } from "./ws";
 import { ENTRY_POINT, RDS_CSS_UTILS } from "./consts";
 import { initPublicWatcher } from "./public";
-import { buildDependencies, getDependencyCache } from "./dependencies";
+import { buildDependencies } from "./dependencies";
 import { logger } from "./logger";
 import { initImportsTransform } from "./importsTransform";
 import { initCSS } from "./css";
@@ -66,11 +66,6 @@ export const main = async () => {
   cssGenerator.onUpdate(() => {
     logger.info(colors.green("hmr update ") + colors.dim(RDS_CSS_UTILS));
     ws.send({ type: "update", paths: [cssGenerator.getHashedCSSUtilsUrl()] });
-  });
-  scanner.onReBundleComplete(() => {
-    importsTransform.clear();
-    getDependencyCache.clear();
-    ws.send({ type: "reload" });
   });
   scanner.onCSSPrune((paths) => {
     ws.send({ type: "prune-css", paths });

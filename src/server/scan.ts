@@ -36,7 +36,6 @@ export const initScan = ({
     ],
   ]);
 
-  let onReBundleCompleteCallback: (() => void) | undefined;
   let cssPruneCallback: ((paths: string[]) => void) | undefined;
 
   const scanCache = cache("scan", async (url) => {
@@ -68,9 +67,7 @@ export const initScan = ({
         i.source,
       ]);
 
-      for (const imp of depsImports) {
-        addDependency(imp.source, onReBundleCompleteCallback);
-      }
+      for (const imp of depsImports) addDependency(imp.source);
 
       content = hasFastRefresh
         ? `import { RefreshRuntime } from "${getClientUrl()}";
@@ -131,8 +128,6 @@ RefreshRuntime.enqueueUpdate();
     ...scanCache,
     onCSSPrune: (callback: (paths: string[]) => void) =>
       (cssPruneCallback = callback),
-    onReBundleComplete: (callback: () => void) =>
-      (onReBundleCompleteCallback = callback),
     graph,
   };
 };
