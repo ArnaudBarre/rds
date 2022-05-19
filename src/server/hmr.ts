@@ -13,6 +13,7 @@ import { WS } from "./ws";
 import { CSSGenerator } from "./css/generator";
 import { Scanner } from "./scan";
 import { isRDSError } from "./errors";
+import { UnbundledDependencyError } from "./dependencies";
 
 export const setupHmr = ({
   cssTransform,
@@ -74,6 +75,7 @@ export const setupHmr = ({
         )
           .then((paths) => ws.send({ type: "update", paths }))
           .catch((e) => {
+            if (e instanceof UnbundledDependencyError) return;
             if (isRDSError(e)) {
               logger.hmrError(e);
               ws.send({ type: "error", error: e });

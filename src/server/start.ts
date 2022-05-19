@@ -43,7 +43,7 @@ export const main = async () => {
     watchFile: (path) => srcWatcher.add(path),
   });
   await scanner.get(ENTRY_POINT);
-  await buildDependencies(false);
+  await buildDependencies();
 
   const importsTransform = initImportsTransform({
     scanner,

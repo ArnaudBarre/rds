@@ -15,6 +15,7 @@ export const logger: {
   debug: (message: string) => void;
   info: (message: string) => void;
   startLine: (id: string, message: string) => void;
+  updateLine: (id: string, message: string) => void;
   endLine: (id: string, message: string) => void;
   warn: (message: string) => void;
   hmrError: (error: RDSErrorPayload) => void;
@@ -35,6 +36,13 @@ export const logger: {
   startLine: (id, message) => {
     editingLineId = id;
     process.stdout.write(message);
+  },
+  updateLine: (id, message) => {
+    if (id === editingLineId) {
+      process.stdout.write(message);
+    } else {
+      logger.info(message);
+    }
   },
   endLine: (id, message) => {
     if (id === editingLineId) {

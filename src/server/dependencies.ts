@@ -31,10 +31,10 @@ type Metadata = {
 };
 let metadata: Metadata | undefined;
 
-const newDeps = new Set<string>();
-let reBundleTimeoutId: number | undefined;
+let reBundleStart: number | undefined;
+let reBundleTimeoutId: NodeJS.Timeout | undefined;
 let reBundlePromise: Promise<void> | undefined;
-let reReBundle = false;
+const reReBundleDeps = new Set<string>();
 
 export const addDependency = (
   dep: string,
@@ -43,30 +43,42 @@ export const addDependency = (
   if (dep.startsWith(RDS_VIRTUAL_PREFIX)) return;
   if (dependencies.has(dep)) return;
   dependencies.add(dep);
-  if (onReBundleComplete) {
-    newDeps.add(dep);
-    queueReBundle(onReBundleComplete);
-  }
+  if (onReBundleComplete) queueReBundle([dep], onReBundleComplete);
 };
 
-const queueReBundle = (onReBundleComplete: () => void) => {
+const queueReBundle = (deps: string[], onReBundleComplete: () => void) => {
   if (reBundlePromise) {
-    reReBundle = true;
+    deps.forEach((dep) => reReBundleDeps.add(dep));
     return;
   }
-  if (reBundleTimeoutId) clearTimeout(reBundleTimeoutId);
-  setTimeout(() => {
+  if (reBundleTimeoutId) {
+    clearTimeout(reBundleTimeoutId);
+    logger.updateLine(
+      "buildDependencies",
+      colors.yellow(`, ${deps.join(", ")}`),
+    );
+  } else {
+    reBundleStart = performance.now();
+    logger.startLine(
+      "buildDependencies",
+      colors.green("Bundling new dependencies: ") +
+        colors.yellow(deps.join(", ")),
+    );
+  }
+  reBundleTimeoutId = setTimeout(() => {
+    reBundleTimeoutId = undefined;
     reBundle(onReBundleComplete);
-  }, 300);
+  }, 200);
 };
 
 const reBundle = (onComplete: () => void) => {
-  reBundlePromise = buildDependencies(true).finally(() => {
+  reBundlePromise = buildDependencies().finally(() => {
+    reBundleStart = undefined;
     reBundlePromise = undefined;
-    newDeps.clear();
-    if (reReBundle) {
-      reReBundle = false;
-      reBundle(onComplete);
+    if (reReBundleDeps.size) {
+      const deps = Array.from(reReBundleDeps);
+      reReBundleDeps.clear();
+      queueReBundle(deps, onComplete);
     } else {
       onComplete();
     }
@@ -94,13 +106,13 @@ const initDependencyHash = () => {
   }
 };
 
-export const buildDependencies = async (isReBundle: boolean) => {
+export const buildDependencies = async () => {
   const start = performance.now();
   initDependencyHash();
   const deps = Array.from(dependencies);
   const metadataCache = jsonCacheSync<Metadata>("dependencies", 1);
   metadata = metadataCache.read();
-  if (metadata && !isReBundle) {
+  if (metadata && !reBundleStart) {
     if (metadata.dependenciesHash === dependenciesHash) {
       const cacheSet = new Set(Object.keys(metadata.deps));
       if (cacheSet.size >= deps.length && deps.every((d) => cacheSet.has(d))) {
@@ -114,22 +126,19 @@ export const buildDependencies = async (isReBundle: boolean) => {
       logger.debug("Skipping dependencies cache (dependenciesHash change)");
     }
   }
-  const listedDeps = isReBundle ? Array.from(newDeps) : deps;
-  const depsString = colors.yellow(
-    listedDeps.length > 5
-      ? `${listedDeps.slice(0, 4).join(", ")} (...and ${
-          listedDeps.length - 4
-        } more)`
-      : listedDeps.join(", "),
-  );
-  logger.startLine(
-    "buildDependencies",
-    colors.green(
-      `${
-        isReBundle ? "Bundling new" : "Pre-bundling"
-      } dependencies: ${depsString}`,
-    ),
-  );
+
+  if (!reBundleStart) {
+    logger.startLine(
+      "buildDependencies",
+      colors.green("Bundling new dependencies: ") +
+        colors.yellow(
+          deps.length > 5
+            ? `${deps.slice(0, 4).join(", ")} (...and ${deps.length - 4} more)`
+            : deps.join(", "),
+        ),
+    );
+  }
+
   const result = await build({
     entryPoints: deps,
     bundle: true,
@@ -154,7 +163,9 @@ export const buildDependencies = async (isReBundle: boolean) => {
   metadataCache.write(metadata);
   logger.endLine(
     "buildDependencies",
-    `  ✔ Bundled in ${Math.round(performance.now() - start)}ms`,
+    `  ✔ Bundled in ${Math.round(
+      performance.now() - (reBundleStart ?? start),
+    )}ms`,
   );
 };
 
@@ -188,7 +199,7 @@ export const transformDependenciesImports = async ({
       throw new Error(`Unhandled entry ${dep.source}`);
     }
     const depMetadata = metadata!.deps[dep.source];
-    if (!depMetadata) throw new Error(`Unbundled dependency ${dep.source}`);
+    if (!depMetadata) throw new UnbundledDependencyError(dep.source);
     const hashedUrl = getHashedUrl(
       `${DEPENDENCY_PREFIX}/${dep.source}`,
       await getDependencyCache.get(dep.source),
@@ -210,6 +221,8 @@ export const transformDependenciesImports = async ({
   }
   return code;
 };
+
+export class UnbundledDependencyError extends Error {}
 
 export const getDependencyCache = cache<Promise<string>>(
   "getDependency",

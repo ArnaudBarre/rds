@@ -52,8 +52,14 @@ export const initSWC = (config: ResolvedConfig) =>
       const fileIndex = err.message.indexOf(" -->");
       const frameIndex = err.message.indexOf("  |");
       throw RDSError({
-        message: err.message.slice(6, fileIndex).trim(),
-        file: err.message.slice(fileIndex + 4, frameIndex).trim(),
+        message:
+          fileIndex === -1
+            ? err.message.slice(6, frameIndex).trim()
+            : err.message.slice(6, fileIndex).trim(),
+        file:
+          fileIndex === -1
+            ? url
+            : err.message.slice(fileIndex + 4, frameIndex).trim(),
         frame: err.message.slice(
           frameIndex,
           err.message.lastIndexOf("  |") + 4,
