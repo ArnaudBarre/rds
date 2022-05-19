@@ -24,7 +24,7 @@ import { AnalyzedImport } from "./swc";
 import { CSSGenerator } from "./css/generator";
 import { RDSError } from "./errors";
 
-const dependencies = new Set<string>();
+const dependencies = new Map<string, string>();
 
 type Metadata = {
   dependenciesHash: string;
@@ -32,8 +32,8 @@ type Metadata = {
 };
 let metadata: Metadata | undefined;
 
-export const addDependency = (dep: string) => {
-  if (!dep.startsWith(RDS_VIRTUAL_PREFIX)) dependencies.add(dep);
+export const addDependency = (dep: string, fromUrl: string) => {
+  if (!dep.startsWith(RDS_VIRTUAL_PREFIX)) dependencies.set(dep, fromUrl);
 };
 
 let dependenciesHash: string;
@@ -57,10 +57,10 @@ const initDependencyHash = () => {
   }
 };
 
-export const buildDependencies = async () => {
+export const bundleDependencies = async () => {
   const start = performance.now();
   initDependencyHash();
-  const deps = Array.from(dependencies);
+  const deps = Array.from(dependencies.keys());
   const metadataCache = jsonCacheSync<Metadata>("dependencies", 1);
   metadata = metadataCache.read();
   if (metadata) {
@@ -79,11 +79,11 @@ export const buildDependencies = async () => {
   }
 
   logger.startLine(
-    "buildDependencies",
-    colors.green("Bundling new dependencies: ") +
+    "bundleDependencies",
+    colors.green("Bundling dependencies: ") +
       colors.yellow(
         deps.length > 5
-          ? `${deps.slice(0, 4).join(", ")} (...and ${deps.length - 4} more)`
+          ? `${deps.slice(0, 4).join(", ")} and ${deps.length - 4} more`
           : deps.join(", "),
       ),
   );
@@ -97,6 +97,14 @@ export const buildDependencies = async () => {
     splitting: true,
     sourcemap: true,
     outdir: cacheDir,
+    logLevel: "silent",
+  }).catch((err) => {
+    const match = (err.message as string).match(/Could not resolve "(.*)"/);
+    if (!match) throw err;
+    throw RDSError({
+      message: `Could not resolve "${match[1]}"`,
+      file: dependencies.get(match[1])!,
+    });
   });
   // eslint-disable-next-line require-atomic-updates
   metadata = { dependenciesHash, deps: {} };
@@ -111,7 +119,7 @@ export const buildDependencies = async () => {
   }
   metadataCache.write(metadata);
   logger.endLine(
-    "buildDependencies",
+    "bundleDependencies",
     `  ✔ Bundled in ${Math.round(performance.now() - start)}ms`,
   );
 };

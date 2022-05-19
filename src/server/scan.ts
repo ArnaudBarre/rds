@@ -67,7 +67,7 @@ export const initScan = ({
         i.source,
       ]);
 
-      for (const imp of depsImports) addDependency(imp.source);
+      for (const imp of depsImports) addDependency(imp.source, url);
 
       content = hasFastRefresh
         ? `import { RefreshRuntime } from "${getClientUrl()}";

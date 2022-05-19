@@ -7,7 +7,7 @@ import { colors } from "./colors";
 import { initWS } from "./ws";
 import { ENTRY_POINT, RDS_CSS_UTILS } from "./consts";
 import { initPublicWatcher } from "./public";
-import { buildDependencies } from "./dependencies";
+import { bundleDependencies } from "./dependencies";
 import { logger } from "./logger";
 import { initImportsTransform } from "./importsTransform";
 import { initCSS } from "./css";
@@ -43,7 +43,7 @@ export const main = async () => {
     watchFile: (path) => srcWatcher.add(path),
   });
   await scanner.get(ENTRY_POINT);
-  await buildDependencies();
+  await bundleDependencies();
 
   const importsTransform = initImportsTransform({
     scanner,

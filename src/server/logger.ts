@@ -57,6 +57,7 @@ export const logger: {
     console.log(colors.yellow(message));
   },
   hmrError: (error) => {
+    ensureNewLine();
     console.log(
       // eslint-disable-next-line prefer-template
       colors.cyan(error.file.includes(":") ? error.file : `${error.file}:1:1`) +
