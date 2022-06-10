@@ -17,7 +17,7 @@ createWatchProgram(
         const name = relative("", log.file.fileName);
         const line = position.line + 1;
         const char = position.character + 1;
-        console.log(`${name}(${line},${char}): ${message}`);
+        console.log(`${name}:${line}:${char} ${message}`);
       } else {
         console.log(message);
       }

@@ -4,7 +4,6 @@ React development server (WIP)
 
 ## TODO
 
-- error resilience
 - open in editor
 - css codegen
 - parallel scan/importsTransform

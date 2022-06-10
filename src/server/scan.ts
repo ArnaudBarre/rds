@@ -49,7 +49,10 @@ export const initScan = ({
     if (isCSSFile) {
       const { code, imports, cssModule } = await cssTransform.get(url);
       graphNode.selfUpdate = !cssModule; // Can't self accept because of modules exports
-      graphNode.imports = imports;
+      graphNode.imports = imports.map(([value, placeholder]) => [
+        resolve(url, value),
+        placeholder,
+      ]);
       content = cssToHMR(url, code, cssModule);
     } else {
       lintFile(url);
@@ -63,7 +66,7 @@ export const initScan = ({
       );
       depsImports = _depsImports;
       graphNode.imports = srcImports.map((i) => [
-        stripQuery(i.source),
+        resolve(url, stripQuery(i.source)),
         i.source,
       ]);
 
@@ -88,16 +91,16 @@ RefreshRuntime.enqueueUpdate();
     const cssImportsToPrune: string[] = [];
     for (const [oldImp] of oldSrcImports) {
       if (graphNode.imports.some(([i]) => oldImp === i)) continue;
-      const impUrl = resolve(url, oldImp);
-      graph.get(impUrl)!.importers.delete(graphNode);
-      if (isCSS(impUrl) && graph.get(impUrl)!.importers.size === 0) {
-        cssImportsToPrune.push(impUrl);
+      const prunedNode = graph.get(oldImp);
+      if (!prunedNode) continue; // Removed a reference to a deleted file
+      prunedNode.importers.delete(graphNode);
+      if (isCSS(oldImp) && prunedNode.importers.size === 0) {
+        cssImportsToPrune.push(oldImp);
       }
     }
     if (cssImportsToPrune.length) cssPruneCallback?.(cssImportsToPrune);
 
-    for (const [imp] of graphNode.imports) {
-      const resolvedUrl = resolve(url, imp);
+    for (const [resolvedUrl] of graphNode.imports) {
       const impGraphNode = graph.get(resolvedUrl);
       if (impGraphNode) {
         if (!impGraphNode.importers.has(graphNode)) {

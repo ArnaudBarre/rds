@@ -90,7 +90,7 @@ export const main = async () => {
 };
 
 main().catch((e) => {
-  if (isRDSError(e)) logger.hmrError(e);
+  if (isRDSError(e)) logger.rdsError(e);
   else console.error(e);
   process.exit(1);
 });

@@ -12,7 +12,7 @@ import { assetsCache } from "./assets";
 import { WS } from "./ws";
 import { CSSGenerator } from "./css/generator";
 import { Scanner } from "./scan";
-import { isRDSError } from "./errors";
+import { isRDSError, RDSError } from "./errors";
 
 export const setupHmr = ({
   cssTransform,
@@ -54,6 +54,9 @@ export const setupHmr = ({
     }
   };
 
+  const successPaths = new Set<string>();
+  const errorPaths = new Set<string>();
+
   srcWatcher
     .on("change", (path) => {
       logger.debug(`change ${path}`);
@@ -64,34 +67,71 @@ export const setupHmr = ({
       if (propagateUpdate(graphNode, updates)) {
         logger.info(colors.green("page reload ") + colors.dim(path));
         ws.send({ type: "reload" });
+        successPaths.clear();
+        errorPaths.clear();
       } else {
         logger.info(
           colors.green("hmr update ") +
             [...updates].map((update) => colors.dim(update)).join(", "),
         );
-        Promise.all(
-          [...updates].map((url) => importsTransform.toHashedUrl(url)),
-        )
-          .then((paths) => ws.send({ type: "update", paths }))
-          .catch((e) => {
-            if (isRDSError(e)) {
-              logger.hmrError(e);
-              ws.send({ type: "error", error: e });
+        const filesToTransform = [...new Set([...errorPaths, ...updates])];
+        Promise.allSettled(
+          filesToTransform.map((url) => importsTransform.toHashedUrl(url)),
+        ).then((results) => {
+          let hasError = false;
+          let errorSent = false;
+          for (const [index, result] of results.entries()) {
+            if (result.status === "fulfilled") {
+              successPaths.add(result.value);
+              errorPaths.delete(filesToTransform[index]);
             } else {
-              console.error(e);
+              hasError = true;
+              errorPaths.add(filesToTransform[index]);
+              const error = result.reason;
+              if (isRDSError(error)) {
+                logger.rdsError(error);
+                if (!errorSent) {
+                  ws.send({ type: "error", error });
+                  errorSent = true;
+                }
+              } else {
+                console.error(error);
+              }
             }
-          });
+          }
+          if (hasError) return;
+          ws.send({ type: "update", paths: Array.from(successPaths) });
+          errorPaths.clear();
+          successPaths.clear();
+        });
       }
     })
     .on("unlink", (path) => {
       logger.debug(`unlink ${path}`);
       if (isJS(path)) {
-        resolveExtensionCache.delete(path.slice(0, path.lastIndexOf(".")));
+        const pathWithoutExt = path.slice(0, path.lastIndexOf("."));
+        resolveExtensionCache.delete(pathWithoutExt);
+        if (pathWithoutExt.endsWith("/index")) {
+          resolveExtensionCache.delete(pathWithoutExt.slice(0, -6));
+        }
+      } else if (isCSS(path)) {
+        ws.send({ type: "prune-css", paths: [path] });
       }
       clearCache(path);
-      scanner.delete(path);
-      importsTransform.delete(path);
-      // TODO: Update importers if exists. Will throws and trigger the overlay
+      const node = scanner.graph.get(path)!;
+      invalidate(node);
+      scanner.graph.delete(path);
+      if (node.importers.size) {
+        const importers = [...node.importers.values()].map((v) => v.url);
+        const error = RDSError({
+          message: `File ${path} was deleted bu used in ${importers.join(
+            ", ",
+          )}`,
+          file: importers[0],
+        });
+        logger.rdsError(error);
+        ws.send({ type: "error", error });
+      }
     });
 };
 

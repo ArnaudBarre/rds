@@ -18,7 +18,7 @@ export const logger: {
   updateLine: (id: string, message: string) => void;
   endLine: (id: string, message: string) => void;
   warn: (message: string) => void;
-  hmrError: (error: RDSErrorPayload) => void;
+  rdsError: (error: RDSErrorPayload) => void;
   esbuildResult: (result: BuildResult) => void;
 } = {
   debug: isDebug
@@ -56,7 +56,7 @@ export const logger: {
     ensureNewLine();
     console.log(colors.yellow(message));
   },
-  hmrError: (error) => {
+  rdsError: (error) => {
     ensureNewLine();
     console.log(
       // eslint-disable-next-line prefer-template

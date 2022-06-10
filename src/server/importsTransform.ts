@@ -10,7 +10,6 @@ import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
 import { CSSGenerator } from "./css/generator";
 import { Scanner } from "./scan";
-import { resolve } from "./resolve";
 import { transformDependenciesImports } from "./dependencies";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
@@ -30,8 +29,7 @@ export const initImportsTransform = ({
     const { code, depsImports, imports } = await scanner.get(url);
     let content = code;
 
-    for (const [imp, placeholder] of imports) {
-      const resolvedUrl = resolve(url, imp);
+    for (const [resolvedUrl, placeholder] of imports) {
       if (isCSSFile) {
         content = content.replace(placeholder, await toHashedUrl(resolvedUrl));
       } else {
