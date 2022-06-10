@@ -18,7 +18,12 @@ export const startServer = async (
   if (config.server.host) {
     Object.values(networkInterfaces())
       .flatMap((nInterface) => nInterface ?? [])
-      .filter((detail) => detail.address && detail.family === "IPv4")
+      .filter(
+        (detail) =>
+          detail.address &&
+          // Node 18 breaking change
+          (detail.family === "IPv4" || (detail.family as any) === 4),
+      )
       .map((detail) =>
         detail.address.includes("127.0.0.1")
           ? `  > Local:   ${localUrl}`
