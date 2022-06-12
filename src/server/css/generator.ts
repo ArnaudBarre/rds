@@ -137,12 +137,12 @@ export const getCSSGenerator = ({
   });
   const generate = () => generatorCache.get("");
 
-  const validSelectorRe = /^[a-z0-9:/[\]#-]+$/;
+  const validSelectorRE = /^[a-z0-9:/[\]#-]+$/;
   const scanCode = (code: string) => {
     const matches: RuleMatch[] = [];
     const tokens = code
       .split(/[\s'"`;>=]+/g)
-      .filter((t) => validSelectorRe.test(t) && !blockList.has(t));
+      .filter((t) => validSelectorRE.test(t) && !blockList.has(t));
     const localMatches = new Set<string>();
     for (const token of tokens) {
       if (localMatches.has(token) || blockList.has(token)) continue;

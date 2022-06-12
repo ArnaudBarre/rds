@@ -18,7 +18,7 @@ const main = async () => {
         browserCache: path.startsWith("assets/"),
       };
     } catch (err: any) {
-      if (err.code === "ENOENT") return null;
+      if (err.code === "ENOENT") return "NOT_FOUND";
       throw err;
     }
   });

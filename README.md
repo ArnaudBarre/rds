@@ -4,7 +4,6 @@ React development server (WIP)
 
 ## TODO
 
-- open in editor
 - css codegen
 - parallel scan/importsTransform
 - fs caching (swc, css transform, css scan)

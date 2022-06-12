@@ -6,6 +6,7 @@ import {
   RDS_CLIENT,
   RDS_CSS_BASE,
   RDS_CSS_UTILS,
+  RDS_OPEN_IN_EDITOR,
   RDS_PREFIX,
   RDS_VIRTUAL_PREFIX,
 } from "./consts";
@@ -21,6 +22,7 @@ import { ImportsTransform } from "./importsTransform";
 import { createServer } from "./createServer";
 import { cssToHMR, getClientCode, getClientUrl } from "./getClient";
 import { ResolvedConfig } from "./loadConfig";
+import { openInEditor } from "./openInEditor";
 
 export const createDevServer = ({
   config,
@@ -37,6 +39,10 @@ export const createDevServer = ({
     if (url.startsWith(RDS_PREFIX)) {
       if (url === RDS_CLIENT) {
         return { content: getClientCode(), type: "js", browserCache: true };
+      }
+      if (url === RDS_OPEN_IN_EDITOR) {
+        openInEditor(searchParams.get("file")!);
+        return;
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
@@ -96,7 +102,7 @@ export const createDevServer = ({
       return { type: "js", content, browserCache: true };
     }
     if (url.includes(".")) {
-      if (!assetsCache.has(url)) return null;
+      if (!assetsCache.has(url)) return "NOT_FOUND";
       return {
         type: getExtension(url) as Extension,
         content: await assetsCache.get(url),

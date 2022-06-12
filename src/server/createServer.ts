@@ -8,7 +8,10 @@ import { ResolvedConfig } from "./loadConfig";
 
 export const createServer = (
   config: ResolvedConfig,
-  handleRequest: (url: string, query: URLSearchParams) => Promise<LoadedFile>,
+  handleRequest: (
+    url: string,
+    query: URLSearchParams,
+  ) => Promise<LoadedFile | "NOT_FOUND" | undefined>,
 ) =>
   createHTTPServer(async (req, res) => {
     const [url, query] = req.url!.split("?") as [string, string | undefined];
@@ -36,6 +39,12 @@ export const createServer = (
     );
 
     if (!loadedFile) {
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+
+    if (loadedFile === "NOT_FOUND") {
       logger.info(`Not found: ${url}`);
       res.writeHead(404);
       res.end();

@@ -5,7 +5,7 @@ export type LoadedFile = {
   content: string | Buffer;
   type: Extension;
   browserCache: boolean;
-} | null;
+};
 
 export type GraphNode = {
   url: string;
