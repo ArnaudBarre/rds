@@ -25,7 +25,7 @@ const log = (step: string) => {
   );
 };
 
-const CSS_UTILS_PLACEHOLDER = "/*! CSS_UTILS */";
+const CSS_UTILS_PLACEHOLDER = "/*! RDS_CSS_UTILS */";
 
 const main = async () => {
   log("Load");
@@ -124,6 +124,17 @@ const main = async () => {
             );
           },
         },
+        {
+          name: "css-scan",
+          setup: (pluginBuild) => {
+            pluginBuild.onLoad({ filter: /\.[jt]sx?$/u }, async ({ path }) => {
+              // https://github.com/evanw/esbuild/issues/1222
+              if (path.includes("/node_modules/")) return;
+              await cssGenerator.scanContentCache.get(path);
+              return null;
+            });
+          },
+        },
       ],
     });
   } catch {
@@ -141,7 +152,6 @@ const main = async () => {
   // Issue with TS flow control
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (hasCSSUtils) {
-    await cssGenerator.scanContentCache.get(jsPath);
     cssOutput = cssOutput.replace(
       CSS_UTILS_PLACEHOLDER,
       cssGenerator.generate(),
