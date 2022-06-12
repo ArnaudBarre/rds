@@ -13,7 +13,12 @@ export const startServer = async (
   config: ResolvedConfig,
 ) => {
   const port = await listen(server, config);
-  logger.info(colors.cyan("Dev server running at:"));
+  logger.info(
+    colors.cyan(`RDS v${__VERSION__}`) +
+      colors.dim(
+        `   ready in ${(performance.now() - global.__rds_start).toFixed(0)} ms`,
+      ),
+  );
   const localUrl = `http://localhost:${port}`;
   if (config.server.host) {
     Object.values(networkInterfaces())
@@ -35,11 +40,6 @@ export const startServer = async (
     logger.info(`  > Network: ${colors.dim("use `--host` to expose")}`);
   }
 
-  logger.info(
-    colors.green(
-      `Ready in ${(performance.now() - global.__rds_start).toFixed(0)} ms`,
-    ),
-  );
   if (process.platform === "darwin" && config.open) {
     exec(`osascript openChrome.applescript ${localUrl}`, {
       cwd: join(__dirname, "../bin"),

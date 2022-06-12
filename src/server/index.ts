@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 global.__rds_start = performance.now();
-const version = "__VERSION__";
 const cmd = process.argv[2] as string | undefined;
 
 if (cmd === "-v" || cmd === "--version") {
-  console.log(version);
+  console.log(__VERSION__);
   process.exit();
 }
 
 const help = () => {
-  console.log(`RDS ${version}:`);
-  console.log("  start, dev: Starts dev server");
-  console.log("  build: Bundles and minify into /dist");
-  console.log("  serve, preview: Serves build output");
+  console.log(`\x1b[36mRDS ${__VERSION__}\x1b[39m
+ \x1b[35m start, dev \x1b[39m      Starts dev server
+ \x1b[35m build \x1b[39m           Bundles and minify into /dist
+ \x1b[35m serve, preview \x1b[39m  Serves build output`);
 };
 
 if (cmd === "--help" || cmd === undefined) {
@@ -28,8 +27,8 @@ const main = () => {
   } else if (cmd === "serve" || cmd === "preview") {
     require("./serve");
   } else {
-    console.error(`Unsupported command ${cmd}`);
-    help()
+    console.error(`\x1b[31mUnsupported command: ${cmd}\x1b[39m`);
+    help();
     process.exit(1);
   }
 };

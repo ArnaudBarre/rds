@@ -16,6 +16,7 @@ const serverOptions: BuildOptions = {
   platform: "node",
   target: "node16",
   legalComments: "inline",
+  define: { __VERSION__: `"${version}"` },
   watch: dev,
 };
 
@@ -47,14 +48,6 @@ Promise.all([
     watch: dev,
   }),
 ]).then(() => {
-  writeFileSync(
-    "dist/server/index.js",
-    readFileSync("dist/server/index.js", "utf-8").replace(
-      "__VERSION__",
-      version,
-    ),
-  );
-
   writeFileSync(
     "dist/server/inject.js",
     'import React from "react";\nexport { React };',
