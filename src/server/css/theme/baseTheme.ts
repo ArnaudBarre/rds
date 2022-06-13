@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { BaseTheme } from "../../../types";
 import { mapObject } from "../../utils";
 import { baseColors } from "./baseColors";

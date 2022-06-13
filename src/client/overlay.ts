@@ -82,7 +82,7 @@ export class ErrorOverlay extends HTMLElement {
     this.root.innerHTML = template;
     this.root.querySelector(".message")!.textContent = err.message;
     if (err.frame) this.root.querySelector(".frame")!.textContent = err.frame;
-    const fileLink = this.root.querySelector(".file") as HTMLLinkElement;
+    const fileLink = this.root.querySelector<HTMLLinkElement>(".file")!;
     fileLink.textContent = err.file;
     fileLink.onclick = () => {
       fetch(`/${RDS_OPEN_IN_EDITOR}?file=${encodeURIComponent(err.file)}`);

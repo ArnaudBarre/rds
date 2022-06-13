@@ -76,7 +76,7 @@ socket.addEventListener("message", ({ data }) => {
 });
 
 const clearErrorOverlay = () =>
-  (document.querySelector(overlayId) as ErrorOverlay | null)?.close();
+  document.querySelector<ErrorOverlay>(overlayId)?.close();
 
 // ping server
 socket.addEventListener("close", async ({ wasClean }) => {

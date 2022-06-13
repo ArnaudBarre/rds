@@ -40,7 +40,6 @@ export const initSWC = (config: ResolvedConfig) =>
           optimizer: {
             globals: {
               vars: {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
                 "process.env.NODE_ENV": '"development"',
                 ...config.define,
               },

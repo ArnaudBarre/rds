@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { BaseTheme } from "../../../types";
 
 // https://github.com/tailwindlabs/tailwindcss/blob/master/src/public/colors.js
