@@ -1,5 +1,4 @@
-#!/usr/bin/env node
-import { promises as fs } from "fs";
+import { readFileSync } from "fs";
 
 import { loadConfig } from "./loadConfig";
 import { createServer } from "./createServer";
@@ -9,11 +8,11 @@ import { Extension } from "./mimeTypes";
 
 const main = async () => {
   const config = await loadConfig();
-  const server = createServer(config, async (url) => {
+  const server = createServer(config, (url) => {
     const path = url.includes(".") ? url : "index.html";
     try {
       return {
-        content: await fs.readFile(`dist/${path}`),
+        content: readFileSync(`dist/${path}`),
         type: getExtension(path) as Extension,
         browserCache: path.startsWith("assets/"),
       };

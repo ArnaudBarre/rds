@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import { readFileSync } from "fs";
 import { watch } from "chokidar";
 
 import { cache } from "./utils";
@@ -6,7 +6,7 @@ import { WS } from "./ws";
 
 export const publicFiles = new Set<string>();
 export const publicFilesCache = cache("publicFiles", (url) =>
-  fs.readFile(`public/${url}`),
+  readFileSync(`public/${url}`),
 );
 export const initPublicWatcher = (ws: WS) => {
   const clearCacheAndReload = (path: string) => {

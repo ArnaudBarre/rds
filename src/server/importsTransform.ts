@@ -1,86 +1,132 @@
-import {
-  cache,
-  getHashedUrl,
-  impSourceToRegex,
-  isCSS,
-  isInnerNode,
-  isSVG,
-} from "./utils";
+import { cache, getHashedUrl, isInnerNode, isSVG } from "./utils";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
-import { CSSGenerator } from "./css/generator";
-import { Scanner } from "./scan";
-import { transformDependenciesImports } from "./dependencies";
+import { Scanner } from "./scanner";
+import { dependenciesCache, getDependencyMetadata } from "./dependencies";
+import { Downwind } from "./downwind";
+import { RDSError } from "./errors";
+import { DEPENDENCY_PREFIX, RDS_CLIENT, RDS_PREFIX } from "./consts";
+import { JSImport } from "./scanImports";
+import { getClientUrl } from "./getClient";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
 
 export const initImportsTransform = ({
   scanner,
-  getCSSBase,
-  cssGenerator,
+  downwind,
 }: {
   scanner: Scanner;
-  getCSSBase: () => Promise<string>;
-  cssGenerator: CSSGenerator;
+  downwind: Downwind;
 }) => {
-  const importsTransformCache = cache("transformImports", async (url) => {
-    const isCSSFile = isCSS(url);
+  const importsTransformCache = cache("importsTransform", (url) => {
+    const scanResult = scanner.get(url);
 
-    const { code, depsImports, imports } = await scanner.get(url);
-    let content = code;
+    if (scanResult.isCSS) {
+      let content = scanResult.code;
+      for (const [resolvedUrl, placeholder] of scanResult.imports) {
+        content = content.replace(placeholder, toHashedUrl(resolvedUrl));
+      }
+      return content;
+    }
 
-    for (const [resolvedUrl, placeholder] of imports) {
-      if (isCSSFile) {
-        content = content.replace(placeholder, await toHashedUrl(resolvedUrl));
-      } else {
-        if (
-          isInnerNode(resolvedUrl) ||
-          (isSVG(resolvedUrl) &&
-            !placeholder.endsWith("?url") &&
-            !placeholder.endsWith("?inline"))
-        ) {
-          content = content.replace(
-            new RegExp(`(import|from)${impSourceToRegex(placeholder)}`),
-            `$1 "${await toHashedUrl(resolvedUrl)}"`,
+    let content = scanResult.code;
+    for (let i = scanResult.imports.length - 1; i >= 0; i--) {
+      const imp = scanResult.imports[i];
+      if (imp.dep) {
+        if (imp.n.startsWith("virtual:") || imp.n.startsWith(RDS_PREFIX)) {
+          if (imp.n === "virtual:@downwind/utils.css") {
+            content = replaceImportSource(
+              content,
+              imp,
+              getHashedUrl("virtual:@downwind/utils.css", downwind.generate()),
+            );
+            continue;
+          }
+          if (imp.n === "virtual:@downwind/base.css") {
+            content = replaceImportSource(
+              content,
+              imp,
+              getHashedUrl("virtual:@downwind/base.css", downwind.base),
+            );
+            continue;
+          }
+          if (imp.n === RDS_CLIENT) {
+            content = replaceImportSource(content, imp, getClientUrl());
+            continue;
+          }
+          throw new Error(`Unhandled entry "${imp.n}"`);
+        }
+        const depMetadata = getDependencyMetadata(imp.n);
+        if (!depMetadata) {
+          throw new RDSError({
+            message: `Unbundled dependency "${imp.n}"`,
+            file: url,
+          });
+        }
+        const hashedUrl = getHashedUrl(
+          `${DEPENDENCY_PREFIX}/${imp.n}`,
+          dependenciesCache.get(imp.n),
+        );
+        if (depMetadata.needInterop && imp.specifiers.length) {
+          const defaultImportName = `__rds_${imp.n.replace(/[-@/]/g, "_")}`;
+          content = replaceImportStatement(
+            content,
+            imp,
+            `import ${defaultImportName} from "${hashedUrl}";${imp.specifiers
+              .map((s) => `const ${s[1]} = ${defaultImportName}["${s[0]}"]`)
+              .join(";")}`,
           );
         } else {
-          content = content.replace(
-            new RegExp(
-              `import\\s+(\\S+)\\s+from${impSourceToRegex(placeholder)}`,
-            ),
-            placeholder.endsWith("?inline")
-              ? `const $1 = "data:image/svg+xml;base64,${(
-                  await assetsCache.get(resolvedUrl)
-                ).toString("base64")}"`
-              : isSVG(resolvedUrl)
-              ? `const $1 = "${getHashedUrl(
-                  resolvedUrl,
-                  await assetsCache.get(resolvedUrl),
+          content = replaceImportSource(content, imp, hashedUrl);
+        }
+      } else {
+        if (
+          isInnerNode(imp.r) ||
+          (isSVG(imp.r) &&
+            !imp.n.endsWith("?url") &&
+            !imp.n.endsWith("?inline"))
+        ) {
+          content = replaceImportSource(content, imp, toHashedUrl(imp.r));
+        } else {
+          const name = content.slice(imp.ss, imp.se).split(" ")[1];
+          content = replaceImportStatement(
+            content,
+            imp,
+            imp.n.endsWith("?inline")
+              ? `const ${name} = "data:image/svg+xml;base64,${assetsCache
+                  .get(imp.r)
+                  .toString("base64")}"`
+              : isSVG(imp.r)
+              ? `const ${name} = "${getHashedUrl(
+                  imp.r,
+                  assetsCache.get(imp.r),
                 )}&url"`
-              : `const $1 = "${await toHashedUrl(resolvedUrl)}"`,
+              : `const ${name} = "${toHashedUrl(imp.r)}"`,
           );
         }
       }
     }
-
-    return transformDependenciesImports({
-      code: content,
-      url,
-      depsImports,
-      getCSSBase,
-      cssGenerator,
-    });
+    return content;
   });
 
-  const toHashedUrl = async (url: string) =>
+  const toHashedUrl = (url: string) =>
     getHashedUrl(
       url,
       isInnerNode(url)
-        ? await importsTransformCache.get(url)
+        ? importsTransformCache.get(url)
         : isSVG(url)
-        ? await svgCache.get(url)
-        : await assetsCache.get(url),
+        ? svgCache.get(url)
+        : assetsCache.get(url),
     );
 
   return { ...importsTransformCache, toHashedUrl };
 };
+
+const replaceImportSource = (code: string, analysed: JSImport, value: string) =>
+  code.slice(0, analysed.s) + value + code.slice(analysed.e);
+
+const replaceImportStatement = (
+  code: string,
+  analysed: JSImport,
+  value: string,
+) => code.slice(0, analysed.ss) + value + code.slice(analysed.se);

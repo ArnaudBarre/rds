@@ -1,6 +1,4 @@
-export const useColors = !(
-  "NO_COLOR" in process.env || process.argv.includes("--no-color")
-);
+import { useColors } from "@arnaud-barre/config-loader";
 
 const getFormatter = (open: string, close: string) => (input: string) =>
   useColors ? open + input + close : input;

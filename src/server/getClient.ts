@@ -1,9 +1,9 @@
 import { readFileSync } from "fs";
 import { join } from "path";
+import { cssModuleToJS } from "@arnaud-barre/downwind";
+import { CSSModuleExports } from "@parcel/css";
 
-import { CSSModule } from "./types";
 import { RDS_CLIENT } from "./consts";
-import { cssModuleToJS } from "./css/utils/cssModuleToJS";
 import { getHashedUrl } from "./utils";
 
 let clientCode: Buffer | undefined;
@@ -18,7 +18,7 @@ export const getClientUrl = () =>
 export const cssToHMR = (
   url: string,
   code: string,
-  cssModule: CSSModule,
+  exports: CSSModuleExports | undefined,
 ) => `import { updateStyle } from "${getClientUrl()}";
 updateStyle("${url}", ${JSON.stringify(code)});
-${cssModuleToJS(cssModule)}`;
+${exports ? cssModuleToJS(exports) : ""}`;

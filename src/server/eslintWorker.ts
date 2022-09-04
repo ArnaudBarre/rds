@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import { writeFileSync } from "fs";
 import { parentPort, workerData } from "worker_threads";
 import { ESLint } from "eslint";
 import { red, yellow, dim } from "chalk"; // chalk is used by eslint
@@ -11,7 +11,7 @@ parentPort!.on("message", (path: string) => {
     .then(async (ignored) => {
       if (ignored) return;
       const [report] = await eslint.lintFiles(path);
-      if (report.output !== undefined) await fs.writeFile(path, report.output);
+      if (report.output !== undefined) writeFileSync(path, report.output);
       if (report.messages.length === 0) return;
       report.messages.forEach((m) => {
         const prettyPath = path.slice(path.indexOf("/src/") + 1);

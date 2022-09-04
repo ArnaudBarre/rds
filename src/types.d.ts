@@ -1,16 +1,13 @@
-import { CSSConfig } from "./css";
+import { DefineConfig } from "@arnaud-barre/config-loader";
 
-export * from "./theme";
-export * from "./css";
-
-export type UserConfig = {
+type UserConfig = {
   open?: boolean;
   server?: {
     host?: boolean;
     port?: number;
     strictPort?: boolean;
   };
-  eslint?: false | { cache?: boolean; fix?: boolean };
+  eslint?: { cache?: boolean; fix?: boolean };
   proxy?: {
     target: string;
     pathRewrite?: (url: string) => string;
@@ -19,9 +16,11 @@ export type UserConfig = {
     ) => Record<string, string | string[] | undefined>;
   };
   define?: Record<string, string>;
+  /**
+   * Documentation: https://esbuild.github.io/api/#target
+   * @default ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari13'] (same as Vite)
+   */
+  target?: string[];
 };
 
-export type DefineCSSConfig = DefineConfig<CSSConfig>;
-export type DefineUserConfig = DefineConfig<UserConfig>;
-
-export type DefineConfig<T> = T | (() => Promise<T>);
+export type RDSConfig = DefineConfig<UserConfig>;

@@ -6,7 +6,6 @@ export type HMRPayload =
   | { type: "error"; error: RDSErrorPayload };
 
 export type RDSErrorPayload = {
-  rds: symbol;
   message: string;
   file: string;
   frame?: string;

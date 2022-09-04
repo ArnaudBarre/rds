@@ -1,17 +1,15 @@
-import { Options, transform } from "@swc/core";
+import { cache, getHashedUrl, readFile } from "./utils";
+import { svgToJS } from "./svgToJS";
+import { DEPENDENCY_PREFIX } from "./consts";
+import { dependenciesCache } from "./dependencies";
 
-import { cache, readFile } from "./utils";
-import { svgToJSX } from "./svgToJSX";
-
-export const svgCache = cache("svg", async (url) => {
-  const { code } = await transform(svgToJSX(await readFile(url)), options);
-  return code;
-});
-
-const options: Options = {
-  jsc: {
-    parser: { jsx: true, syntax: "ecmascript" },
-    transform: { react: { useBuiltins: true } },
-    target: "es2020",
-  },
-};
+export const svgCache = cache("svg", (url) =>
+  svgToJS(
+    readFile(url),
+    `import __rds_react_jsx_dev_runtime from "${getHashedUrl(
+      `${DEPENDENCY_PREFIX}/react/jsx-dev-runtime`,
+      dependenciesCache.get("react/jsx-dev-runtime"),
+    )}";`,
+    "__rds_react_jsx_dev_runtime.jsxDEV",
+  ),
+);

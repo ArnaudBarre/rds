@@ -1,8 +1,8 @@
 import { createServer as createHTTPServer, request } from "http";
+import { getHash } from "@arnaud-barre/config-loader";
 
 import { LoadedFile } from "./types";
 import { mimeTypes } from "./mimeTypes";
-import { getHash } from "./utils";
 import { logger } from "./logger";
 import { ResolvedConfig } from "./loadConfig";
 
@@ -11,9 +11,9 @@ export const createServer = (
   handleRequest: (
     url: string,
     query: URLSearchParams,
-  ) => Promise<LoadedFile | "NOT_FOUND" | undefined>,
+  ) => LoadedFile | "NOT_FOUND" | undefined,
 ) =>
-  createHTTPServer(async (req, res) => {
+  createHTTPServer((req, res) => {
     const [url, query] = req.url!.split("?") as [string, string | undefined];
     if (config.proxy && url.startsWith("/api/")) {
       req.pipe(
@@ -33,10 +33,7 @@ export const createServer = (
       );
       return;
     }
-    const loadedFile = await handleRequest(
-      url.slice(1),
-      new URLSearchParams(query),
-    );
+    const loadedFile = handleRequest(url.slice(1), new URLSearchParams(query));
 
     if (!loadedFile) {
       res.writeHead(200);

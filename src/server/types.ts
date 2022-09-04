@@ -10,12 +10,10 @@ export type LoadedFile = {
 export type GraphNode = {
   url: string;
   selfUpdate: boolean;
-  imports: [value: string, placeholder: string][];
+  imports: string[];
   importers: Set<GraphNode>;
 };
 export type Graph = Map<string, GraphNode>;
-
-export type CSSModule = false | { [key: string]: string };
 
 declare global {
   /* eslint-disable no-var */

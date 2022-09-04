@@ -1,8 +1,3 @@
-// Virtual entrypoint for CSS reset
-declare module "virtual:@rds/css-base";
-// Virtual entrypoint for on-demand CSS utils
-declare module "virtual:@rds/css-utils";
-
 // CSS modules
 declare module "*.module.css" {
   const classes: { readonly [key: string]: string };

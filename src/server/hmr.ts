@@ -1,4 +1,5 @@
 import { FSWatcher } from "chokidar";
+
 import { GraphNode } from "./types";
 import { logger } from "./logger";
 import { colors } from "./colors";
@@ -6,29 +7,28 @@ import { SWCCache } from "./swc";
 import { resolveExtensionCache } from "./resolve";
 import { ImportsTransform } from "./importsTransform";
 import { isCSS, isJS, isSVG } from "./utils";
-import { CSSTransform } from "./css/cssTransform";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
 import { WS } from "./ws";
-import { CSSGenerator } from "./css/generator";
-import { Scanner } from "./scan";
-import { isRDSError, RDSError } from "./errors";
+import { Scanner } from "./scanner";
+import { RDSError } from "./errors";
+import { Downwind } from "./downwind";
 
 export const setupHmr = ({
-  cssTransform,
-  cssGenerator,
+  downwind,
   srcWatcher,
   swcCache,
   scanner,
   importsTransform,
+  lintFile,
   ws,
 }: {
-  cssTransform: CSSTransform;
-  cssGenerator: CSSGenerator;
+  downwind: Downwind;
   srcWatcher: FSWatcher;
   swcCache: SWCCache;
   scanner: Scanner;
   importsTransform: ImportsTransform;
+  lintFile: (path: string) => void;
   ws: WS;
 }) => {
   const invalidate = (node: GraphNode) => {
@@ -38,14 +38,22 @@ export const setupHmr = ({
     }
   };
 
-  const clearCache = (path: string) => {
+  const clearCache = (
+    path: string,
+    update: boolean,
+  ): true | undefined /* skipUpdate */ => {
     if (isJS(path)) {
+      if (update) {
+        const outputChanged = swcCache.update(path);
+        if (!outputChanged) return true;
+      } else {
+        swcCache.delete(path);
+      }
       scanner.delete(path);
-      cssGenerator.scanContentCache.delete(path);
-      swcCache.delete(path);
+      downwind.scanCache.delete(path);
     } else if (isCSS(path)) {
       scanner.delete(path);
-      cssTransform.delete(path);
+      downwind.transformCache.delete(path);
     } else if (isSVG(path)) {
       svgCache.delete(path);
       assetsCache.delete(path);
@@ -60,7 +68,11 @@ export const setupHmr = ({
   srcWatcher
     .on("change", (path) => {
       logger.debug(`change ${path}`);
-      clearCache(path);
+      if (clearCache(path, true)) {
+        // Type or whitespace only change, but can impact lint result
+        lintFile(path);
+        return;
+      }
       const graphNode = scanner.graph.get(path)!;
       invalidate(graphNode);
       const updates = new Set<string>();
@@ -88,10 +100,10 @@ export const setupHmr = ({
               hasError = true;
               errorPaths.add(filesToTransform[index]);
               const error = result.reason;
-              if (isRDSError(error)) {
-                logger.rdsError(error);
+              if (error instanceof RDSError) {
+                logger.rdsError(error.payload);
                 if (!errorSent) {
-                  ws.send({ type: "error", error });
+                  ws.send({ type: "error", error: error.payload });
                   errorSent = true;
                 }
               } else {
@@ -117,20 +129,20 @@ export const setupHmr = ({
       } else if (isCSS(path)) {
         ws.send({ type: "prune-css", paths: [path] });
       }
-      clearCache(path);
+      clearCache(path, false);
       const node = scanner.graph.get(path)!;
       invalidate(node);
       scanner.graph.delete(path);
       if (node.importers.size) {
         const importers = [...node.importers.values()].map((v) => v.url);
-        const error = RDSError({
+        const error = new RDSError({
           message: `File ${path} was deleted bu used in ${importers.join(
             ", ",
           )}`,
           file: importers[0],
         });
-        logger.rdsError(error);
-        ws.send({ type: "error", error });
+        logger.rdsError(error.payload);
+        ws.send({ type: "error", error: error.payload });
       }
     });
 };

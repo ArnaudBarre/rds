@@ -4,68 +4,51 @@ import {
   DEPENDENCY_PREFIX,
   ENTRY_POINT,
   RDS_CLIENT,
-  RDS_CSS_BASE,
-  RDS_CSS_UTILS,
   RDS_OPEN_IN_EDITOR,
   RDS_PREFIX,
-  RDS_VIRTUAL_PREFIX,
 } from "./consts";
 import { publicFiles, publicFilesCache } from "./public";
-import {
-  getDependencyCache,
-  transformDependenciesImports,
-} from "./dependencies";
+import { dependenciesCache } from "./dependencies";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
-import { CSSGenerator } from "./css/generator";
 import { ImportsTransform } from "./importsTransform";
 import { createServer } from "./createServer";
 import { cssToHMR, getClientCode, getClientUrl } from "./getClient";
 import { ResolvedConfig } from "./loadConfig";
 import { openInEditor } from "./openInEditor";
+import { Downwind } from "./downwind";
+import { LoadedFile } from "./types";
 
 export const createDevServer = ({
   config,
   importsTransform,
-  cssGenerator,
-  getCSSBase,
+  downwind,
 }: {
   config: ResolvedConfig;
   importsTransform: ImportsTransform;
-  cssGenerator: CSSGenerator;
-  getCSSBase: () => Promise<string>;
+  downwind: Downwind;
 }) =>
-  createServer(config, async (url, searchParams) => {
+  createServer(config, (url, searchParams) => {
     if (url.startsWith(RDS_PREFIX)) {
-      if (url === RDS_CLIENT) {
-        return { content: getClientCode(), type: "js", browserCache: true };
-      }
+      if (url === RDS_CLIENT) return cachedJS(getClientCode());
       if (url === RDS_OPEN_IN_EDITOR) {
         openInEditor(searchParams.get("file")!);
         return;
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
-    if (url.startsWith(RDS_VIRTUAL_PREFIX)) {
-      if (url === RDS_CSS_BASE) {
-        return {
-          content: cssToHMR(url, await getCSSBase(), false),
-          type: "js",
-          browserCache: true,
-        };
+    if (url.startsWith("virtual:")) {
+      if (url === "virtual:@downwind/base.css") {
+        return cachedJS(cssToHMR(url, downwind.base, undefined));
       }
-      if (url === RDS_CSS_UTILS) {
-        return {
-          content: cssToHMR(url, cssGenerator.generate(), false),
-          type: "js",
-          browserCache: true,
-        };
+      if (url === "virtual:@downwind/utils.css") {
+        return cachedJS(cssToHMR(url, downwind.generate(), undefined));
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
 
     if (publicFiles.has(url)) {
-      const content = await publicFilesCache.get(url);
+      const content = publicFilesCache.get(url);
       return {
         type: getExtension(url) as Extension,
         content,
@@ -76,42 +59,26 @@ export const createDevServer = ({
     if (url.startsWith(DEPENDENCY_PREFIX)) {
       const path = url.slice(DEPENDENCY_PREFIX.length + 1);
       if (url.endsWith(".map")) {
-        const content = await readCacheFile(path);
+        const content = readCacheFile(path);
         return { type: "json", content, browserCache: false };
       }
-      const code = await getDependencyCache.get(path);
-      return { type: "js", content: code, browserCache: true };
+      return cachedJS(dependenciesCache.get(path));
     }
-    if (isJS(url)) {
-      const code = await importsTransform.get(url);
-      return { type: "js", content: code, browserCache: true };
-    }
-    if (isCSS(url)) {
-      const code = await importsTransform.get(url);
-      return { type: "js", content: code, browserCache: true };
-    }
+    if (isJS(url) || isCSS(url)) return cachedJS(importsTransform.get(url));
     if (isSVG(url) && !searchParams.has("url")) {
-      const code = await svgCache.get(url);
-      const content = await transformDependenciesImports({
-        code,
-        url,
-        depsImports: [{ source: "react", specifiers: [] }],
-        cssGenerator,
-        getCSSBase,
-      });
-      return { type: "js", content, browserCache: true };
+      return cachedJS(svgCache.get(url));
     }
     if (url.includes(".")) {
       if (!assetsCache.has(url)) return "NOT_FOUND";
       return {
         type: getExtension(url) as Extension,
-        content: await assetsCache.get(url),
+        content: assetsCache.get(url),
         browserCache: true,
       };
     }
 
-    const content = await publicFilesCache.get("index.html");
-    const entryUrl = await importsTransform.toHashedUrl(ENTRY_POINT);
+    const content = publicFilesCache.get("index.html");
+    const entryUrl = importsTransform.toHashedUrl(ENTRY_POINT);
     return {
       type: "html",
       content: content
@@ -127,3 +94,9 @@ export const createDevServer = ({
       browserCache: false,
     };
   });
+
+const cachedJS = (content: string | Buffer): LoadedFile => ({
+  type: "js",
+  content,
+  browserCache: true,
+});

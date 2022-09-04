@@ -1,28 +1,17 @@
-import { statSync, readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, statSync } from "fs";
+import { dirname, join } from "path";
 import { build } from "esbuild";
+import { getHash, jsonCache } from "@arnaud-barre/config-loader";
 
-import {
-  cache,
-  cacheDir,
-  getHash,
-  getHashedUrl,
-  impSourceToRegex,
-  jsonCacheSync,
-  lookup,
-  readCacheFile,
-} from "./utils";
+import { cache, cacheDir, lookup, readCacheFile } from "./utils";
 import { colors } from "./colors";
-import { logger } from "./logger";
+import { debugNow, logger } from "./logger";
+import { RDSError } from "./errors";
 import {
   DEPENDENCY_PREFIX,
-  RDS_CSS_BASE,
-  RDS_CSS_UTILS,
-  RDS_VIRTUAL_PREFIX,
+  ESBUILD_MODULES_TARGET,
+  RDS_PREFIX,
 } from "./consts";
-import { AnalyzedImport } from "./swc";
-import { CSSGenerator } from "./css/generator";
-import { RDSError } from "./errors";
 
 const dependencies = new Map<string, string>();
 
@@ -33,7 +22,8 @@ type Metadata = {
 let metadata: Metadata | undefined;
 
 export const addDependency = (dep: string, fromUrl: string) => {
-  if (!dep.startsWith(RDS_VIRTUAL_PREFIX)) dependencies.set(dep, fromUrl);
+  if (dep.startsWith("virtual:") || dep.startsWith(RDS_PREFIX)) return;
+  dependencies.set(dep, fromUrl);
 };
 
 let dependenciesHash: string;
@@ -43,6 +33,7 @@ const initDependencyHash = () => {
       "package-lock.json",
       "yarn.lock",
       "pnpm-lock.yaml",
+      "bun.lockb",
     ]);
     if (!lockPath) {
       throw new Error(
@@ -61,14 +52,17 @@ export const bundleDependencies = async () => {
   const start = performance.now();
   initDependencyHash();
   const deps = Array.from(dependencies.keys());
-  const metadataCache = jsonCacheSync<Metadata>("dependencies", 1);
+  const metadataCache = jsonCache<Metadata>(
+    join(cacheDir, "dependencies.json"),
+    1,
+  );
   metadata = metadataCache.read();
   if (metadata) {
     if (metadata.dependenciesHash === dependenciesHash) {
       const cacheSet = new Set(Object.keys(metadata.deps));
       if (cacheSet.size >= deps.length && deps.every((d) => cacheSet.has(d))) {
         logger.debug(
-          `Pre-bundling skipped in ${(performance.now() - start).toFixed(2)}ms`,
+          `Pre-bundling skipped in ${(debugNow() - start).toFixed(2)}ms`,
         );
         return;
       }
@@ -92,16 +86,18 @@ export const bundleDependencies = async () => {
     entryPoints: deps,
     bundle: true,
     format: "esm",
+    platform: "browser",
     legalComments: "none",
     metafile: true,
     splitting: true,
     sourcemap: true,
+    target: ESBUILD_MODULES_TARGET, // TODO: Compute the min between this and config.target
     outdir: cacheDir,
-    logLevel: "silent",
+    logLevel: "error",
   }).catch((err) => {
     const match = (err.message as string).match(/Could not resolve "(.*)"/);
     if (!match) throw err;
-    throw RDSError({
+    throw new RDSError({
       message: `Could not resolve "${match[1]}"`,
       file: dependencies.get(match[1])!,
     });
@@ -110,12 +106,16 @@ export const bundleDependencies = async () => {
   metadata = { dependenciesHash, deps: {} };
   const output = result.metafile.outputs;
   for (const dep of deps) {
-    const { exports } = output[join(cacheDir, getFileName(dep))];
-    metadata.deps[dep] = {
-      needInterop:
-        exports.length === 0 ||
-        (exports.length === 1 && exports[0] === "default"),
-    };
+    if (dep.endsWith(".css")) {
+      metadata.deps[dep] = { needInterop: false };
+    } else {
+      const { exports } = output[join(cacheDir, `${dep}.js`)];
+      metadata.deps[dep] = {
+        needInterop:
+          exports.length === 0 ||
+          (exports.length === 1 && exports[0] === "default"),
+      };
+    }
   }
   metadataCache.write(metadata);
   logger.endLine(
@@ -124,72 +124,36 @@ export const bundleDependencies = async () => {
   );
 };
 
-export const transformDependenciesImports = async ({
-  code,
-  url,
-  depsImports,
-  cssGenerator,
-  getCSSBase,
-}: {
-  code: string;
-  url: string;
-  depsImports: AnalyzedImport[];
-  cssGenerator: CSSGenerator;
-  getCSSBase: () => Promise<string>;
-}) => {
-  for (const dep of depsImports) {
-    if (dep.source.startsWith(RDS_VIRTUAL_PREFIX)) {
-      if (dep.source === RDS_CSS_UTILS) {
-        code = code.replace(
-          new RegExp(`import${impSourceToRegex(dep.source)}`),
-          `import "${cssGenerator.getHashedCSSUtilsUrl()}"`,
+export const getDependencyMetadata = (dependency: string) =>
+  metadata!.deps[dependency];
+
+export const dependenciesCache = cache("dependencies", (dependency) => {
+  if (dependency.endsWith(".css")) {
+    let content = readCacheFile(dependency);
+    const sourceMapIndex = content.indexOf("# sourceMappingURL=");
+    if (sourceMapIndex !== -1) {
+      const dotMapIndex = content.indexOf(".map", sourceMapIndex);
+      if (dotMapIndex !== -1) {
+        const path = content.slice(
+          sourceMapIndex + "# sourceMappingURL=".length,
+          dotMapIndex,
         );
-        continue;
+        const updatedPath = join(dirname(dependency), path);
+        content =
+          // eslint-disable-next-line prefer-template
+          content.slice(0, sourceMapIndex) +
+          `# sourceMappingURL=${DEPENDENCY_PREFIX}/${updatedPath}` +
+          content.slice(dotMapIndex);
       }
-      if (dep.source === RDS_CSS_BASE) {
-        code = code.replace(
-          new RegExp(`import${impSourceToRegex(dep.source)}`),
-          `import "${getHashedUrl(RDS_CSS_BASE, await getCSSBase())}"`,
-        );
-        continue;
-      }
-      throw new Error(`Unhandled entry ${dep.source}`);
     }
-    const depMetadata = metadata!.deps[dep.source];
-    if (!depMetadata) {
-      throw RDSError({
-        message: `Unbundled dependency ${dep.source}`,
-        file: url,
-      });
-    }
-    const hashedUrl = getHashedUrl(
-      `${DEPENDENCY_PREFIX}/${dep.source}`,
-      await getDependencyCache.get(dep.source),
-    );
-    if (depMetadata.needInterop && dep.specifiers.length) {
-      const defaultImportName = `__rds_${dep.source.replace(/[-@/]/g, "_")}`;
-      code = code.replace(
-        new RegExp(`import {[^}]+}\\s+from${impSourceToRegex(dep.source)}`),
-        `import ${defaultImportName} from "${hashedUrl}";${dep.specifiers
-          .map((s) => `const ${s.local} = ${defaultImportName}["${s.name}"]`)
-          .join(";")}`,
-      );
-    } else {
-      code = code.replace(
-        new RegExp(`from${impSourceToRegex(dep.source)}`),
-        `from "${hashedUrl}"`,
-      );
-    }
+    return `const style = document.createElement("style");
+style.setAttribute("type", "text/css");
+style.setAttribute("data-id", "${dependency}");
+style.innerHTML = ${JSON.stringify(content)};
+document.head.appendChild(style);
+`;
   }
-  return code;
-};
-
-export const getDependencyCache = cache<Promise<string>>(
-  "getDependency",
-  async (dependency) =>
-    dependency.endsWith(".js")
-      ? readCacheFile(dependency)
-      : readCacheFile(getFileName(dependency)),
-);
-
-const getFileName = (dep: string) => `${dep.replaceAll("/", "_")}.js`;
+  return readCacheFile(
+    dependency.endsWith(".js") ? dependency : `${dependency}.js`,
+  );
+});

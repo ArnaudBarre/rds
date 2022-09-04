@@ -1,10 +1,16 @@
 #!/usr/bin/env tnode
-import { copyFileSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { readFileSync, rmSync, writeFileSync } from "fs";
 import { execSync } from "child_process";
 import { Worker } from "worker_threads";
 import { build, BuildOptions } from "esbuild";
 
-import { name, version, license, dependencies } from "../package.json";
+import {
+  name,
+  version,
+  license,
+  dependencies,
+  peerDependencies,
+} from "../package.json";
 import { esbuildFilesLoaders } from "../src/server/mimeTypes";
 
 const dev = process.argv.includes("--dev");
@@ -34,7 +40,11 @@ Promise.all([
       "src/server/tscWorker.ts",
       "src/server/eslintWorker.ts",
     ],
-    external: Object.keys(dependencies).concat(["chalk"]),
+    external: [
+      ...Object.keys(peerDependencies),
+      ...Object.keys(dependencies),
+      "chalk", // In eslint worker
+    ],
     ...serverOptions,
   }),
   build({
@@ -48,13 +58,7 @@ Promise.all([
     watch: dev,
   }),
 ]).then(() => {
-  writeFileSync(
-    "dist/server/inject.js",
-    'import React from "react";\nexport { React };',
-  );
-
-  execSync("cp -r src/types bin LICENSE README.md dist/");
-  copyFileSync("src/server/css/base/base.css", "dist/server/base.css");
+  execSync("cp -r src/types.d.ts bin LICENSE README.md dist/");
 
   writeFileSync(
     "dist/client.d.ts",
