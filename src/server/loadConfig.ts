@@ -22,7 +22,7 @@ export const loadConfig = async () => {
           headersRewrite: config?.proxy?.headersRewrite,
         }
       : undefined,
-    define: config?.define,
+    define: config?.define ?? {},
     target: config?.target ?? ESBUILD_MODULES_TARGET,
   };
   logger.debug(`Load config: ${(debugNow() - start).toFixed(2)}ms`);

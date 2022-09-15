@@ -18,11 +18,14 @@ type SWCOutput = {
   imports: JSImport[];
   selfUpdate: boolean;
 };
-type Cache = Record<string, SWCOutput | undefined>;
+type Cache = {
+  define: Record<string, string>;
+  transformations: Record<string, SWCOutput | undefined>;
+};
 
 export const initSWC = async (config: ResolvedConfig) => {
   const fsCache = jsonCache<Cache>(join(cacheDir, "swcCache.json"), 1);
-  const cache: Cache = {};
+  const cache: Cache = { define: config.define, transformations: {} };
 
   const save = () => {
     fsCache.write(cache);
@@ -30,7 +33,7 @@ export const initSWC = async (config: ResolvedConfig) => {
 
   const get = (url: string): SWCOutput => {
     logger.debug(`swc: get - ${url}`);
-    const cached = cache[url];
+    const cached = cache.transformations[url];
     if (cached) return cached;
 
     const start = debugNow();
@@ -102,18 +105,40 @@ RefreshRuntime.enqueueUpdate();
       selfUpdate: hasFastRefresh,
     };
     logger.debug(`swc: load - ${url}: ${Math.round(debugNow() - start)}ms`);
-    cache[url] = output;
+    cache.transformations[url] = output;
     save();
     return output;
   };
 
-  const current = fsCache.read();
-  if (current) {
+  const previousCache = fsCache.read();
+  if (previousCache) {
     const start = debugNow();
-    for (const path in current) {
+    const allDefineKeys = [
+      ...new Set([
+        ...Object.keys(previousCache.define),
+        ...Object.keys(cache.define),
+      ]),
+    ];
+    let definedHasChanged = false;
+    for (const key of allDefineKeys) {
+      if (previousCache.define[key] !== cache.define[key]) {
+        definedHasChanged = true;
+        break;
+      }
+    }
+    for (const path in previousCache.transformations) {
       const content = readMaybeFileSync(path);
-      if (content && current[path]!.input === content) {
-        cache[path] = current[path];
+      if (
+        content &&
+        previousCache.transformations[path]!.input === content &&
+        (!definedHasChanged ||
+          !allDefineKeys.some(
+            (key) =>
+              content.includes(key) &&
+              previousCache.define[key] !== cache.define[key],
+          ))
+      ) {
+        cache.transformations[path] = previousCache.transformations[path];
       }
     }
     logger.debug(`Load SWC fs cache: ${(debugNow() - start).toFixed(2)}ms`);
@@ -125,14 +150,14 @@ RefreshRuntime.enqueueUpdate();
     get,
     update: (url: string) => {
       logger.debug(`swc: update - ${url}`);
-      const previous = stripSourceMap(cache[url]!.code);
-      cache[url] = undefined;
+      const previous = stripSourceMap(cache.transformations[url]!.code);
+      cache.transformations[url] = undefined;
       const newOutput = get(url);
       return stripSourceMap(newOutput.code) !== previous;
     },
     delete: (url: string) => {
       logger.debug(`swc: delete - ${url}`);
-      cache[url] = undefined;
+      cache.transformations[url] = undefined;
     },
   };
 };
