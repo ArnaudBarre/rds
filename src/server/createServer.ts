@@ -19,16 +19,20 @@ export const createServer = (
       req.pipe(
         request(
           {
-            host: config.proxy.target,
+            host: config.proxy.host,
+            port: config.proxy.port,
             path: config.proxy.pathRewrite?.(url) ?? url,
             method: req.method,
             headers: config.proxy.headersRewrite?.(req.headers) ?? req.headers,
           },
-          (proxiedRes) => {
-            res.writeHead(proxiedRes.statusCode!, proxiedRes.headers);
-            proxiedRes.pipe(res, { end: true });
+          (proxyRes) => {
+            res.writeHead(proxyRes.statusCode!, proxyRes.headers);
+            proxyRes.pipe(res, { end: true });
           },
-        ),
+        ).on("error", (err) => {
+          res.writeHead(500);
+          res.end(err.message);
+        }),
         { end: true },
       );
       return;

@@ -5,8 +5,8 @@ React development server (WIP)
 ## TODO
 
 - js API
-- TS base url
-- qrCode
-- design in devtool
 - click to component
+- design in devtool
+- dynamic import
+- qrCode
 - workers

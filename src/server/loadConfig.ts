@@ -9,11 +9,19 @@ export type ResolvedConfig = Awaited<ReturnType<typeof loadConfig>>;
 export const loadConfig = async () => {
   const start = debugNow();
   const config = await configLoader<UserConfig>("rds");
+  const proxyUrl = config?.proxy ? new URL(config.proxy.target) : undefined;
   const resolvedConfig = {
     open: config?.open ?? false,
     eslint: { cache: true, fix: false, ...config?.eslint },
     server: { host: false, port: 3000, strictPort: false, ...config?.server },
-    proxy: config?.proxy,
+    proxy: proxyUrl
+      ? {
+          host: proxyUrl.hostname,
+          port: proxyUrl.port,
+          pathRewrite: config?.proxy?.pathRewrite,
+          headersRewrite: config?.proxy?.headersRewrite,
+        }
+      : undefined,
     define: config?.define,
     target: config?.target ?? ESBUILD_MODULES_TARGET,
   };

@@ -1,4 +1,4 @@
-const attributesRE = /\s([a-z-:]*)=("[^"]*")/gu;
+const attributesRE = /\s([a-zA-Z0-9-:]+)=("[^"]*")/gu;
 
 export const svgToJS = (svg: string, jsxImport: string, jsxFn: string) => {
   const index = svg.indexOf(">");
