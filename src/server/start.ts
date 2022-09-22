@@ -18,7 +18,7 @@ import { initScanner } from "./scanner";
 import { initSWC } from "./swc";
 import { RDSError } from "./errors";
 import { getDownwind } from "./downwind";
-import { cacheDir } from "./utils";
+import { cacheDir, getHashedUrl } from "./utils";
 
 export const main = async () => {
   const config = await loadConfig();
@@ -63,7 +63,10 @@ export const main = async () => {
     logger.info(
       colors.green("hmr update ") + colors.dim("virtual:@downwind/utils.css"),
     );
-    ws.send({ type: "update", paths: [downwind.getHashedCSSUtilsUrl()] });
+    ws.send({
+      type: "update",
+      paths: [getHashedUrl("virtual:@downwind/utils.css", downwind.generate())],
+    });
   });
   scanner.onCSSPrune((paths) => {
     ws.send({ type: "prune-css", paths });

@@ -1,5 +1,4 @@
-import { CLIENT_PING, HMR_HEADER, HMR_PING } from "../consts";
-import { HMRPayload } from "../hmrPayload";
+import { HMR_HEADER, HMRPayload } from "../hmr";
 import { ErrorOverlay, overlayId } from "./overlay";
 
 import * as RefreshRuntime from "./refresh-runtime";
@@ -11,7 +10,7 @@ window.$RefreshSig$ = () => (type) => type;
 
 export { RefreshRuntime };
 
-console.log("[rds] connecting....");
+console.debug("[rds] connecting....");
 
 const socket = new WebSocket(
   window.location.origin.replace("http", "ws"),
@@ -24,16 +23,13 @@ socket.addEventListener("message", ({ data }) => {
   const payload: HMRPayload = JSON.parse(data);
   switch (payload.type) {
     case "connected":
-      console.log("[rds] Connected");
-      // proxy(nginx, docker) hmr ws maybe caused timeout,
-      // so send ping package let ws keep alive.
-      setInterval(() => socket.send(HMR_PING), 30_000);
+      console.debug("[rds] Connected");
       break;
     case "update":
-      // if this is the first update and there's already an error overlay, it
+      // If this is the first update and there's already an error overlay, it
       // means the page opened with existing server compile error and the whole
       // module script failed to load (since one of the nested imports is 500).
-      // in this case a normal update won't work and a full reload is needed.
+      // In this case a normal update won't work and a full reload is needed.
       if (isFirstUpdate && document.querySelector(overlayId)) {
         window.location.reload();
         return;
@@ -42,9 +38,9 @@ socket.addEventListener("message", ({ data }) => {
       isFirstUpdate = false;
 
       for (const path of payload.paths) {
-        // dynamic import are not re-evaluated when cached
-        // fetch + temp script tag allow to have caching +
-        // revaluate js modules on each hot update
+        // Dynamic import are not re-evaluated when cached.
+        // fetch + temp script tag allow to have caching + revaluate js modules
+        // on each hot update.
         fetch(path)
           .then(async (response) => {
             const script = document.createElement("script");
@@ -52,7 +48,7 @@ socket.addEventListener("message", ({ data }) => {
             script.innerHTML = await response.text();
             document.head.appendChild(script);
             document.head.removeChild(script);
-            console.log(`[rds] Hot updated: ${path}`);
+            console.debug(`[rds] Hot updated: ${path}`);
           })
           .catch((err) => {
             if (!(err as Error).message.includes("fetch")) console.error(err);
@@ -78,25 +74,20 @@ socket.addEventListener("message", ({ data }) => {
 const clearErrorOverlay = () =>
   document.querySelector<ErrorOverlay>(overlayId)?.close();
 
-// ping server
 socket.addEventListener("close", async ({ wasClean }) => {
   if (wasClean) return;
-  console.log("[rds] Server connection lost. Polling for restart...");
-  await waitForSuccessfulPing();
-  window.location.reload();
-});
-
-const waitForSuccessfulPing = async () => {
+  console.debug("[rds] Server connection lost. Polling for restart...");
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     try {
-      await fetch(CLIENT_PING);
+      await fetch("rds-ping");
       break;
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 3_000));
     }
   }
-};
+  window.location.reload();
+});
 
 const stylesMap = new Map<string, HTMLStyleElement>();
 

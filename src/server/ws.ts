@@ -2,8 +2,7 @@ import { IncomingMessage } from "http";
 import { WebSocketServer } from "ws";
 import { Duplex } from "stream";
 
-import { HMR_HEADER } from "../consts";
-import { RDSErrorPayload, HMRPayload } from "../hmrPayload";
+import { HMR_HEADER, RDSErrorPayload, HMRPayload } from "../hmr";
 
 import { colors } from "./colors";
 import { logger } from "./logger";

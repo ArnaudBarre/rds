@@ -7,7 +7,7 @@ import { Downwind } from "./downwind";
 import { RDSError } from "./errors";
 import { DEPENDENCY_PREFIX, RDS_CLIENT, RDS_PREFIX } from "./consts";
 import { JSImport } from "./scanImports";
-import { getClientUrl } from "./getClient";
+import { clientUrl } from "./client";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
 
@@ -46,12 +46,12 @@ export const initImportsTransform = ({
             content = replaceImportSource(
               content,
               imp,
-              getHashedUrl("virtual:@downwind/base.css", downwind.base),
+              getHashedUrl("virtual:@downwind/base.css", downwind.getBase()),
             );
             continue;
           }
           if (imp.n === RDS_CLIENT) {
-            content = replaceImportSource(content, imp, getClientUrl());
+            content = replaceImportSource(content, imp, clientUrl);
             continue;
           }
           throw new Error(`Unhandled entry "${imp.n}"`);

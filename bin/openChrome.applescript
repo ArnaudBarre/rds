@@ -1,10 +1,6 @@
-(*
-Copyright (c) 2015-present, Facebook, Inc.
-
-This source code is licensed under the MIT license found in the
-LICENSE file at
-https://github.com/facebookincubator/create-react-app/blob/master/LICENSE
-*)
+-- Copyright (c) 2015-present, Facebook, Inc.
+-- This source code is licensed under the MIT license found at
+-- https://github.com/facebook/create-react-app/blob/main/LICENSE
 
 property targetTab: null
 property targetTabIndex: -1
@@ -20,9 +16,7 @@ on run argv
         make new window
       end if
 
-      -- 1: Looking for tab running debugger
-      -- then, Reload debugging tab if found
-      -- then return
+      -- Option 1: Activate a tab running the targeted URL
       set found to my lookupTabWithUrl(theURL)
       if found then
         set targetWindow's active tab index to targetTabIndex
@@ -32,9 +26,7 @@ on run argv
         return
       end if
 
-      -- 2: Looking for Empty tab
-      -- In case debugging tab was not found
-      -- We try to find an empty tab instead
+      -- Option 2: Use an empty new tab
       set found to my lookupTabWithUrl("chrome://newtab/")
       if found then
         set targetWindow's active tab index to targetTabIndex
@@ -43,9 +35,7 @@ on run argv
         return
       end if
 
-      -- 3: Create new tab
-      -- both debugging and empty tab were not found
-      -- make a new tab with url
+      -- Option 3: Create a new tab
       tell window 1
         activate
         make new tab with properties {URL:theURL}
@@ -54,13 +44,10 @@ on run argv
   end timeout
 end run
 
--- Function:
--- Lookup tab with given url
--- if found, store tab, index, and window in properties
--- (properties were declared on top of file)
+-- Function: Find tab with given url
+-- if found, store tab, index, and window in properties (declared on top of file)
 on lookupTabWithUrl(lookupUrl)
   tell application "Chrome"
-    -- Find a tab with the given url
     set found to false
     set theTabIndex to -1
     repeat with theWindow in every window

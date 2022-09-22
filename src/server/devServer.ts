@@ -13,7 +13,7 @@ import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
 import { ImportsTransform } from "./importsTransform";
 import { createServer } from "./createServer";
-import { cssToHMR, getClientCode, getClientUrl } from "./getClient";
+import { clientCode, clientUrl } from "./client";
 import { ResolvedConfig } from "./loadConfig";
 import { openInEditor } from "./openInEditor";
 import { Downwind } from "./downwind";
@@ -30,7 +30,7 @@ export const createDevServer = ({
 }) =>
   createServer(config, (url, searchParams) => {
     if (url.startsWith(RDS_PREFIX)) {
-      if (url === RDS_CLIENT) return cachedJS(getClientCode());
+      if (url === RDS_CLIENT) return cachedJS(clientCode);
       if (url === RDS_OPEN_IN_EDITOR) {
         openInEditor(searchParams.get("file")!);
         return;
@@ -39,10 +39,10 @@ export const createDevServer = ({
     }
     if (url.startsWith("virtual:")) {
       if (url === "virtual:@downwind/base.css") {
-        return cachedJS(cssToHMR(url, downwind.base, undefined));
+        return cachedJS(downwind.getBase());
       }
       if (url === "virtual:@downwind/utils.css") {
-        return cachedJS(cssToHMR(url, downwind.generate(), undefined));
+        return cachedJS(downwind.generate());
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
@@ -85,7 +85,7 @@ export const createDevServer = ({
         .toString()
         .replace(
           "<head>",
-          `<head>\n    <script type="module" src="${getClientUrl()}"></script>`,
+          `<head>\n    <script type="module" src="${clientUrl}"></script>`,
         )
         .replace(
           "</body>",

@@ -1,9 +1,9 @@
 import { BuildResult } from "esbuild";
 import { logEsbuildErrors } from "@arnaud-barre/config-loader";
 
+import { RDSErrorPayload } from "../hmr";
 import { colors } from "./colors";
 import { run } from "./utils";
-import { RDSErrorPayload } from "../hmrPayload";
 
 export const isDebug = process.argv.includes("--debug");
 

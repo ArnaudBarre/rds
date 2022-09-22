@@ -1,4 +1,4 @@
-import type { RDSErrorPayload } from "../hmrPayload";
+import type { RDSErrorPayload } from "../hmr";
 import { RDS_OPEN_IN_EDITOR } from "../server/consts";
 
 const template = /* html */ `

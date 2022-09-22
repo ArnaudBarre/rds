@@ -1,10 +1,14 @@
-import { initDownwind, convertTargets } from "@arnaud-barre/downwind";
+import {
+  convertTargets,
+  cssModuleToJS,
+  initDownwind,
+} from "@arnaud-barre/downwind";
+import { Dependency, CSSModuleExports } from "lightningcss";
 
-import { cache, getHashedUrl, run } from "./utils";
-import { Dependency } from "@parcel/css";
+import { cache, run } from "./utils";
 import { codeToFrame, RDSError } from "./errors";
 import { resolve } from "./resolve";
-import { cssToHMR } from "./getClient";
+import { clientUrl } from "./client";
 
 export type Downwind = Awaited<ReturnType<typeof getDownwind>>;
 export type CSSImport = [resolvedUrl: string, placeholder: string];
@@ -13,11 +17,12 @@ export const getDownwind = async (target: string[]) => {
   const downwind = await initDownwind({
     targets: convertTargets(target),
   });
+  const base = downwind.getBase();
   let utilsUpdateCallback: (() => void) | undefined;
   let utils: string | undefined;
   const generate = (): string => {
     if (!utils) utils = downwind.generate();
-    return utils;
+    return cssToHMR("virtual:@downwind/utils.css", utils, undefined);
   };
   const invalidate = () => {
     utils = undefined;
@@ -25,7 +30,7 @@ export const getDownwind = async (target: string[]) => {
   };
 
   return {
-    base: downwind.getBase(),
+    getBase: () => cssToHMR("virtual:@downwind/base.css", base, undefined),
     scanCache: cache("cssScan", (url) => {
       const isNew = downwind.scan(url);
       if (isNew) invalidate();
@@ -58,13 +63,19 @@ export const getDownwind = async (target: string[]) => {
       };
     }),
     generate,
-    getHashedCSSUtilsUrl: () =>
-      getHashedUrl("virtual:@downwind/utils.css", generate()),
     onUtilsUpdate: (callback: () => void) => {
       utilsUpdateCallback = callback;
     },
   };
 };
+
+const cssToHMR = (
+  url: string,
+  code: string,
+  exports: CSSModuleExports | undefined,
+) => `import { updateStyle } from "${clientUrl}";
+updateStyle("${url}", ${JSON.stringify(code)});
+${exports ? cssModuleToJS(exports) : ""}`;
 
 const getPlaceholder = (dependency: Dependency) => {
   if (dependency.type === "import") {
