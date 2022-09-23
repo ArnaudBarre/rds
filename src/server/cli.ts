@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { InlineConfig } from "../types";
+
 global.__rds_start = performance.now();
 const cmd = process.argv[2] as string | undefined;
 
@@ -20,22 +22,25 @@ if (cmd === "--help" || cmd === undefined) {
 }
 
 const main = () => {
+  const inlineConfig: InlineConfig = {
+    force: process.argv.includes("--force") ? true : undefined,
+    server: {
+      open: process.argv.includes("--open") ? true : undefined,
+      host: process.argv.includes("--host") ? true : undefined,
+    },
+  };
   if (cmd === "start" || cmd === "dev") {
-    require("./start");
+    require("./start").main(inlineConfig);
   } else if (cmd === "build") {
-    require("./build");
+    require("./build").main(inlineConfig);
   } else if (cmd === "serve" || cmd === "preview") {
-    require("./serve");
+    require("./serve").main(inlineConfig);
   } else {
     console.error(`\x1b[31mUnsupported command: ${cmd}\x1b[39m`);
     help();
     process.exit(1);
   }
 };
-
-if (process.argv.includes("--force")) {
-  require("fs").rmSync("node_modules/.rds", { recursive: true, force: true });
-}
 
 if (process.argv.includes("--profile")) {
   const inspector = require("inspector");

@@ -1,13 +1,12 @@
 import { readFileSync } from "fs";
 
-import { loadConfig } from "./loadConfig";
 import { createServer } from "./createServer";
 import { startServer } from "./startServer";
 import { getExtension } from "./utils";
 import { Extension } from "./mimeTypes";
+import { commandWrapper } from "./commandWrapper";
 
-const main = async () => {
-  const config = await loadConfig();
+export const main = commandWrapper(async (config) => {
   const server = createServer(config, (url) => {
     const path = url.includes(".") ? url : "index.html";
     try {
@@ -22,6 +21,5 @@ const main = async () => {
     }
   });
   await startServer(server, config);
-};
-
-main();
+  return server.close;
+});

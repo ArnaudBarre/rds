@@ -40,7 +40,7 @@ export const startServer = async (
     logger.info(`  > Network: ${colors.dim("use `--host` to expose")}`);
   }
 
-  if (process.platform === "darwin" && config.open) {
+  if (process.platform === "darwin" && config.server.open) {
     exec(`osascript openChrome.applescript ${localUrl}`, {
       cwd: join(__dirname, "../bin"),
     });

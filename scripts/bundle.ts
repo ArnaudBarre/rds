@@ -28,7 +28,7 @@ const serverOptions: BuildOptions = {
 
 Promise.all([
   build({
-    entryPoints: ["src/server/cli.ts"],
+    entryPoints: ["src/server/index.ts", "src/server/cli.ts"],
     ...serverOptions,
   }),
   build({
@@ -81,6 +81,7 @@ Promise.all([
         author: "Arnaud Barré (https://github.com/ArnaudBarre)",
         license,
         repository: "github:ArnaudBarre/rds",
+        main: "server/index.js",
         types: "types",
         bin: { rds: "server/cli.js" },
         keywords: ["react", "dev-server"],

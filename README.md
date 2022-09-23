@@ -4,7 +4,7 @@ React development server (WIP)
 
 ## TODO
 
-- js API
+- print build output
 - click to component
 - design in devtool
 - dynamic import

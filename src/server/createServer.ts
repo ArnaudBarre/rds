@@ -15,15 +15,16 @@ export const createServer = (
 ) =>
   createHTTPServer((req, res) => {
     const [url, query] = req.url!.split("?") as [string, string | undefined];
-    if (config.proxy && url.startsWith("/api/")) {
+    if (config.server.proxy && url.startsWith("/api/")) {
       req.pipe(
         request(
           {
-            host: config.proxy.host,
-            port: config.proxy.port,
-            path: config.proxy.pathRewrite?.(url) ?? url,
+            host: config.server.proxy.host,
+            port: config.server.proxy.port,
+            path: config.server.proxy.pathRewrite?.(url) ?? url,
             method: req.method,
-            headers: config.proxy.headersRewrite?.(req.headers) ?? req.headers,
+            headers:
+              config.server.proxy.headersRewrite?.(req.headers) ?? req.headers,
           },
           (proxyRes) => {
             res.writeHead(proxyRes.statusCode!, proxyRes.headers);

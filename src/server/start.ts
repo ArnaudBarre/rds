@@ -12,17 +12,15 @@ import { logger } from "./logger";
 import { initImportsTransform } from "./importsTransform";
 import { setupHmr } from "./hmr";
 import { createDevServer } from "./devServer";
-import { loadConfig } from "./loadConfig";
 import { startServer } from "./startServer";
 import { initScanner } from "./scanner";
 import { initSWC } from "./swc";
-import { RDSError } from "./errors";
 import { getDownwind } from "./downwind";
 import { cacheDir, getHashedUrl } from "./utils";
+import { commandWrapper } from "./commandWrapper";
 
-export const main = async () => {
-  const config = await loadConfig();
-  const downwind = await getDownwind(config.target);
+export const main = commandWrapper(async (config) => {
+  const downwind = await getDownwind(config.build.target);
   const srcWatcher = watch([ENTRY_POINT], {
     ignoreInitial: true,
     disableGlobbing: true,
@@ -30,7 +28,7 @@ export const main = async () => {
   // eslint-disable-next-line no-new
   new Worker(resolve(__dirname, "./tscWorker"));
   const eslintWorker = new Worker(resolve(__dirname, "./eslintWorker"), {
-    workerData: config.eslint,
+    workerData: config.server.eslint,
   });
   const lintFile = (path: string) => eslintWorker.postMessage(path);
 
@@ -83,10 +81,4 @@ export const main = async () => {
     await ws.close();
     server.close();
   };
-};
-
-main().catch((e) => {
-  if (e instanceof RDSError) logger.rdsError(e.payload);
-  else console.error(e);
-  process.exit(1);
 });

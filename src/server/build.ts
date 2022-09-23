@@ -1,4 +1,4 @@
-import { rmSync, writeFileSync, readFileSync } from "fs";
+import { readFileSync, rmSync, writeFileSync } from "fs";
 import { join } from "path";
 import { build, BuildResult, Metafile } from "esbuild";
 import { execSync } from "child_process";
@@ -11,7 +11,7 @@ import { esbuildFilesLoaders } from "./mimeTypes";
 import { isDebug } from "./logger";
 import { ENTRY_POINT } from "./consts";
 import { stopProfiler } from "./stopProfiler";
-import { loadConfig } from "./loadConfig";
+import { commandWrapper } from "./commandWrapper";
 
 const log = (step: string) => {
   if (!isDebug) return;
@@ -22,12 +22,12 @@ const log = (step: string) => {
   );
 };
 
-const main = async () => {
+export const main = commandWrapper(async (config) => {
   log("Load");
-  rmSync("dist", { recursive: true, force: true });
+  if (config.build.emptyOutDir) {
+    rmSync("dist", { recursive: true, force: true });
+  }
   log("Clean dist");
-  const config = await loadConfig();
-  log("Load config");
   let bundleResult: BuildResult & { metafile: Metafile };
   try {
     bundleResult = await build({
@@ -38,7 +38,7 @@ const main = async () => {
       metafile: true,
       format: "esm",
       platform: "browser",
-      target: config.target,
+      target: config.build.target,
       minify: true,
       jsx: "automatic",
       define: config.define,
@@ -104,6 +104,4 @@ const main = async () => {
     ),
   );
   stopProfiler();
-};
-
-main();
+});
