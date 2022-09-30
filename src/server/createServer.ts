@@ -1,4 +1,8 @@
-import { createServer as createHTTPServer, request } from "http";
+import {
+  createServer as createHTTPServer,
+  IncomingMessage,
+  request,
+} from "http";
 import { getHash } from "@arnaud-barre/config-loader";
 
 import { LoadedFile } from "./types";
@@ -12,25 +16,17 @@ export const createServer = (
     url: string,
     query: URLSearchParams,
   ) => LoadedFile | "NOT_FOUND" | undefined,
-) =>
-  createHTTPServer((req, res) => {
+) => {
+  const proxy = config.server.proxy;
+
+  const server = createHTTPServer((req, res) => {
     const [url, query] = req.url!.split("?") as [string, string | undefined];
-    if (config.server.proxy && url.startsWith("/api/")) {
+    if (proxy && (url.startsWith("/api/") || url === "/api")) {
       req.pipe(
-        request(
-          {
-            host: config.server.proxy.host,
-            port: config.server.proxy.port,
-            path: config.server.proxy.pathRewrite?.(url) ?? url,
-            method: req.method,
-            headers:
-              config.server.proxy.headersRewrite?.(req.headers) ?? req.headers,
-          },
-          (proxyRes) => {
-            res.writeHead(proxyRes.statusCode!, proxyRes.headers);
-            proxyRes.pipe(res, { end: true });
-          },
-        ).on("error", (err) => {
+        request(rewriteReq(req, proxy), (proxyRes) => {
+          res.writeHead(proxyRes.statusCode!, proxyRes.headers);
+          proxyRes.pipe(res, { end: true });
+        }).on("error", (err) => {
           res.writeHead(500);
           res.end(err.message);
         }),
@@ -75,3 +71,46 @@ export const createServer = (
       }
     }
   });
+
+  if (proxy) {
+    server.on("upgrade", (req, socket) => {
+      const [url] = req.url!.split("?");
+      if (url.startsWith("/api/") || url === "/api") {
+        request(rewriteReq(req, proxy))
+          // Credit: node-http-proxy (https://github.com/http-party/node-http-proxy/blob/master/lib/http-proxy/passes/ws-incoming.js#L79)
+          .on("upgrade", (proxyRes, proxySocket) => {
+            const head = ["HTTP/1.1 101 Switching Protocols"];
+            for (const [key, value] of Object.entries(proxyRes.headers)) {
+              if (Array.isArray(value)) {
+                for (const element of value) head.push(`${key}: ${element}`);
+              } else {
+                head.push(`${key}: ${value!}`);
+              }
+            }
+            socket.write(`${head.join("\r\n")}\r\n\r\n`);
+            proxySocket.on("error", () => socket.end());
+            // The pipe below will end proxySocket if socket closes cleanly, but not
+            // if it errors (eg, vanishes from the net and starts returning EHOSTUNREACH).
+            // We need to do that explicitly.
+            socket.on("error", () => proxySocket.end());
+            proxySocket.pipe(socket).pipe(proxySocket);
+          })
+          .on("error", () => socket.end())
+          .end();
+      }
+    });
+  }
+
+  return server;
+};
+
+const rewriteReq = (
+  req: IncomingMessage,
+  proxy: NonNullable<ResolvedConfig["server"]["proxy"]>,
+) => ({
+  host: proxy.host,
+  port: proxy.port,
+  path: proxy.pathRewrite?.(req.url!) ?? req.url!,
+  method: req.method,
+  headers: proxy.headersRewrite?.(req.headers) ?? req.headers,
+});
