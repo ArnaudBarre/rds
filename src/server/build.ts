@@ -2,32 +2,21 @@ import { readFileSync, rmSync, writeFileSync } from "fs";
 import { join } from "path";
 import { build, BuildResult, Metafile } from "esbuild";
 import { execSync } from "child_process";
+import { logEsbuildErrors } from "@arnaud-barre/config-loader";
 import { downwind } from "@arnaud-barre/downwind/esbuild";
 
 import { svgToJS } from "./svgToJS";
 import { colors } from "./colors";
 import { readFile } from "./utils";
 import { esbuildFilesLoaders } from "./mimeTypes";
-import { isDebug } from "./logger";
 import { ENTRY_POINT } from "./consts";
 import { stopProfiler } from "./stopProfiler";
 import { commandWrapper } from "./commandWrapper";
 
-const log = (step: string) => {
-  if (!isDebug) return;
-  console.log(
-    `${colors.green(
-      (performance.now() - global.__rds_start).toFixed(2),
-    )} ${step}`,
-  );
-};
-
 export const main = commandWrapper(async (config) => {
-  log("Load");
   if (config.build.emptyOutDir) {
     rmSync("dist", { recursive: true, force: true });
   }
-  log("Clean dist");
   let bundleResult: BuildResult & { metafile: Metafile };
   try {
     bundleResult = await build({
@@ -79,29 +68,40 @@ export const main = commandWrapper(async (config) => {
     // esbuild has already logged perfect errors, no need to add anything
     process.exit(1);
   }
-  // TODO: log warnings
-  log("Assets bundled");
+  logEsbuildErrors(bundleResult);
 
   execSync("cp -r public/ dist", { shell: "/bin/bash" });
-  log("Copy public");
 
-  const paths = Object.keys(bundleResult.metafile.outputs);
-  const jsPath = paths.find((p) => p.endsWith(".js"))!;
-  const cssPath = paths.find((p) => p.endsWith(".css"))!;
-
-  writeFileSync(
-    "dist/index.html",
-    readFileSync("dist/index.html", "utf-8").replace(
-      "</head>",
-      `  <link rel="stylesheet" href="${cssPath.slice(4)}">
-    <script type="module" src="${jsPath.slice(4)}"></script>
+  const outputs = Object.entries(bundleResult.metafile.outputs);
+  const jsEntry = outputs.find(([p]) => p.endsWith(".js"))!;
+  const html = readFileSync("dist/index.html", "utf-8").replace(
+    "</head>",
+    `  <link rel="stylesheet" href="${jsEntry[1].cssBundle!.slice(4)}">
+    <script type="module" src="${jsEntry[0].slice(4)}"></script>
   </head>`,
-    ),
   );
-  console.log(
-    colors.green(
-      `Done in ${Math.ceil(performance.now() - global.__rds_start)}ms`,
-    ),
-  );
+  writeFileSync("dist/index.html", html);
+
+  const files = [{ path: "dist/index.html", bytes: Buffer.byteLength(html) }];
+  let longest = 0;
+  for (const [path, { bytes }] of outputs) {
+    if (!path.endsWith(".map")) continue;
+    if (path.length > longest) longest = path.length;
+    files.push({ path, bytes });
+  }
+  files.sort((a, z) => a.bytes - z.bytes);
+  const maxFileSize = Math.trunc(Math.log10(files.at(-1)!.bytes)) + 1;
+  files.forEach(({ path, bytes }) => {
+    const printer = path.endsWith(".css")
+      ? colors.magenta
+      : path.endsWith(".js")
+      ? colors.cyan
+      : colors.green;
+    console.log(
+      colors.dim("dist/") +
+        printer(path.slice(5).padEnd(longest - 3)) +
+        colors.dim(`${(bytes / 1e3).toFixed(2).padStart(maxFileSize)} kB`),
+    );
+  });
   stopProfiler();
 });
