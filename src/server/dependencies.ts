@@ -3,7 +3,8 @@ import { dirname, join } from "path";
 import { build } from "esbuild";
 import { getHash, jsonCache } from "@arnaud-barre/config-loader";
 
-import { cache, cacheDir, lookup, readCacheFile } from "./utils";
+import { cache } from "./cache";
+import { cacheDir, lookup, readCacheFile } from "./utils";
 import { colors } from "./colors";
 import { debugNow, logger } from "./logger";
 import { RDSError } from "./errors";

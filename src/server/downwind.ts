@@ -5,7 +5,8 @@ import {
 } from "@arnaud-barre/downwind";
 import { Dependency, CSSModuleExports } from "lightningcss";
 
-import { cache, run } from "./utils";
+import { cache } from "./cache";
+import { run } from "./utils";
 import { codeToFrame, RDSError } from "./errors";
 import { resolve } from "./resolve";
 import { clientUrl } from "./client";

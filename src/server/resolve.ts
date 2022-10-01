@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import { dirname, extname, join } from "path";
 
-import { cache } from "./utils";
+import { cache } from "./cache";
 import { RDSError } from "./errors";
 
 const localError = "RDS: Unresolved import";

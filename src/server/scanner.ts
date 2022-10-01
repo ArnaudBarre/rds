@@ -1,4 +1,5 @@
-import { cache, isCSS, isInnerNode, split } from "./utils";
+import { cache } from "./cache";
+import { isCSS, isInnerNode, split } from "./utils";
 import { SWCCache } from "./swc";
 import { ENTRY_POINT } from "./consts";
 import { Graph, GraphNode } from "./types";

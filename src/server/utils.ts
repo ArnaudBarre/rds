@@ -2,8 +2,6 @@ import { existsSync, readFileSync } from "fs";
 import { dirname, extname, join } from "path";
 import { getHash } from "@arnaud-barre/config-loader";
 
-import { debugNow, logger } from "./logger";
-
 export const isCSS = (path: string) => path.endsWith(".css");
 export const isJS = (path: string) => /\.[jt]sx?$/.test(path);
 export const isSVG = (path: string) => path.endsWith(".svg");
@@ -18,36 +16,6 @@ export const readFile = (path: string) => readFileSync(path, "utf-8");
 
 export const cacheDir = "node_modules/.rds";
 export const readCacheFile = (path: string) => readFile(join(cacheDir, path));
-
-export const cache = <Value>(name: string, load: (key: string) => Value) => {
-  const map = new Map<string, Value>();
-  return {
-    has: (key: string) => {
-      logger.debug(`${name}: has - ${key}`);
-      return map.has(key);
-    },
-    delete: (key: string) => {
-      logger.debug(`${name}: delete - ${key}`);
-      map.delete(key);
-    },
-    clear: () => {
-      logger.debug(`${name}: clear`);
-      map.clear();
-    },
-    get: (key: string) => {
-      logger.debug(`${name}: get - ${key}`);
-      const cached = map.get(key);
-      if (cached) return cached;
-      const start = debugNow();
-      const value = load(key);
-      logger.debug(
-        `${name}: load - ${key}: ${Math.round(debugNow() - start)}ms`,
-      );
-      map.set(key, value);
-      return value;
-    },
-  };
-};
 
 export const run = <T>(cb: () => T) => cb();
 

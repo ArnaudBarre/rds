@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { watch } from "chokidar";
 
-import { cache } from "./utils";
+import { cache } from "./cache";
 import { WS } from "./ws";
 
 export const publicFiles = new Set<string>();

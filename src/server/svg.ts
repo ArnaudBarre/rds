@@ -1,4 +1,5 @@
-import { cache, getHashedUrl, readFile } from "./utils";
+import { cache } from "./cache";
+import { getHashedUrl, readFile } from "./utils";
 import { svgToJS } from "./svgToJS";
 import { DEPENDENCY_PREFIX } from "./consts";
 import { dependenciesCache } from "./dependencies";
