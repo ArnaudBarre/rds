@@ -143,7 +143,7 @@ export const dependenciesCache = cache("dependencies", (dependency) => {
         content =
           // eslint-disable-next-line prefer-template
           content.slice(0, sourceMapIndex) +
-          `# sourceMappingURL=${DEPENDENCY_PREFIX}/${updatedPath}` +
+          `# sourceMappingURL=/${DEPENDENCY_PREFIX}/${updatedPath}` +
           content.slice(dotMapIndex);
       }
     }
