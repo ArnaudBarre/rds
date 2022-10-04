@@ -85,7 +85,7 @@ export const main = commandWrapper(async (config) => {
   const files = [{ path: "dist/index.html", bytes: Buffer.byteLength(html) }];
   let longest = 0;
   for (const [path, { bytes }] of outputs) {
-    if (!path.endsWith(".map")) continue;
+    if (path.endsWith(".map")) continue;
     if (path.length > longest) longest = path.length;
     files.push({ path, bytes });
   }
