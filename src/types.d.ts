@@ -2,8 +2,18 @@ import { DefineConfig } from "@arnaud-barre/config-loader";
 
 type UserConfig = {
   server?: {
-    host?: boolean /** @default false */;
-    port?: number /** @default 3000 */;
+    /**
+     * Set to true to listen on all addresses, including LAN and public addresses.
+     * This can be set via the CLI using --host
+     * @default false
+     */
+    host?: boolean;
+    /**
+     * Specify server port. Note if the port is already being used, RDS will automatically try
+     * the next available port so this may not be the actual port the server ends up listening on.
+     * @default 3000
+     */
+    port?: number;
     /**
      * Set to true to exit if port is already in use, instead of automatically trying the next available port.
      * @default false
@@ -12,6 +22,7 @@ type UserConfig = {
     /**
      * Automatically open the app in the browser on server start.
      * Only works for Chrome on Mac.
+     * This can be set via the CLI using --open
      * @default false
      */
     open?: boolean;
@@ -20,6 +31,9 @@ type UserConfig = {
      * @default { cache: true; fix: false }
      */
     eslint?: { cache?: boolean; fix?: boolean };
+    /**
+     * If set, configure where /api/* requests are redirect
+     */
     proxy?: {
       target: string;
       pathRewrite?: (url: string) => string;
@@ -28,9 +42,14 @@ type UserConfig = {
       ) => Record<string, string | string[] | undefined>;
     };
   };
+  /**
+   * Define global constant replacements.
+   * process.env.NODE_ENV will be set to "development" in dev and "production" during build.
+   */
   define?: Record<string, string>;
   build?: {
-    emptyOutDir?: boolean /** @default true */;
+    /** @default true */
+    emptyOutDir?: boolean;
     /**
      * Documentation: https://esbuild.github.io/api/#target
      * @default ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari13'] (same as Vite)

@@ -1,6 +1,6 @@
 {
   "name": "@arnaud-barre/rds",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
   "scripts": {
     "start": "scripts/bundle.ts --dev",
@@ -9,7 +9,8 @@
     "lint": "bun lint-ci --fix --cache",
     "lint-ci": "eslint src scripts --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "prettier": "bun prettier-ci --write",
-    "prettier-ci": "prettier --ignore-path .gitignore --check '**/*.{js,ts,json,md}'"
+    "prettier-ci": "prettier --ignore-path .gitignore --check '**/*.{js,ts,json,md}'",
+    "ci": "tsc && bun lint-ci && bun prettier-ci && bun run build"
   },
   "prettier": {
     "trailingComma": "all"
