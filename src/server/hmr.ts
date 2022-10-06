@@ -44,8 +44,19 @@ export const setupHmr = ({
   ): true | undefined /* skipUpdate */ => {
     if (isJS(path)) {
       if (update) {
-        const outputChanged = swcCache.update(path);
-        if (!outputChanged) return true;
+        try {
+          const outputChanged = swcCache.update(path);
+          if (!outputChanged) return true;
+        } catch (error) {
+          if (error instanceof RDSError) {
+            logger.rdsError(error.payload);
+            ws.send({ type: "error", error: error.payload });
+          } else {
+            console.error(error);
+          }
+          errorPaths.add(path);
+          return true;
+        }
       } else {
         swcCache.delete(path);
       }
@@ -83,39 +94,34 @@ export const setupHmr = ({
         errorPaths.clear();
       } else {
         logger.info(
-          colors.green("hmr update ") +
-            [...updates].map((update) => colors.dim(update)).join(", "),
+          colors.green("hmr update ") + colors.dim([...updates].join(", ")),
         );
         const filesToTransform = [...new Set([...errorPaths, ...updates])];
-        Promise.allSettled(
-          filesToTransform.map((url) => importsTransform.toHashedUrl(url)),
-        ).then((results) => {
-          let hasError = false;
-          let errorSent = false;
-          for (const [index, result] of results.entries()) {
-            if (result.status === "fulfilled") {
-              successPaths.add(result.value);
-              errorPaths.delete(filesToTransform[index]);
-            } else {
-              hasError = true;
-              errorPaths.add(filesToTransform[index]);
-              const error = result.reason;
-              if (error instanceof RDSError) {
-                logger.rdsError(error.payload);
-                if (!errorSent) {
-                  ws.send({ type: "error", error: error.payload });
-                  errorSent = true;
-                }
-              } else {
-                console.error(error);
+        let hasError = false;
+        let errorSent = false;
+        for (const url of filesToTransform) {
+          try {
+            const hmrUrl = importsTransform.toHashedUrl(url);
+            successPaths.add(hmrUrl);
+            errorPaths.delete(url);
+          } catch (error) {
+            hasError = true;
+            errorPaths.add(url);
+            if (error instanceof RDSError) {
+              logger.rdsError(error.payload);
+              if (!errorSent) {
+                ws.send({ type: "error", error: error.payload });
+                errorSent = true;
               }
+            } else {
+              console.error(error);
             }
           }
-          if (hasError) return;
-          ws.send({ type: "update", paths: Array.from(successPaths) });
-          errorPaths.clear();
-          successPaths.clear();
-        });
+        }
+        if (hasError) return;
+        ws.send({ type: "update", paths: Array.from(successPaths) });
+        errorPaths.clear();
+        successPaths.clear();
       }
     })
     .on("unlink", (path) => {

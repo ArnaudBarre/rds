@@ -148,7 +148,7 @@ RefreshRuntime.enqueueUpdate();
 
   return {
     get,
-    update: (url: string) => {
+    update: (url: string): boolean /* Output changed */ => {
       logger.debug(`swc: update - ${url}`);
       const previous = stripSourceMap(cache.transformations[url]!.code);
       cache.transformations[url] = undefined;
