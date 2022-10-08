@@ -2,6 +2,7 @@ import {
   convertTargets,
   cssModuleToJS,
   initDownwind,
+  DownwindError,
 } from "@arnaud-barre/downwind";
 import { Dependency, CSSModuleExports } from "lightningcss";
 
@@ -41,16 +42,21 @@ export const getDownwind = async (target: string[]) => {
         try {
           return downwind.transform(url, { analyzeDependencies: true });
         } catch (error) {
-          const e = error as {
-            message: string;
-            source: string;
-            loc: { line: number; column: number };
-          };
-          throw new RDSError({
-            message: e.message,
-            file: `${url}:${e.loc.line}:${e.loc.column}`,
-            frame: getFrame(code, e.loc.line),
-          });
+          if (error instanceof DownwindError) {
+            throw new RDSError({
+              message: error.message,
+              file: url,
+              frame: codeToFrame(error.context, null),
+            });
+          }
+          if (isLightningCSSError(error)) {
+            throw new RDSError({
+              message: error.message,
+              file: `${url}:${error.loc.line}:${error.loc.column}`,
+              frame: getFrame(error.source, error.loc.line),
+            });
+          }
+          throw error;
         }
       });
       if (invalidateUtils) invalidate();
@@ -91,6 +97,14 @@ const getPlaceholder = (dependency: Dependency) => {
   }
   return dependency.placeholder;
 };
+
+const isLightningCSSError = (
+  e: any,
+): e is {
+  message: string;
+  source: string;
+  loc: { line: number; column: number };
+} => "loc" in e;
 
 const getFrame = (code: string, line: number) => {
   let index = 0;

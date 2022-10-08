@@ -1,42 +1,48 @@
 import { join } from "path";
 import { transformFileSync } from "@swc/core";
-import { jsonCache, readMaybeFileSync } from "@arnaud-barre/config-loader";
 import { init } from "es-module-lexer";
 
-import { cacheDir, readFile } from "./utils";
+import { cacheDir, readFile, readFileAsync } from "./utils";
 import { ResolvedConfig } from "./loadConfig";
-import { RDSError } from "./errors";
+import { codeToFrame, RDSError } from "./errors";
 import { debugNow, logger } from "./logger";
 import { JSImport, scanImports } from "./scanImports";
 import { RDS_CLIENT } from "./consts";
+import { jsonCache } from "@arnaud-barre/config-loader";
+import {
+  readdirSync,
+  writeFileSync,
+  promises,
+  existsSync,
+  mkdirSync,
+} from "fs";
 
 export type SWCCache = Awaited<ReturnType<typeof initSWC>>;
 
+const swcCachePath = join(cacheDir, "swcCache");
 type SWCOutput = {
   code: string;
   input: string;
   imports: JSImport[];
   selfUpdate: boolean;
 };
-type Cache = {
-  define: Record<string, string>;
-  transformations: Record<string, SWCOutput | undefined>;
-};
 
 export const initSWC = async (config: ResolvedConfig) => {
-  const fsCache = jsonCache<Cache>(join(cacheDir, "swcCache.json"), 1);
-  const cache: Cache = { define: config.define, transformations: {} };
+  if (!existsSync(swcCachePath)) mkdirSync(swcCachePath);
+  const mainCache = jsonCache<{
+    define: Record<string, string>;
+  }>(join(swcCachePath, "main.json"), 1);
+  const start = debugNow();
+  const transformations: Record<string, SWCOutput | undefined> = {};
+  const toCachePah = (url: string) =>
+    `${swcCachePath}/${url.replaceAll("/", "|")}.json`;
 
-  const save = () => {
-    fsCache.write(cache);
-  };
-
-  const get = (url: string): SWCOutput => {
-    logger.debug(`swc: get - ${url}`);
-    const cached = cache.transformations[url];
+  const get = (url: string, withCache: boolean): SWCOutput => {
+    logger.debug(`swc: get - ${url} ${withCache ? "with cache" : "no cache"}`);
+    const cached = withCache && transformations[url];
     if (cached) return cached;
 
-    const start = debugNow();
+    const startGet = debugNow();
     let code: string;
     try {
       code = transformFileSync(url, {
@@ -65,22 +71,33 @@ export const initSWC = async (config: ResolvedConfig) => {
       }).code;
     } catch (err) {
       if (!isError(err)) throw err;
-      const fileIndex = err.message.indexOf(" -->");
-      const frameIndex = err.message.indexOf("  |");
-      throw new RDSError({
-        message:
-          fileIndex === -1
-            ? err.message.slice(6, frameIndex).trim()
-            : err.message.slice(6, fileIndex).trim(),
-        file:
-          fileIndex === -1
-            ? url
-            : err.message.slice(fileIndex + 4, frameIndex).trim(),
-        frame: err.message.slice(
-          frameIndex,
-          err.message.lastIndexOf("  |") + 4,
-        ),
-      });
+      // eslint-disable-next-line no-control-regex
+      const rawMessage = err.message.replace(/\u001b\[.*?m/g, "");
+      const messageIndex = rawMessage.indexOf("×");
+      const fileIndex = rawMessage.indexOf("╭─[");
+      const codeStartIndex = rawMessage.indexOf(" │ ");
+      if (messageIndex !== -1 && fileIndex !== -1 && codeStartIndex !== -1) {
+        const file = rawMessage.slice(
+          fileIndex + 3,
+          rawMessage.indexOf("]", fileIndex),
+        );
+        const lineIndex = file.indexOf(":");
+        throw new RDSError({
+          message: rawMessage.slice(
+            messageIndex + 2,
+            rawMessage.indexOf("\n", messageIndex),
+          ),
+          file,
+          frame: codeToFrame(
+            rawMessage.slice(
+              codeStartIndex + 3,
+              rawMessage.indexOf("\n", codeStartIndex),
+            ),
+            lineIndex === -1 ? null : Number(file.split(":")[1]),
+          ),
+        });
+      }
+      throw new RDSError({ message: err.message, file: url });
     }
 
     const hasFastRefresh = code.includes("$RefreshReg$");
@@ -104,60 +121,70 @@ RefreshRuntime.enqueueUpdate();
       imports: scanImports(url, code),
       selfUpdate: hasFastRefresh,
     };
-    logger.debug(`swc: load - ${url}: ${Math.round(debugNow() - start)}ms`);
-    cache.transformations[url] = output;
-    save();
+    logger.debug(`swc: load - ${url}: ${Math.round(debugNow() - startGet)}ms`);
+    transformations[url] = output;
+    writeFileSync(toCachePah(url), JSON.stringify(output));
     return output;
   };
 
-  const previousCache = fsCache.read();
+  const previousCache = mainCache.read();
   if (previousCache) {
-    const start = debugNow();
     const allDefineKeys = [
       ...new Set([
         ...Object.keys(previousCache.define),
-        ...Object.keys(cache.define),
+        ...Object.keys(config.define),
       ]),
     ];
     let definedHasChanged = false;
     for (const key of allDefineKeys) {
-      if (previousCache.define[key] !== cache.define[key]) {
+      if (previousCache.define[key] !== config.define[key]) {
         definedHasChanged = true;
         break;
       }
     }
-    for (const path in previousCache.transformations) {
-      const content = readMaybeFileSync(path);
+    const contents = await Promise.all(
+      readdirSync(swcCachePath)
+        .filter((f) => f.endsWith(".json") && f !== "main.json")
+        .map((f) => {
+          const path = f.replaceAll("|", "/").slice(0, -5);
+          return Promise.all([
+            path,
+            readFileAsync(path).catch(() => null),
+            readFileAsync(`${swcCachePath}/${f}`),
+          ]);
+        }),
+    );
+    for (const [path, content, json] of contents) {
+      const previous = JSON.parse(json) as SWCOutput;
       if (
         content &&
-        previousCache.transformations[path]!.input === content &&
+        previous.input === content &&
         (!definedHasChanged ||
           !allDefineKeys.some(
             (key) =>
               content.includes(key) &&
-              previousCache.define[key] !== cache.define[key],
+              previousCache.define[key] !== config.define[key],
           ))
       ) {
-        cache.transformations[path] = previousCache.transformations[path];
+        transformations[path] = previous;
       }
     }
     logger.debug(`Load SWC fs cache: ${(debugNow() - start).toFixed(2)}ms`);
   }
+  mainCache.write({ define: config.define });
 
   await init;
 
   return {
     get,
     update: (url: string): boolean /* Output changed */ => {
-      logger.debug(`swc: update - ${url}`);
-      const previous = stripSourceMap(cache.transformations[url]!.code);
-      cache.transformations[url] = undefined;
-      const newOutput = get(url);
+      const previous = stripSourceMap(transformations[url]!.code);
+      const newOutput = get(url, false);
       return stripSourceMap(newOutput.code) !== previous;
     },
     delete: (url: string) => {
       logger.debug(`swc: delete - ${url}`);
-      cache.transformations[url] = undefined;
+      promises.rm(toCachePah(url));
     },
   };
 };

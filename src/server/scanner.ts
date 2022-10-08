@@ -51,7 +51,7 @@ export const initScanner = ({
       lintFile(url);
       downwind.scanCache.get(url);
       const oldSrcImports = graphNode.imports;
-      const { code, imports, selfUpdate } = swcCache.get(url);
+      const { code, imports, selfUpdate } = swcCache.get(url, true);
       graphNode.selfUpdate = selfUpdate;
       const [depsImports, srcImports] = split(imports, (imp) => imp.dep);
       graphNode.imports = srcImports.map((i) => i.r);

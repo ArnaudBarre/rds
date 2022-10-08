@@ -4,11 +4,11 @@ import { RDSError } from "./errors";
 import { logger } from "./logger";
 
 export const commandWrapper =
-  <T>(main: (config: ResolvedConfig) => T) =>
+  <T>(main: (config: ResolvedConfig) => Promise<T>) =>
   async (inlineConfig?: InlineConfig) => {
     const config = await loadConfig(inlineConfig);
     try {
-      return main(config);
+      return await main(config);
     } catch (e) {
       if (e instanceof RDSError) logger.rdsError(e.payload);
       throw e;

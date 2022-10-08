@@ -138,17 +138,18 @@ export const setupHmr = ({
       clearCache(path, false);
       const node = scanner.graph.get(path)!;
       invalidate(node);
-      scanner.graph.delete(path);
       if (node.importers.size) {
         const importers = [...node.importers.values()].map((v) => v.url);
         const error = new RDSError({
-          message: `File ${path} was deleted bu used in ${importers.join(
+          message: `File ${path} was deleted but used in ${importers.join(
             ", ",
           )}`,
           file: importers[0],
         });
         logger.rdsError(error.payload);
         ws.send({ type: "error", error: error.payload });
+      } else {
+        scanner.graph.delete(path);
       }
     });
 };

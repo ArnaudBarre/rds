@@ -10,5 +10,8 @@ export class RDSError extends Error {
   }
 }
 
-export const codeToFrame = (code: string, line: number | null) =>
-  `  |\n${line ?? "?"} | ${code}\n  |`;
+export const codeToFrame = (code: string, line: number | null) => {
+  const length = Math.trunc(Math.log10(line ?? 1)) + 1;
+  const padding = " ".repeat(length + 1);
+  return `${padding}|\n${line ?? "?"} | ${code}\n${padding}|`;
+};
