@@ -39,7 +39,6 @@ Each of the three mode (dev, build, preview) is exposed via JS. See the types de
 
 ## Planned features
 
-- click to component
 - restart on config change
 - design in devtool
 - dynamic import

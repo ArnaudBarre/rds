@@ -1,5 +1,5 @@
 import type { RDSErrorPayload } from "../hmr";
-import { RDS_OPEN_IN_EDITOR } from "../server/consts";
+import { openInEditor } from "./open-in-editor";
 
 const template = /* html */ `
 <style>
@@ -85,7 +85,7 @@ export class ErrorOverlay extends HTMLElement {
     const fileLink = this.root.querySelector<HTMLLinkElement>(".file")!;
     fileLink.textContent = err.file;
     fileLink.onclick = () => {
-      fetch(`/${RDS_OPEN_IN_EDITOR}?file=${encodeURIComponent(err.file)}`);
+      openInEditor(err.file);
     };
 
     this.root.querySelector(".window")!.addEventListener("click", (e) => {

@@ -1,6 +1,6 @@
 import { HMR_HEADER, HMRPayload } from "../hmr";
 import { ErrorOverlay, overlayId } from "./overlay";
-
+import "./click-handler";
 import * as RefreshRuntime from "./refresh-runtime";
 
 RefreshRuntime.injectIntoGlobalHook(window);

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+Click to component when pressing alt 🎉
+
 ## 0.1.3
 
 - Fix SWC errors display
