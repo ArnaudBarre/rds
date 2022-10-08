@@ -4,6 +4,10 @@ A [CRA](https://github.com/facebook/create-react-app) like experience, with a de
 
 CSS is handle via [downwind](https://github.com/ArnaudBarre/downwind) a lightweight Tailwind implementation.
 
+## Create a new project
+
+`npx degit ArnaudBarre/rds/template my-app && cd my-app && bun i && bun run dev`
+
 ## CLI
 
 - `rds (start|dev) [--host] [--open] [--force]`: Starts the dev server
@@ -35,7 +39,6 @@ Each of the three mode (dev, build, preview) is exposed via JS. See the types de
 
 ## Planned features
 
-- create cli
 - click to component
 - restart on config change
 - design in devtool

@@ -1,0 +1,26 @@
+{
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+
+    /* Options for bundlers & React integration  */
+    "jsx": "react-jsx",
+    "allowJs": false,
+    "types": ["@arnaud-barre/rds/client"], // Provide types for assets imports
+    "skipLibCheck": true, // Report mostly false positive
+    "moduleResolution": "node", // Allow `index` imports
+    "resolveJsonModule": true, // Allow json import
+    "forceConsistentCasingInFileNames": true, // Avoid difference in case between filename and import
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": false,
+    "noEmit": true,
+    "isolatedModules": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}

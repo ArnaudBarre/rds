@@ -1,3 +1,5 @@
 node_modules/
 dist/
 .eslintcache
+template/bun.lockb
+template/yarn.lock
