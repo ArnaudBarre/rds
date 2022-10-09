@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+Hotfix: Fix config loader
+
 ## 0.2.0
 
 - Click to component when pressing alt 🎉 (Inspired by [click-to-component](https://github.com/ericclemmons/click-to-component))

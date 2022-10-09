@@ -13,7 +13,8 @@ export const loadConfig = async (
 ) => {
   const start = debugNow();
   if (inlineConfig.force) rmSync(cacheDir, { recursive: true, force: true });
-  const configFile = (await configLoader<UserConfig>("rds")) ?? {};
+  const configFile: UserConfig =
+    (await configLoader<UserConfig>("rds"))?.config ?? {};
   const mergedConfig = mergeConfig<UserConfig>(configFile, inlineConfig);
   const proxyUrl = mergedConfig.server?.proxy
     ? new URL(mergedConfig.server.proxy.target)
