@@ -1,8 +1,9 @@
 # Changelog
 
-## 0.1.4
+## Unreleased
 
-Click to component when pressing alt 🎉
+- Click to component when pressing alt 🎉
+- CSS updates on Downwind config change 🎉
 
 ## 0.1.3
 

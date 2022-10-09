@@ -1,6 +1,6 @@
 {
   "name": "@arnaud-barre/rds",
-  "version": "0.1.4",
+  "version": "0.1.3",
   "license": "MIT",
   "scripts": {
     "start": "scripts/bundle.ts --dev",
@@ -16,8 +16,8 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@arnaud-barre/downwind": "^0.2.3",
-    "@arnaud-barre/config-loader": "^0.4.1",
+    "@arnaud-barre/downwind": "^0.2.4",
+    "@arnaud-barre/config-loader": "^0.5.0",
     "@swc/core": "^1.3.4",
     "es-module-lexer": "^1.0.3",
     "chokidar": "^3.5.3",

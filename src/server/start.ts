@@ -66,6 +66,22 @@ export const main = commandWrapper(async (config) => {
       paths: [getHashedUrl("virtual:@downwind/utils.css", downwind.generate())],
     });
   });
+  downwind.onReload((changedCSS) => {
+    scanner.clear();
+    importsTransform.clear();
+    importsTransform.get(ENTRY_POINT);
+    if (changedCSS.length) {
+      logger.info(
+        colors.green("hmr update ") + colors.dim([...changedCSS].join(", ")),
+      );
+      ws.send({
+        type: "update",
+        paths: changedCSS.map((path) =>
+          getHashedUrl(path, importsTransform.get(path)),
+        ),
+      });
+    }
+  });
   scanner.onCSSPrune((paths) => {
     ws.send({ type: "prune-css", paths });
   });
@@ -77,6 +93,7 @@ export const main = commandWrapper(async (config) => {
 
   return async () => {
     await srcWatcher.close();
+    await downwind.closeConfigWatcher();
     await publicWatcher.close();
     await ws.close();
     server.close();

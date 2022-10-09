@@ -5,74 +5,120 @@ import {
   DownwindError,
 } from "@arnaud-barre/downwind";
 import { Dependency, CSSModuleExports } from "lightningcss";
+import { watch } from "chokidar";
 
 import { cache } from "./cache";
 import { run } from "./utils";
 import { codeToFrame, RDSError } from "./errors";
 import { resolve } from "./resolve";
 import { clientUrl } from "./client";
+import { debugNow, logger } from "./logger";
+import { colors } from "./colors";
 
 export type Downwind = Awaited<ReturnType<typeof getDownwind>>;
 export type CSSImport = [resolvedUrl: string, placeholder: string];
 
 export const getDownwind = async (target: string[]) => {
-  const downwind = await initDownwind({
-    targets: convertTargets(target),
-  });
-  const base = downwind.getBase();
+  const targets = convertTargets(target);
+  const downwind = { current: await initDownwind({ targets }) };
+  let base = downwind.current.getBase();
+  let updating = false;
   let utilsUpdateCallback: (() => void) | undefined;
   let utils: string | undefined;
-  const generate = (): string => {
-    if (!utils) utils = downwind.generate();
-    return cssToHMR("virtual:@downwind/utils.css", utils, undefined);
-  };
   const invalidate = () => {
+    if (updating) return;
     utils = undefined;
     utilsUpdateCallback?.();
   };
 
+  const scanCache = cache("cssScan", (url) => {
+    const isNew = downwind.current.scan(url);
+    if (isNew) invalidate();
+  });
+  const transformCache = cache("cssTransform", (url) => {
+    const { code, exports, dependencies, invalidateUtils } = run(() => {
+      try {
+        return downwind.current.transform(url, { analyzeDependencies: true });
+      } catch (error) {
+        if (error instanceof DownwindError) {
+          throw new RDSError({
+            message: error.message,
+            file: url,
+            frame: codeToFrame(error.context, null),
+          });
+        }
+        if (isLightningCSSError(error)) {
+          throw new RDSError({
+            message: error.message,
+            file: `${url}:${error.loc.line}:${error.loc.column}`,
+            frame: getFrame(error.source, error.loc.line),
+          });
+        }
+        throw error;
+      }
+    });
+    if (invalidateUtils) invalidate();
+
+    return {
+      code: cssToHMR(url, code, exports),
+      imports: dependencies.map(
+        (d): CSSImport => [resolve(url, d.url), getPlaceholder(d)],
+      ),
+      selfUpdate: !exports, // Can't self accept because of modules exports
+    };
+  });
+
+  let reloadCallback: ((changedCSS: string[]) => void) | undefined;
+  const configWatcher = watch(
+    downwind.current.configFiles.length
+      ? downwind.current.configFiles
+      : ["downwind.config.ts"],
+    { ignoreInitial: true },
+  ).on("change", async () => {
+    const start = debugNow();
+    logger.info(colors.green("Downwind config changed, updating..."));
+    const previousConfigFiles = downwind.current.configFiles;
+    // eslint-disable-next-line require-atomic-updates
+    downwind.current = await initDownwind({ targets });
+    base = downwind.current.getBase();
+    configWatcher.unwatch(
+      previousConfigFiles.filter(
+        (f) => !downwind.current.configFiles.includes(f),
+      ),
+    );
+    configWatcher.add(
+      downwind.current.configFiles.filter(
+        (f) => !previousConfigFiles.includes(f),
+      ),
+    );
+    scanCache.clear();
+    const changedCSS = transformCache.reload(
+      (prev, next) => prev.code !== next.code,
+    );
+    updating = true;
+    reloadCallback?.(changedCSS);
+    updating = false;
+    invalidate();
+    logger.debug(
+      `Downwind config updated in ${Math.round(performance.now() - start)}ms`,
+    );
+  });
+
   return {
     getBase: () => cssToHMR("virtual:@downwind/base.css", base, undefined),
-    scanCache: cache("cssScan", (url) => {
-      const isNew = downwind.scan(url);
-      if (isNew) invalidate();
-    }),
-    transformCache: cache("cssTransform", (url) => {
-      const { code, exports, dependencies, invalidateUtils } = run(() => {
-        try {
-          return downwind.transform(url, { analyzeDependencies: true });
-        } catch (error) {
-          if (error instanceof DownwindError) {
-            throw new RDSError({
-              message: error.message,
-              file: url,
-              frame: codeToFrame(error.context, null),
-            });
-          }
-          if (isLightningCSSError(error)) {
-            throw new RDSError({
-              message: error.message,
-              file: `${url}:${error.loc.line}:${error.loc.column}`,
-              frame: getFrame(error.source, error.loc.line),
-            });
-          }
-          throw error;
-        }
-      });
-      if (invalidateUtils) invalidate();
-
-      return {
-        code: cssToHMR(url, code, exports),
-        imports: dependencies.map(
-          (d): CSSImport => [resolve(url, d.url), getPlaceholder(d)],
-        ),
-        selfUpdate: !exports, // Can't self accept because of modules exports
-      };
-    }),
-    generate,
+    scanCache,
+    transformCache,
+    generate: (): string => {
+      if (!utils) utils = downwind.current.generate();
+      return cssToHMR("virtual:@downwind/utils.css", utils, undefined);
+    },
+    onReload: (callback: (changedCSS: string[]) => void) => {
+      reloadCallback = callback;
+    },
     onUtilsUpdate: (callback: () => void) => {
       utilsUpdateCallback = callback;
     },
+    closeConfigWatcher: () => configWatcher.close(),
   };
 };
 
