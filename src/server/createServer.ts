@@ -2,6 +2,7 @@ import {
   createServer as createHTTPServer,
   IncomingMessage,
   request,
+  ServerResponse,
 } from "http";
 import { getHash } from "@arnaud-barre/config-loader";
 
@@ -15,7 +16,8 @@ export const createServer = (
   handleRequest: (
     url: string,
     query: URLSearchParams,
-  ) => LoadedFile | "NOT_FOUND" | undefined,
+    res: ServerResponse,
+  ) => LoadedFile | "HANDLED" | "NOT_FOUND" | undefined,
 ) => {
   const proxy = config.server.proxy;
 
@@ -34,7 +36,14 @@ export const createServer = (
       );
       return;
     }
-    const loadedFile = handleRequest(url.slice(1), new URLSearchParams(query));
+
+    const loadedFile = handleRequest(
+      url.slice(1),
+      new URLSearchParams(query),
+      res,
+    );
+
+    if (loadedFile === "HANDLED") return;
 
     if (!loadedFile) {
       res.writeHead(200);

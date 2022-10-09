@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
-- Click to component when pressing alt 🎉
-- CSS updates on Downwind config change 🎉
+- Click to component when pressing alt 🎉 (Inspired by [click-to-component](https://github.com/ericclemmons/click-to-component))
+- CSS updates on Downwind config change 🎉 (Inspired by Vite, doesn't work for RDS config)
+- Design in devtools 🎉 (Inspired by [unoCSS](https://github.com/unocss/unocss/tree/main/packages/vite#design-in-devtools))
 
 ## 0.1.3
 

@@ -23,17 +23,17 @@ export const getDownwind = async (target: string[]) => {
   const downwind = { current: await initDownwind({ targets }) };
   let base = downwind.current.getBase();
   let updating = false;
-  let utilsUpdateCallback: (() => void) | undefined;
+  let utilsUpdateCallback: ((from: "hmr" | "devtools") => void) | undefined;
   let utils: string | undefined;
-  const invalidate = () => {
+  const invalidate = (from: "hmr" | "devtools") => {
     if (updating) return;
     utils = undefined;
-    utilsUpdateCallback?.();
+    utilsUpdateCallback?.(from);
   };
 
   const scanCache = cache("cssScan", (url) => {
-    const isNew = downwind.current.scan(url);
-    if (isNew) invalidate();
+    const hasNew = downwind.current.scan(url);
+    if (hasNew) invalidate("hmr");
   });
   const transformCache = cache("cssTransform", (url) => {
     const { code, exports, dependencies, invalidateUtils } = run(() => {
@@ -57,7 +57,7 @@ export const getDownwind = async (target: string[]) => {
         throw error;
       }
     });
-    if (invalidateUtils) invalidate();
+    if (invalidateUtils) invalidate("hmr");
 
     return {
       code: cssToHMR(url, code, exports),
@@ -98,7 +98,7 @@ export const getDownwind = async (target: string[]) => {
     updating = true;
     reloadCallback?.(changedCSS);
     updating = false;
-    invalidate();
+    invalidate("hmr");
     logger.debug(
       `Downwind config updated in ${Math.round(performance.now() - start)}ms`,
     );
@@ -112,10 +112,23 @@ export const getDownwind = async (target: string[]) => {
       if (!utils) utils = downwind.current.generate();
       return cssToHMR("virtual:@downwind/utils.css", utils, undefined);
     },
+    devtoolsScan: (classes: string[]) => {
+      const hasNew = downwind.current.scan(
+        "devtools-update",
+        `@downwind-scan ${classes.join(" ")}`,
+      );
+      if (hasNew) invalidate("devtools");
+    },
+    devtoolsGenerate: () =>
+      cssToHMR(
+        "virtual:@downwind/devtools.css",
+        downwind.current.codegen({ omitContent: true }),
+        undefined,
+      ),
     onReload: (callback: (changedCSS: string[]) => void) => {
       reloadCallback = callback;
     },
-    onUtilsUpdate: (callback: () => void) => {
+    onUtilsUpdate: (callback: (from: "hmr" | "devtools") => void) => {
       utilsUpdateCallback = callback;
     },
     closeConfigWatcher: () => configWatcher.close(),

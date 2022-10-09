@@ -57,9 +57,10 @@ export const main = commandWrapper(async (config) => {
     lintFile,
     ws,
   });
-  downwind.onUtilsUpdate(() => {
+  downwind.onUtilsUpdate((from) => {
     logger.info(
-      colors.green("hmr update ") + colors.dim("virtual:@downwind/utils.css"),
+      colors.green(`${from} update `) +
+        colors.dim("virtual:@downwind/utils.css"),
     );
     ws.send({
       type: "update",
@@ -70,17 +71,24 @@ export const main = commandWrapper(async (config) => {
     scanner.clear();
     importsTransform.clear();
     importsTransform.get(ENTRY_POINT);
-    if (changedCSS.length) {
-      logger.info(
-        colors.green("hmr update ") + colors.dim([...changedCSS].join(", ")),
-      );
-      ws.send({
-        type: "update",
-        paths: changedCSS.map((path) =>
+    logger.info(
+      colors.green("hmr update ") +
+        colors.dim(
+          [...changedCSS, "virtual:@downwind/devtools.css"].join(", "),
+        ),
+    );
+    ws.send({
+      type: "update",
+      paths: [
+        ...changedCSS.map((path) =>
           getHashedUrl(path, importsTransform.get(path)),
         ),
-      });
-    }
+        getHashedUrl(
+          "virtual:@downwind/devtools.css",
+          downwind.devtoolsGenerate(),
+        ),
+      ],
+    });
   });
   scanner.onCSSPrune((paths) => {
     ws.send({ type: "prune-css", paths });

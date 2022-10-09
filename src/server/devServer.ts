@@ -1,9 +1,19 @@
+import { IncomingMessage, ServerResponse } from "http";
+
 import { Extension } from "./mimeTypes";
-import { getExtension, isCSS, isJS, isSVG, readCacheFile } from "./utils";
+import {
+  getExtension,
+  getHashedUrl,
+  isCSS,
+  isJS,
+  isSVG,
+  readCacheFile,
+} from "./utils";
 import {
   DEPENDENCY_PREFIX,
   ENTRY_POINT,
   RDS_CLIENT,
+  RDS_DEVTOOLS_UPDATE,
   RDS_OPEN_IN_EDITOR,
   RDS_PREFIX,
 } from "./consts";
@@ -28,12 +38,25 @@ export const createDevServer = ({
   importsTransform: ImportsTransform;
   downwind: Downwind;
 }) =>
-  createServer(config, (url, searchParams) => {
+  createServer(config, (url, searchParams, res: ServerResponse) => {
     if (url.startsWith(RDS_PREFIX)) {
       if (url === RDS_CLIENT) return cachedJS(clientCode);
       if (url === RDS_OPEN_IN_EDITOR) {
         openInEditor(searchParams.get("file")!);
         return;
+      }
+      if (url === RDS_DEVTOOLS_UPDATE) {
+        getBodyJson<string[]>(res.req)
+          .then((classes) => {
+            downwind.devtoolsScan(classes);
+            res.writeHead(200);
+            res.end();
+          })
+          .catch((err) => {
+            res.writeHead(500);
+            res.end(err.message);
+          });
+        return "HANDLED";
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
@@ -43,6 +66,9 @@ export const createDevServer = ({
       }
       if (url === "virtual:@downwind/utils.css") {
         return cachedJS(downwind.generate());
+      }
+      if (url === "virtual:@downwind/devtools.css") {
+        return cachedJS(downwind.devtoolsGenerate());
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
@@ -79,13 +105,19 @@ export const createDevServer = ({
 
     const content = publicFilesCache.get("index.html");
     const entryUrl = importsTransform.toHashedUrl(ENTRY_POINT);
+    const devtoolsUrl = getHashedUrl(
+      "virtual:@downwind/devtools.css",
+      downwind.devtoolsGenerate(),
+    );
     return {
       type: "html",
       content: content
         .toString()
         .replace(
-          "<head>",
-          `<head>\n    <script type="module" src="${clientUrl}"></script>`,
+          "</head>",
+          `  <script type="module" src="${clientUrl}"></script>
+    <script type="module" src="${devtoolsUrl}"></script>
+  </head>`,
         )
         .replace(
           "</body>",
@@ -100,3 +132,19 @@ const cachedJS = (content: string | Buffer): LoadedFile => ({
   content,
   browserCache: true,
 });
+
+const getBodyJson = <T>(req: IncomingMessage) =>
+  new Promise<T>((resolve, reject) => {
+    let body = "";
+    req.on("data", (chunk: string) => {
+      body += chunk;
+    });
+    req.on("error", reject);
+    req.on("end", () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });

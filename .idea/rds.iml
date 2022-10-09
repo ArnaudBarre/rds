@@ -7,6 +7,7 @@
       <excludePattern pattern="yarn.lock" />
       <excludePattern pattern="bun.lockb" />
       <excludePattern pattern=".eslintcache" />
+      <excludePattern pattern="local.css" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

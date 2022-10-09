@@ -21,7 +21,7 @@ CSS is handle via [downwind](https://github.com/ArnaudBarre/downwind) a lightwei
 
 ## Configuration
 
-The config file should be name `rds.config.ts`.
+The config file (optional) should be name `rds.config.ts`.
 
 ```ts
 import type { RDSConfig } from "@arnaud-barre/rds";
@@ -39,7 +39,6 @@ Each of the three mode (dev, build, preview) is exposed via JS. See the types de
 
 ## Planned features
 
-- design in devtool
 - dynamic import
 - qrCode
 - workers
