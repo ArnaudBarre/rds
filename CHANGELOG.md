@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix: Return 404 instead of crash on unknown public file
+
 ## 0.2.1
 
 Hotfix: Fix config loader
@@ -8,7 +12,7 @@ Hotfix: Fix config loader
 
 - Click to component when pressing alt 🎉 (Inspired by [click-to-component](https://github.com/ericclemmons/click-to-component))
 - CSS updates on Downwind config change 🎉 (Inspired by Vite, doesn't work for RDS config)
-- Design in devtools 🎉 (Inspired by [unoCSS](https://github.com/unocss/unocss/tree/main/packages/vite#design-in-devtools))
+- Design in devtools 🎉 (Inspired by [UnoCSS](https://github.com/unocss/unocss/tree/main/packages/vite#design-in-devtools))
 
 ## 0.1.3
 

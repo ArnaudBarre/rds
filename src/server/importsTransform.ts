@@ -25,7 +25,10 @@ export const initImportsTransform = ({
     if (scanResult.isCSS) {
       let content = scanResult.code;
       for (const [resolvedUrl, placeholder] of scanResult.imports) {
-        content = content.replace(placeholder, toHashedUrl(resolvedUrl));
+        content = content.replace(
+          placeholder,
+          getHashedUrl(resolvedUrl, assetsCache.get(resolvedUrl)),
+        );
       }
       return content;
     }
@@ -97,12 +100,10 @@ export const initImportsTransform = ({
               ? `const ${name} = "data:image/svg+xml;base64,${assetsCache
                   .get(imp.r)
                   .toString("base64")}"`
-              : isSVG(imp.r)
-              ? `const ${name} = "${getHashedUrl(
+              : `const ${name} = "${getHashedUrl(
                   imp.r,
                   assetsCache.get(imp.r),
-                )}&url"`
-              : `const ${name} = "${toHashedUrl(imp.r)}"`,
+                )}${isSVG(imp.r) ? "&url" : ""}`,
           );
         }
       }

@@ -1,6 +1,6 @@
 import { parse } from "es-module-lexer";
 import { codeToFrame, RDSError } from "./errors";
-import { resolve } from "./resolve";
+import { resolveJSImport } from "./resolve";
 import { run } from "./utils";
 
 export type JSImport = {
@@ -28,7 +28,7 @@ export const scanImports = (url: string, code: string) => {
     const dep = !i.n!.startsWith(".");
     return {
       n: i.n!,
-      r: dep ? i.n! : resolve(url, stripQuery(i.n!)),
+      r: dep ? i.n! : resolveJSImport(url, stripQuery(i.n!)),
       dep,
       specifiers: dep
         ? run(() => {

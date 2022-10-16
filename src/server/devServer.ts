@@ -1,14 +1,7 @@
 import { IncomingMessage, ServerResponse } from "http";
 
 import { Extension } from "./mimeTypes";
-import {
-  getExtension,
-  getHashedUrl,
-  isCSS,
-  isJS,
-  isSVG,
-  readCacheFile,
-} from "./utils";
+import { getExtension, getHashedUrl, readCacheFile } from "./utils";
 import {
   DEPENDENCY_PREFIX,
   ENTRY_POINT,
@@ -60,6 +53,7 @@ export const createDevServer = ({
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
+
     if (url.startsWith("virtual:")) {
       if (url === "virtual:@downwind/base.css") {
         return cachedJS(downwind.getBase());
@@ -90,18 +84,18 @@ export const createDevServer = ({
       }
       return cachedJS(dependenciesCache.get(path));
     }
-    if (isJS(url) || isCSS(url)) return cachedJS(importsTransform.get(url));
-    if (isSVG(url) && !searchParams.has("url")) {
-      return cachedJS(svgCache.get(url));
-    }
-    if (url.includes(".")) {
-      if (!assetsCache.has(url)) return "NOT_FOUND";
+
+    if (importsTransform.has(url)) return cachedJS(importsTransform.get(url));
+    if (svgCache.has(url)) return cachedJS(svgCache.get(url));
+    if (assetsCache.has(url)) {
       return {
         type: getExtension(url) as Extension,
         content: assetsCache.get(url),
         browserCache: true,
       };
     }
+
+    if (url.includes(".")) return "NOT_FOUND";
 
     const content = publicFilesCache.get("index.html");
     const entryUrl = importsTransform.toHashedUrl(ENTRY_POINT);

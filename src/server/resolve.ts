@@ -6,7 +6,10 @@ import { RDSError } from "./errors";
 
 const localError = "RDS: Unresolved import";
 
-export const resolve = (from: string, importString: string) => {
+export const resolve = (from: string, importString: string) =>
+  join(dirname(from), importString);
+
+export const resolveJSImport = (from: string, importString: string) => {
   try {
     return resolveExtensionCache.get(join(dirname(from), importString));
   } catch (e: any) {
