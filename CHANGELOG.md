@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
+- Set `@arnaud-barre/downwind` as a peer-dependency
+- Fix source maps for files with Fast Refresh
 - Fix: Return 404 instead of crash on unknown public file
 
 ## 0.2.1

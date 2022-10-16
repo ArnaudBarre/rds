@@ -1,8 +1,9 @@
 import { join } from "path";
+import type { SourceMapPayload } from "module";
 import { transformFileSync } from "@swc/core";
 import { init } from "es-module-lexer";
 
-import { cacheDir, readFile, readFileAsync } from "./utils";
+import { cacheDir, readFile, readFileAsync, run } from "./utils";
 import { ResolvedConfig } from "./loadConfig";
 import { codeToFrame, RDSError } from "./errors";
 import { debugNow, logger } from "./logger";
@@ -31,7 +32,7 @@ export const initSWC = async (config: ResolvedConfig) => {
   if (!existsSync(swcCachePath)) mkdirSync(swcCachePath);
   const mainCache = jsonCache<{
     define: Record<string, string>;
-  }>(join(swcCachePath, "main.json"), 1);
+  }>(join(swcCachePath, "main.json"), 2);
   const start = debugNow();
   const transformations: Record<string, SWCOutput | undefined> = {};
   const toCachePah = (url: string) =>
@@ -43,78 +44,88 @@ export const initSWC = async (config: ResolvedConfig) => {
     if (cached) return cached;
 
     const startGet = debugNow();
-    let code: string;
-    try {
-      code = transformFileSync(url, {
-        configFile: false,
-        swcrc: false,
-        sourceMaps: "inline",
-        jsc: {
-          target: "es2020",
-          transform: {
-            react: {
-              refresh: true,
-              development: true,
-              useBuiltins: true,
-              runtime: "automatic",
-            },
-            optimizer: {
-              globals: {
-                vars: {
-                  "process.env.NODE_ENV": '"development"',
-                  ...config.define,
+    const transformed = run(() => {
+      try {
+        return transformFileSync(url, {
+          configFile: false,
+          swcrc: false,
+          sourceMaps: true,
+          jsc: {
+            target: "es2020",
+            transform: {
+              react: {
+                refresh: true,
+                development: true,
+                useBuiltins: true,
+                runtime: "automatic",
+              },
+              optimizer: {
+                globals: {
+                  vars: {
+                    "process.env.NODE_ENV": '"development"',
+                    ...config.define,
+                  },
                 },
               },
             },
           },
-        },
-      }).code;
-    } catch (err) {
-      if (!isError(err)) throw err;
-      // eslint-disable-next-line no-control-regex
-      const rawMessage = err.message.replace(/\u001b\[.*?m/g, "");
-      const messageIndex = rawMessage.indexOf("×");
-      const fileIndex = rawMessage.indexOf("╭─[");
-      const codeStartIndex = rawMessage.indexOf(" │ ");
-      if (messageIndex !== -1 && fileIndex !== -1 && codeStartIndex !== -1) {
-        const file = rawMessage.slice(
-          fileIndex + 3,
-          rawMessage.indexOf("]", fileIndex),
-        );
-        const lineIndex = file.indexOf(":");
-        throw new RDSError({
-          message: rawMessage.slice(
-            messageIndex + 2,
-            rawMessage.indexOf("\n", messageIndex),
-          ),
-          file,
-          frame: codeToFrame(
-            rawMessage.slice(
-              codeStartIndex + 3,
-              rawMessage.indexOf("\n", codeStartIndex),
-            ),
-            lineIndex === -1 ? null : Number(file.split(":")[1]),
-          ),
         });
+      } catch (err) {
+        if (!isError(err)) throw err;
+        // eslint-disable-next-line no-control-regex
+        const rawMessage = err.message.replace(/\u001b\[.*?m/g, "");
+        const messageIndex = rawMessage.indexOf("×");
+        const fileIndex = rawMessage.indexOf("╭─[");
+        const codeStartIndex = rawMessage.indexOf(" │ ");
+        if (messageIndex !== -1 && fileIndex !== -1 && codeStartIndex !== -1) {
+          const file = rawMessage.slice(
+            fileIndex + 3,
+            rawMessage.indexOf("]", fileIndex),
+          );
+          const lineIndex = file.indexOf(":");
+          throw new RDSError({
+            message: rawMessage.slice(
+              messageIndex + 2,
+              rawMessage.indexOf("\n", messageIndex),
+            ),
+            file,
+            frame: codeToFrame(
+              rawMessage.slice(
+                codeStartIndex + 3,
+                rawMessage.indexOf("\n", codeStartIndex),
+              ),
+              lineIndex === -1 ? null : Number(file.split(":")[1]),
+            ),
+          });
+        }
+        throw new RDSError({ message: err.message, file: url });
       }
-      throw new RDSError({ message: err.message, file: url });
-    }
+    });
 
-    const hasFastRefresh = code.includes("$RefreshReg$");
-    code = hasFastRefresh
-      ? `import { RefreshRuntime } from "${RDS_CLIENT}";
+    const hasFastRefresh = transformed.code.includes("$RefreshReg$");
+    const code = run(() => {
+      if (!hasFastRefresh) {
+        return inlineSourceMap(transformed.code, transformed.map!);
+      }
+      const sourceMap: SourceMapPayload = JSON.parse(transformed.map!);
+      const header = `import { RefreshRuntime } from "${RDS_CLIENT}";
 const prevRefreshReg = window.$RefreshReg$;
 const prevRefreshSig = window.$RefreshSig$;
-window.$RefreshReg$ = RefreshRuntime.getRefreshReg("${url}")
+window.$RefreshReg$ = RefreshRuntime.getRefreshReg("${url}");
 window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
 
-${code}
-
+`;
+      const footer = `
 window.$RefreshReg$ = prevRefreshReg;
 window.$RefreshSig$ = prevRefreshSig;
 RefreshRuntime.enqueueUpdate();
-`
-      : code;
+`;
+      sourceMap.mappings = `;;;;;;${sourceMap.mappings}`;
+      return inlineSourceMap(
+        header + transformed.code + footer,
+        JSON.stringify(sourceMap),
+      );
+    });
     const output: SWCOutput = {
       code,
       input: readFile(url),
@@ -193,3 +204,9 @@ const isError = (err: any): err is Error => err.message;
 
 const stripSourceMap = (code: string) =>
   code.slice(0, code.indexOf("//# sourceMappingURL"));
+
+const inlineSourceMap = (code: string, map: string) =>
+  `${code}
+//# sourceMappingURL=data:application/json;base64,${Buffer.from(map).toString(
+    "base64",
+  )}`;

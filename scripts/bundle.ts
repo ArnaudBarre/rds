@@ -4,13 +4,7 @@ import { execSync } from "child_process";
 import { Worker } from "worker_threads";
 import { build, BuildOptions } from "esbuild";
 
-import {
-  name,
-  version,
-  license,
-  dependencies,
-  peerDependencies,
-} from "../package.json";
+import * as packageJSON from "../package.json";
 import { esbuildFilesLoaders } from "../src/server/mimeTypes";
 
 const dev = process.argv.includes("--dev");
@@ -22,7 +16,7 @@ const serverOptions: BuildOptions = {
   platform: "node",
   target: "node16",
   legalComments: "inline",
-  define: { __VERSION__: `"${version}"` },
+  define: { __VERSION__: `"${packageJSON.version}"` },
   watch: dev,
 };
 
@@ -41,8 +35,8 @@ Promise.all([
       "src/server/eslintWorker.ts",
     ],
     external: [
-      ...Object.keys(peerDependencies),
-      ...Object.keys(dependencies),
+      ...Object.keys(packageJSON.peerDependencies),
+      ...Object.keys(packageJSON.dependencies),
       "chalk", // In eslint worker
     ],
     ...serverOptions,
@@ -75,17 +69,18 @@ Promise.all([
     "dist/package.json",
     JSON.stringify(
       {
-        name,
-        description: "React development server",
-        version,
+        name: packageJSON.name,
+        description: "React Development Server",
+        version: packageJSON.version,
         author: "Arnaud Barré (https://github.com/ArnaudBarre)",
-        license,
+        license: packageJSON.license,
         repository: "github:ArnaudBarre/rds",
         main: "server/index.js",
         types: "types",
         bin: { rds: "server/cli.js" },
         keywords: ["react", "dev-server"],
-        dependencies,
+        peerDependencies: packageJSON.peerDependencies,
+        dependencies: packageJSON.dependencies,
       },
       null,
       2,
