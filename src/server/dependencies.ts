@@ -8,11 +8,7 @@ import { cacheDir, lookup, readCacheFile } from "./utils";
 import { colors } from "./colors";
 import { debugNow, logger } from "./logger";
 import { RDSError } from "./errors";
-import {
-  DEPENDENCY_PREFIX,
-  ESBUILD_MODULES_TARGET,
-  RDS_PREFIX,
-} from "./consts";
+import { DEPENDENCY_PREFIX, RDS_PREFIX } from "./consts";
 
 const dependencies = new Map<string, string>();
 
@@ -49,13 +45,13 @@ const initDependencyHash = () => {
   }
 };
 
-export const bundleDependencies = async () => {
+export const bundleDependencies = async (target: string[]) => {
   const start = performance.now();
   initDependencyHash();
   const deps = Array.from(dependencies.keys());
   const metadataCache = jsonCache<Metadata>(
     join(cacheDir, "dependencies.json"),
-    1,
+    2,
   );
   metadata = metadataCache.read();
   if (metadata) {
@@ -92,7 +88,7 @@ export const bundleDependencies = async () => {
     metafile: true,
     splitting: true,
     sourcemap: true,
-    target: ESBUILD_MODULES_TARGET, // TODO: Compute the min between this and config.target
+    target,
     outdir: cacheDir,
     logLevel: "error",
   }).catch((err) => {

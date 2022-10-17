@@ -58,7 +58,6 @@ export const initScanner = ({
 
       for (const imp of depsImports) addDependency(imp.n, url);
 
-      // TODO: This can be done inside swcCache
       const cssImportsToPrune: string[] = [];
       for (const oldImp of oldSrcImports) {
         if (graphNode.imports.some((i) => oldImp === i)) continue;

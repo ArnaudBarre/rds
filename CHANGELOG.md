@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-Add SWC version to cache key for SWC cache
+- Add SWC version to cache key for SWC cache
+- Use config.build.target (if defined) for bundling dependencies in development
 
 ## 0.3.1
 

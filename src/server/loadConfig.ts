@@ -3,7 +3,6 @@ import { loadConfig as configLoader } from "@arnaud-barre/config-loader";
 
 import { InlineConfig, UserConfig } from "../types";
 import { debugNow, logger } from "./logger";
-import { ESBUILD_MODULES_TARGET } from "./consts";
 import { cacheDir } from "./utils";
 
 export type ResolvedConfig = Awaited<ReturnType<typeof loadConfig>>;
@@ -39,7 +38,14 @@ export const loadConfig = async (
     define: mergedConfig.define ?? {},
     build: {
       emptyOutDir: mergedConfig.build?.emptyOutDir ?? true,
-      target: mergedConfig.build?.target ?? ESBUILD_MODULES_TARGET,
+      // https://github.com/vitejs/vite/blob/main/packages/vite/src/node/constants.ts#L14-L23
+      target: mergedConfig.build?.target ?? [
+        "es2020",
+        "edge88",
+        "firefox78",
+        "chrome87",
+        "safari13",
+      ],
     },
   };
   logger.debug(`Load config: ${(debugNow() - start).toFixed(2)}ms`);

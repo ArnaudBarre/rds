@@ -41,7 +41,7 @@ export const main = commandWrapper(async (config) => {
     watchFile: (path) => srcWatcher.add(path),
   });
   scanner.get(ENTRY_POINT);
-  await bundleDependencies();
+  await bundleDependencies(config.build.target);
 
   const importsTransform = initImportsTransform({ scanner, downwind });
   importsTransform.get(ENTRY_POINT);

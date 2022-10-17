@@ -1,8 +1,8 @@
-# RDS: React Development Server
+# RDS: React Development Server [![npm](https://img.shields.io/npm/v/@arnaud-barre/rds)](https://www.npmjs.com/package/@arnaud-barre/rds)
 
-A [CRA](https://github.com/facebook/create-react-app) like experience, with a dev server inspired by [Vite](https://vitejs.dev/), using [swc](https://swc.rs/) for Fast Refresh and fast build powered by [esbuild](https://esbuild.github.io/).
+A [CRA](https://github.com/facebook/create-react-app) like experience, with a dev server inspired by [Vite](https://vitejs.dev/), using [swc](https://swc.rs/) for Fast Refresh and a fast build powered by [esbuild](https://esbuild.github.io/).
 
-CSS is handle via [downwind](https://github.com/ArnaudBarre/downwind) a lightweight Tailwind implementation.
+CSS is handled via [downwind](https://github.com/ArnaudBarre/downwind) a lightweight Tailwind implementation.
 
 ## Create a new project
 
@@ -21,7 +21,7 @@ CSS is handle via [downwind](https://github.com/ArnaudBarre/downwind) a lightwei
 
 ## Configuration
 
-The config file (optional) should be name `rds.config.ts`.
+The (optional) configuration file should be named `rds.config.ts`.
 
 ```ts
 import type { RDSConfig } from "@arnaud-barre/rds";
