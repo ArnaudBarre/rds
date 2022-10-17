@@ -1,6 +1,6 @@
 import { join } from "path";
 import type { SourceMapPayload } from "module";
-import { transformFileSync } from "@swc/core";
+import { transformFileSync, version } from "@swc/core";
 import { init } from "es-module-lexer";
 
 import { cacheDir, readFile, readFileAsync, run } from "./utils";
@@ -32,7 +32,7 @@ export const initSWC = async (config: ResolvedConfig) => {
   if (!existsSync(swcCachePath)) mkdirSync(swcCachePath);
   const mainCache = jsonCache<{
     define: Record<string, string>;
-  }>(join(swcCachePath, "main.json"), 2);
+  }>(join(swcCachePath, "main.json"), `2-${version as string}`);
   const start = debugNow();
   const transformations: Record<string, SWCOutput | undefined> = {};
   const toCachePah = (url: string) =>

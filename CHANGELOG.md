@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+Add SWC version to cache key for SWC cache
+
 ## 0.3.1
 
 Hotfix: Missing quote in asset import rewrite
