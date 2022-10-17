@@ -103,7 +103,7 @@ export const initImportsTransform = ({
               : `const ${name} = "${getHashedUrl(
                   imp.r,
                   assetsCache.get(imp.r),
-                )}${isSVG(imp.r) ? "&url" : ""}`,
+                )}${isSVG(imp.r) ? "&url" : ""}"`,
           );
         }
       }

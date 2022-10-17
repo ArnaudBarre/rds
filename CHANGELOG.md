@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+Hotfix: Missing quote in asset import rewrite
+
 ## 0.3.0
 
 - Set `@arnaud-barre/downwind` as a peer-dependency
