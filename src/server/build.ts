@@ -12,11 +12,15 @@ import { esbuildFilesLoaders } from "./mimeTypes";
 import { ENTRY_POINT } from "./consts";
 import { stopProfiler } from "./stopProfiler";
 import { commandWrapper } from "./commandWrapper";
+import { modulesCodegen } from "./modules-codegen";
 
 export const main = commandWrapper(async (config) => {
   if (config.build.emptyOutDir) {
     rmSync("dist", { recursive: true, force: true });
   }
+  const start = performance.now();
+  modulesCodegen();
+  console.log(`codegen: ${(performance.now() - start).toFixed(2)}ms`);
   let bundleResult: BuildResult & { metafile: Metafile };
   try {
     bundleResult = await build({

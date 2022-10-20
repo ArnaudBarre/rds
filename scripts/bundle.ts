@@ -37,6 +37,7 @@ Promise.all([
     external: [
       ...Object.keys(packageJSON.peerDependencies),
       ...Object.keys(packageJSON.dependencies),
+      "lightningcss", // From downwind
       "chalk", // In eslint worker
     ],
     ...serverOptions,
