@@ -56,6 +56,8 @@ export const main = commandWrapper(async (config) => {
                   contents,
                   'import { jsx } from "react/jsx-runtime";',
                   "jsx",
+                  'import { forwardRef } from "react";',
+                  "forwardRef",
                 ),
                 loader: "js",
               };

@@ -16,7 +16,7 @@ new MutationObserver((mutations) => {
     if (timeoutId !== undefined) clearTimeout(timeoutId);
     const payload = Array.from(pendingClasses);
     timeoutId = setTimeout(() => {
-      fetch(RDS_DEVTOOLS_UPDATE, {
+      fetch(`/${RDS_DEVTOOLS_UPDATE}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

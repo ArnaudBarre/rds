@@ -12,5 +12,10 @@ export const svgCache = cache("svg", (url) =>
       dependenciesCache.get("react/jsx-dev-runtime"),
     )}";`,
     "__rds_react_jsx_dev_runtime.jsxDEV",
+    `import __rds_react from "${getHashedUrl(
+      `${DEPENDENCY_PREFIX}/react`,
+      dependenciesCache.get("react"),
+    )}";`,
+    "__rds_react.forwardRef",
   ),
 );

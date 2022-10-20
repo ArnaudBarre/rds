@@ -81,7 +81,7 @@ socket.addEventListener("close", async ({ wasClean }) => {
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     try {
-      await fetch("rds-ping");
+      await fetch("/rds-ping");
       break;
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 3_000));
