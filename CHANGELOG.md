@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Show outline & path when pressing alt
+
 ## 0.4.0
 
 - Add SWC version to cache key for SWC cache

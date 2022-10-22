@@ -3,6 +3,7 @@ import { ErrorOverlay, overlayId } from "./overlay";
 import "./click-handler";
 import "./css-devtools";
 import * as RefreshRuntime from "./refresh-runtime";
+import { newStyleSheet } from "./utils";
 
 RefreshRuntime.injectIntoGlobalHook(window);
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -97,12 +98,7 @@ export const updateStyle = (id: string, content: string) => {
   if (style) {
     style.innerHTML = content;
   } else {
-    const newStyle = document.createElement("style");
-    newStyle.setAttribute("type", "text/css");
-    newStyle.setAttribute("data-id", id);
-    newStyle.innerHTML = content;
-    document.head.appendChild(newStyle);
-    stylesMap.set(id, newStyle);
+    stylesMap.set(id, newStyleSheet(id, content));
   }
 };
 

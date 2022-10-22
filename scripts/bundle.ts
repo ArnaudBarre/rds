@@ -8,11 +8,12 @@ import * as packageJSON from "../package.json";
 import { esbuildFilesLoaders } from "../src/server/mimeTypes";
 
 const dev = process.argv.includes("--dev");
+const outdir = dev ? "template/node_modules/@arnaud-barre/rds" : "dist";
 
-rmSync("dist", { force: true, recursive: true });
+rmSync(outdir, { force: true, recursive: true });
 
 const serverOptions: BuildOptions = {
-  outdir: "dist/server",
+  outdir: `${outdir}/server`,
   platform: "node",
   target: "node16",
   legalComments: "inline",
@@ -44,7 +45,7 @@ Promise.all([
   build({
     bundle: true,
     entryPoints: ["src/client/index.ts"],
-    outdir: "dist/client",
+    outdir: `${outdir}/client`,
     platform: "browser",
     format: "esm",
     target: "safari13",
@@ -52,10 +53,10 @@ Promise.all([
     watch: dev,
   }),
 ]).then(() => {
-  execSync("cp -r src/types.d.ts bin LICENSE README.md dist/");
+  execSync(`cp -r src/types.d.ts bin LICENSE README.md ${outdir}/`);
 
   writeFileSync(
-    "dist/client.d.ts",
+    `${outdir}/client.d.ts`,
     readFileSync("src/client.d.ts", "utf-8") +
       Object.keys(esbuildFilesLoaders)
         .flatMap((ext) => [
@@ -66,7 +67,7 @@ Promise.all([
   );
 
   writeFileSync(
-    "dist/package.json",
+    `${outdir}/package.json`,
     JSON.stringify(
       {
         name: packageJSON.name,
@@ -88,5 +89,5 @@ Promise.all([
   );
 
   // eslint-disable-next-line no-new
-  if (dev) new Worker("./dist/server/tscWorker");
+  if (dev) new Worker(`./${outdir}/server/tscWorker`);
 });
