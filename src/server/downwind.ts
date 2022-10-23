@@ -122,7 +122,7 @@ export const getDownwind = async (target: string[]) => {
     devtoolsGenerate: () =>
       cssToHMR(
         "virtual:@downwind/devtools.css",
-        downwind.current.codegen({ omitContent: true }),
+        downwind.current.codegen({ mode: "DEVTOOLS" }),
         undefined,
       ),
     onReload: (callback: (changedCSS: string[]) => void) => {

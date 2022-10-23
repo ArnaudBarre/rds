@@ -1,14 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - Show outline & path when pressing alt
+- Bump downwind to [v0.4](https://github.com/ArnaudBarre/downwind/releases/tag/v0.4.0)
 
 ## 0.4.0
 
 - Add SWC version to cache key for SWC cache
 - Use config.build.target (if defined) for bundling dependencies in development
-- Bump downwind to v0.3
+- Bump downwind to [v0.3](https://github.com/ArnaudBarre/downwind/releases/tag/v0.3.0)
 - Use forwardRef for SVG component
 - Fix: Make devtools update works when URL is not root
 
