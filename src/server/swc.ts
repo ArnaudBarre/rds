@@ -1,6 +1,14 @@
-import { join } from "path";
+import {
+  readdirSync,
+  writeFileSync,
+  promises,
+  existsSync,
+  mkdirSync,
+} from "fs";
+import { extname, join } from "path";
 import type { SourceMapPayload } from "module";
-import { transformFileSync, version } from "@swc/core";
+import { jsonCache } from "@arnaud-barre/config-loader";
+import { ParserConfig, transformFileSync, version } from "@swc/core";
 import { init } from "es-module-lexer";
 
 import { cacheDir, readFile, readFileAsync, run } from "./utils";
@@ -9,14 +17,6 @@ import { codeToFrame, RDSError } from "./errors";
 import { debugNow, logger } from "./logger";
 import { JSImport, scanImports } from "./scanImports";
 import { RDS_CLIENT } from "./consts";
-import { jsonCache } from "@arnaud-barre/config-loader";
-import {
-  readdirSync,
-  writeFileSync,
-  promises,
-  existsSync,
-  mkdirSync,
-} from "fs";
 
 export type SWCCache = Awaited<ReturnType<typeof initSWC>>;
 
@@ -26,6 +26,13 @@ type SWCOutput = {
   input: string;
   imports: JSImport[];
   selfUpdate: boolean;
+};
+
+const parserMap: Record<string, ParserConfig> = {
+  ".tsx": { syntax: "typescript", tsx: true },
+  ".ts": { syntax: "typescript", tsx: false },
+  ".jsx": { syntax: "ecmascript", jsx: true },
+  ".js": { syntax: "ecmascript", jsx: false },
 };
 
 export const initSWC = async (config: ResolvedConfig) => {
@@ -52,6 +59,7 @@ export const initSWC = async (config: ResolvedConfig) => {
           sourceMaps: true,
           jsc: {
             target: "es2020",
+            parser: parserMap[extname(url)],
             transform: {
               react: {
                 refresh: true,

@@ -7,7 +7,6 @@ import { dependenciesCache, getDependencyMetadata } from "./dependencies";
 import { Downwind } from "./downwind";
 import { RDSError } from "./errors";
 import { DEPENDENCY_PREFIX, RDS_CLIENT, RDS_PREFIX } from "./consts";
-import { JSImport } from "./scanImports";
 import { clientUrl } from "./client";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
@@ -33,29 +32,33 @@ export const initImportsTransform = ({
       return content;
     }
 
-    let content = scanResult.code;
+    const content = scanResult.code;
+    if (!scanResult.imports.length) return content;
+    let index: number | undefined = undefined;
+    let output = "";
     for (let i = scanResult.imports.length - 1; i >= 0; i--) {
       const imp = scanResult.imports[i];
       if (imp.dep) {
         if (imp.n.startsWith("virtual:") || imp.n.startsWith(RDS_PREFIX)) {
           if (imp.n === "virtual:@downwind/utils.css") {
-            content = replaceImportSource(
-              content,
-              imp,
-              getHashedUrl("virtual:@downwind/utils.css", downwind.generate()),
-            );
+            output =
+              getHashedUrl("virtual:@downwind/utils.css", downwind.generate()) +
+              content.slice(imp.e, index) +
+              output;
+            index = imp.s;
             continue;
           }
           if (imp.n === "virtual:@downwind/base.css") {
-            content = replaceImportSource(
-              content,
-              imp,
-              getHashedUrl("virtual:@downwind/base.css", downwind.getBase()),
-            );
+            output =
+              getHashedUrl("virtual:@downwind/base.css", downwind.getBase()) +
+              content.slice(imp.e, index) +
+              output;
+            index = imp.s;
             continue;
           }
           if (imp.n === RDS_CLIENT) {
-            content = replaceImportSource(content, imp, clientUrl);
+            output = clientUrl + content.slice(imp.e, index) + output;
+            index = imp.s;
             continue;
           }
           throw new Error(`Unhandled entry "${imp.n}"`);
@@ -73,15 +76,14 @@ export const initImportsTransform = ({
         );
         if (depMetadata.needInterop && imp.specifiers.length) {
           const defaultImportName = `__rds_${imp.n.replace(/[-@/]/g, "_")}`;
-          content = replaceImportStatement(
-            content,
-            imp,
-            `import ${defaultImportName} from "${hashedUrl}";${imp.specifiers
-              .map((s) => `const ${s[1]} = ${defaultImportName}["${s[0]}"]`)
-              .join(";")}`,
-          );
+          const withInterop = `import ${defaultImportName} from "${hashedUrl}";${imp.specifiers
+            .map((s) => `const ${s[1]} = ${defaultImportName}["${s[0]}"]`)
+            .join(";")}`;
+          output = withInterop + content.slice(imp.se, index) + output;
+          index = imp.ss;
         } else {
-          content = replaceImportSource(content, imp, hashedUrl);
+          output = hashedUrl + content.slice(imp.e, index) + output;
+          index = imp.s;
         }
       } else {
         if (
@@ -90,25 +92,23 @@ export const initImportsTransform = ({
             !imp.n.endsWith("?url") &&
             !imp.n.endsWith("?inline"))
         ) {
-          content = replaceImportSource(content, imp, toHashedUrl(imp.r));
+          output = toHashedUrl(imp.r) + content.slice(imp.e, index) + output;
+          index = imp.s;
         } else {
           const name = content.slice(imp.ss, imp.se).split(" ")[1];
-          content = replaceImportStatement(
-            content,
-            imp,
-            imp.n.endsWith("?inline")
-              ? `const ${name} = "data:image/svg+xml;base64,${assetsCache
-                  .get(imp.r)
-                  .toString("base64")}"`
-              : `const ${name} = "${getHashedUrl(
-                  imp.r,
-                  assetsCache.get(imp.r),
-                )}${isSVG(imp.r) ? "&url" : ""}"`,
-          );
+          const statement = imp.n.endsWith("?inline")
+            ? `const ${name} = "data:image/svg+xml;base64,${assetsCache
+                .get(imp.r)
+                .toString("base64")}"`
+            : `const ${name} = "${getHashedUrl(imp.r, assetsCache.get(imp.r))}${
+                isSVG(imp.r) ? "&url" : ""
+              }"`;
+          output = statement + content.slice(imp.se, index) + output;
+          index = imp.ss;
         }
       }
     }
-    return content;
+    return content.slice(0, index) + output;
   });
 
   const toHashedUrl = (url: string) =>
@@ -123,12 +123,3 @@ export const initImportsTransform = ({
 
   return { ...importsTransformCache, toHashedUrl };
 };
-
-const replaceImportSource = (code: string, analysed: JSImport, value: string) =>
-  code.slice(0, analysed.s) + value + code.slice(analysed.e);
-
-const replaceImportStatement = (
-  code: string,
-  analysed: JSImport,
-  value: string,
-) => code.slice(0, analysed.ss) + value + code.slice(analysed.se);

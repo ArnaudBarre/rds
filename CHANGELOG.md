@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix perf issue Fix perf issue in imports rewrite
+- Always provide parser options for SWC
+
 ## 0.5.0
 
 - Show outline & path when pressing alt
