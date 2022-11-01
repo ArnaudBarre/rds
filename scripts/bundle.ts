@@ -71,7 +71,8 @@ Promise.all([
     JSON.stringify(
       {
         name: packageJSON.name,
-        description: "React Development Server",
+        description:
+          "React Development Server: A modern CRA inspired by Vite and powered by SWC, esbuild & Lightning CSS",
         version: packageJSON.version,
         author: "Arnaud Barré (https://github.com/ArnaudBarre)",
         license: packageJSON.license,

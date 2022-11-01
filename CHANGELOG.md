@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.5.1
 
-- Fix perf issue Fix perf issue in imports rewrite
+- Fix not found issues concurrent file updates (since v0.3). Public and source files are now properly seperated.
+- Fix perf issue in imports rewrite
 - Always provide parser options for SWC
 
 ## 0.5.0

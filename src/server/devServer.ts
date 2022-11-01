@@ -1,10 +1,18 @@
 import { IncomingMessage, ServerResponse } from "http";
 
 import { Extension } from "./mimeTypes";
-import { getExtension, getHashedUrl, readCacheFile } from "./utils";
+import {
+  getExtension,
+  getHashedUrl,
+  isCSS,
+  isJS,
+  isSVG,
+  readCacheFile,
+} from "./utils";
 import {
   DEPENDENCY_PREFIX,
   ENTRY_POINT,
+  FS_PREFIX,
   RDS_CLIENT,
   RDS_DEVTOOLS_UPDATE,
   RDS_OPEN_IN_EDITOR,
@@ -54,6 +62,19 @@ export const createDevServer = ({
       throw new Error(`Unexpect entry point: ${url}`);
     }
 
+    if (url.startsWith(FS_PREFIX)) {
+      const path = url.slice(FS_PREFIX.length + 1);
+      if (isJS(url) || isCSS(url)) return cachedJS(importsTransform.get(path));
+      if (isSVG(url) && !searchParams.has("url")) {
+        return cachedJS(svgCache.get(path));
+      }
+      return {
+        type: getExtension(url) as Extension,
+        content: assetsCache.get(path),
+        browserCache: true,
+      };
+    }
+
     if (url.startsWith("virtual:")) {
       if (url === "virtual:@downwind/base.css") {
         return cachedJS(downwind.getBase());
@@ -67,15 +88,6 @@ export const createDevServer = ({
       throw new Error(`Unexpect entry point: ${url}`);
     }
 
-    if (publicFiles.has(url)) {
-      const content = publicFilesCache.get(url);
-      return {
-        type: getExtension(url) as Extension,
-        content,
-        browserCache: false,
-      };
-    }
-
     if (url.startsWith(DEPENDENCY_PREFIX)) {
       const path = url.slice(DEPENDENCY_PREFIX.length + 1);
       if (url.endsWith(".map")) {
@@ -85,17 +97,14 @@ export const createDevServer = ({
       return cachedJS(dependenciesCache.get(path));
     }
 
-    if (importsTransform.has(url)) return cachedJS(importsTransform.get(url));
-    if (svgCache.has(url)) return cachedJS(svgCache.get(url));
-    if (assetsCache.has(url)) {
+    if (url.includes(".")) {
+      if (!publicFiles.has(url)) return "NOT_FOUND";
       return {
         type: getExtension(url) as Extension,
-        content: assetsCache.get(url),
-        browserCache: true,
+        content: publicFilesCache.get(url),
+        browserCache: false,
       };
     }
-
-    if (url.includes(".")) return "NOT_FOUND";
 
     const content = publicFilesCache.get("index.html");
     const entryUrl = importsTransform.toHashedUrl(ENTRY_POINT);

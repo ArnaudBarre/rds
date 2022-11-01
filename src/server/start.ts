@@ -5,7 +5,7 @@ import { watch } from "chokidar";
 
 import { colors } from "./colors";
 import { initWS } from "./ws";
-import { ENTRY_POINT } from "./consts";
+import { ENTRY_POINT, FS_PREFIX } from "./consts";
 import { initPublicWatcher } from "./public";
 import { bundleDependencies } from "./dependencies";
 import { logger } from "./logger";
@@ -81,7 +81,7 @@ export const main = commandWrapper(async (config) => {
       type: "update",
       paths: [
         ...changedCSS.map((path) =>
-          getHashedUrl(path, importsTransform.get(path)),
+          getHashedUrl(`${FS_PREFIX}/${path}`, importsTransform.get(path)),
         ),
         getHashedUrl(
           "virtual:@downwind/devtools.css",

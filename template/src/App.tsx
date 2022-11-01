@@ -8,7 +8,7 @@ export const App = () => {
     <div className="h-full p-10 overflow-auto flex-col justify-center items-center space-y-8 text-center">
       <a href="https://reactjs.org" target="_blank" rel="noreferrer">
         <Logo
-          className="h-24 w-24 motion-safe:animate-spin [animation-duration:20s]"
+          className="h-24 w-24 motion-safe:animate-spin motion-safe:[animation-duration:20s]"
           style={{ filter: "drop-shadow(0 0 2em #61dafbaa)" }}
         />
       </a>

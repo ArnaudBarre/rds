@@ -6,7 +6,7 @@ import { Scanner } from "./scanner";
 import { dependenciesCache, getDependencyMetadata } from "./dependencies";
 import { Downwind } from "./downwind";
 import { RDSError } from "./errors";
-import { DEPENDENCY_PREFIX, RDS_CLIENT, RDS_PREFIX } from "./consts";
+import { DEPENDENCY_PREFIX, FS_PREFIX, RDS_CLIENT, RDS_PREFIX } from "./consts";
 import { clientUrl } from "./client";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
@@ -26,7 +26,10 @@ export const initImportsTransform = ({
       for (const [resolvedUrl, placeholder] of scanResult.imports) {
         content = content.replace(
           placeholder,
-          getHashedUrl(resolvedUrl, assetsCache.get(resolvedUrl)),
+          getHashedUrl(
+            `${FS_PREFIX}/${resolvedUrl}`,
+            assetsCache.get(resolvedUrl),
+          ),
         );
       }
       return content;
@@ -100,9 +103,10 @@ export const initImportsTransform = ({
             ? `const ${name} = "data:image/svg+xml;base64,${assetsCache
                 .get(imp.r)
                 .toString("base64")}"`
-            : `const ${name} = "${getHashedUrl(imp.r, assetsCache.get(imp.r))}${
-                isSVG(imp.r) ? "&url" : ""
-              }"`;
+            : `const ${name} = "${getHashedUrl(
+                `${FS_PREFIX}/${imp.r}`,
+                assetsCache.get(imp.r),
+              )}${isSVG(imp.r) ? "&url" : ""}"`;
           output = statement + content.slice(imp.se, index) + output;
           index = imp.ss;
         }
@@ -113,7 +117,7 @@ export const initImportsTransform = ({
 
   const toHashedUrl = (url: string) =>
     getHashedUrl(
-      url,
+      `${FS_PREFIX}/${url}`,
       isInnerNode(url)
         ? importsTransformCache.get(url)
         : isSVG(url)

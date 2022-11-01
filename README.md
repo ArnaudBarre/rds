@@ -1,8 +1,8 @@
 # RDS: React Development Server [![npm](https://img.shields.io/npm/v/@arnaud-barre/rds)](https://www.npmjs.com/package/@arnaud-barre/rds)
 
-A [CRA](https://github.com/facebook/create-react-app) like experience, with a dev server inspired by [Vite](https://vitejs.dev/), using [swc](https://swc.rs/) for Fast Refresh and a fast build powered by [esbuild](https://esbuild.github.io/).
+A modern [CRA](https://github.com/facebook/create-react-app) inspired by [Vite](https://vitejs.dev/) using [SWC](https://swc.rs/) for Fast Refresh and [esbuild](https://esbuild.github.io/) for bundling.
 
-CSS is handled via [downwind](https://github.com/ArnaudBarre/downwind) a lightweight Tailwind implementation.
+CSS is handled via [downwind](https://github.com/ArnaudBarre/downwind), a lightweight Tailwind implementation based on [Lightning CSS](https://lightningcss.dev/)
 
 ## Create a new project
 
