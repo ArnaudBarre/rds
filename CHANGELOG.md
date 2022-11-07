@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix tooltip position for elements on the right side of the screen
+
 ## 0.5.1
 
 - Fix not found issues concurrent file updates (since v0.3). Public and source files are now properly seperated.
