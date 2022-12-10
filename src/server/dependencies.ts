@@ -90,10 +90,15 @@ export const bundleDependencies = async (target: string[]) => {
     sourcemap: true,
     target,
     outdir: cacheDir,
-    logLevel: "error",
+    logLevel: "silent",
   }).catch((err) => {
+    logger.endLine("bundleDependencies", colors.red(" x"));
     const match = (err.message as string).match(/Could not resolve "(.*)"/);
-    if (!match) throw err;
+    if (!match) {
+      if (err.errors.length > 5) err.errors.splice(5);
+      logger.esbuildResult(err);
+      throw err;
+    }
     throw new RDSError({
       message: `Could not resolve "${match[1]}"`,
       file: dependencies.get(match[1])!,

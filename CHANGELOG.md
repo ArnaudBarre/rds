@@ -4,6 +4,7 @@
 
 - Fix tooltip position for elements on the right side of the screen
 - Click to component: don't show outline for non-clickable targets and use debug log
+- Improve error logging on failed dependencies pre-bundling
 
 ## 0.5.1
 
