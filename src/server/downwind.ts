@@ -4,7 +4,7 @@ import {
   initDownwind,
   DownwindError,
 } from "@arnaud-barre/downwind";
-import { Dependency, CSSModuleExports } from "lightningcss";
+import { CSSModuleExports } from "lightningcss";
 import { watch } from "chokidar";
 
 import { cache } from "./cache";
@@ -59,11 +59,22 @@ export const getDownwind = async (target: string[]) => {
     });
     if (invalidateUtils) invalidate("hmr");
 
+    const imports: CSSImport[] = [];
+    for (const d of dependencies) {
+      if (d.type === "import") {
+        throw new RDSError({
+          message: "CSS imports are not supported",
+          file: `${d.loc.filePath}:${d.loc.start.line}:${d.loc.start.column}`,
+          frame: codeToFrame(`@import "${d.url}";`, d.loc.start.line),
+        });
+      }
+      if (d.url.startsWith("data:")) continue;
+      imports.push([resolve(url, d.url), d.placeholder]);
+    }
+
     return {
       code: cssToHMR(url, code, exports),
-      imports: dependencies.map(
-        (d): CSSImport => [resolve(url, d.url), getPlaceholder(d)],
-      ),
+      imports,
       selfUpdate: !exports, // Can't self accept because of modules exports
     };
   });
@@ -142,20 +153,6 @@ const cssToHMR = (
 ) => `import { updateStyle } from "${clientUrl}";
 updateStyle("${url}", ${JSON.stringify(code)});
 ${exports ? cssModuleToJS(exports) : ""}`;
-
-const getPlaceholder = (dependency: Dependency) => {
-  if (dependency.type === "import") {
-    throw new RDSError({
-      message: "CSS imports are not supported",
-      file: `${dependency.loc.filePath}:${dependency.loc.start.line}:${dependency.loc.start.column}`,
-      frame: codeToFrame(
-        `@import "${dependency.url}";`,
-        dependency.loc.start.line,
-      ),
-    });
-  }
-  return dependency.placeholder;
-};
 
 const isLightningCSSError = (
   e: any,
