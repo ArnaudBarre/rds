@@ -39,7 +39,7 @@ export const initSWC = async (config: ResolvedConfig) => {
   if (!existsSync(swcCachePath)) mkdirSync(swcCachePath);
   const mainCache = jsonCache<{
     define: Record<string, string>;
-  }>(join(swcCachePath, "main.json"), `2-${version as string}`);
+  }>(join(swcCachePath, "main.json"), `2-${version}`);
   const start = debugNow();
   const transformations: Record<string, SWCOutput | undefined> = {};
   const toCachePah = (url: string) =>
@@ -81,7 +81,7 @@ export const initSWC = async (config: ResolvedConfig) => {
       } catch (err) {
         if (!isError(err)) throw err;
         // eslint-disable-next-line no-control-regex
-        const rawMessage = err.message.replace(/\u001b\[.*?m/g, "");
+        const rawMessage = err.message.replaceAll(/\u001b\[.*?m/g, "");
         const messageIndex = rawMessage.indexOf("×");
         const fileIndex = rawMessage.indexOf("╭─[");
         const codeStartIndex = rawMessage.indexOf(" │ ");

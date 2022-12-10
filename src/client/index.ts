@@ -79,7 +79,6 @@ const clearErrorOverlay = () =>
 socket.addEventListener("close", async ({ wasClean }) => {
   if (wasClean) return;
   console.debug("[rds] Server connection lost. Polling for restart...");
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     try {
       await fetch("/rds-ping");

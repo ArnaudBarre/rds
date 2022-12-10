@@ -11,7 +11,7 @@ export const svgToJS = (
   const content = svg
     .slice(index + 1, svg.indexOf("</svg>"))
     .trim()
-    .replace(/\s+/g, " ");
+    .replaceAll(/\s+/g, " ");
   let attributes = "";
   for (const match of svg.slice(0, index).matchAll(attributesRE)) {
     attributes += `    ${transformKey(match[1])}: ${match[2]},\n`;

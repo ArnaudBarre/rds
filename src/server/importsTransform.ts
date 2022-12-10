@@ -78,7 +78,7 @@ export const initImportsTransform = ({
           dependenciesCache.get(imp.n),
         );
         if (depMetadata.needInterop && imp.specifiers.length) {
-          const defaultImportName = `__rds_${imp.n.replace(/[-@/]/g, "_")}`;
+          const defaultImportName = `__rds_${imp.n.replaceAll(/[-@/]/g, "_")}`;
           const withInterop = `import ${defaultImportName} from "${hashedUrl}";${imp.specifiers
             .map((s) => `const ${s[1]} = ${defaultImportName}["${s[0]}"]`)
             .join(";")}`;
