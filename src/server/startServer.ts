@@ -1,5 +1,5 @@
 import { join } from "path";
-import { Server as HttpServer } from "http";
+import { Http2Server } from "http2";
 import { exec } from "child_process";
 import { networkInterfaces } from "os";
 
@@ -9,7 +9,7 @@ import { colors } from "./colors";
 import { stopProfiler } from "./stopProfiler";
 
 export const startServer = async (
-  server: HttpServer,
+  server: Http2Server,
   config: ResolvedConfig,
 ) => {
   const port = await listen(server, config);
@@ -19,7 +19,7 @@ export const startServer = async (
         `   ready in ${(performance.now() - global.__rds_start).toFixed(0)} ms`,
       ),
   );
-  const localUrl = `http://localhost:${port}`;
+  const localUrl = `https://localhost:${port}`;
   if (config.server.host) {
     Object.values(networkInterfaces())
       .flatMap((nInterface) => nInterface ?? [])
@@ -32,7 +32,7 @@ export const startServer = async (
       .map((detail) =>
         detail.address.includes("127.0.0.1")
           ? `  > Local:   ${localUrl}`
-          : `  > Network: http://${detail.address}:${port}`,
+          : `  > Network: https://${detail.address}:${port}`,
       )
       .forEach((msg) => logger.info(msg));
   } else {
@@ -48,7 +48,7 @@ export const startServer = async (
   stopProfiler();
 };
 
-const listen = async (httpServer: HttpServer, config: ResolvedConfig) =>
+const listen = async (httpServer: Http2Server, config: ResolvedConfig) =>
   new Promise<number>((resolve, reject) => {
     const host = config.server.host ? undefined : "127.0.0.1";
     let port = config.server.port;

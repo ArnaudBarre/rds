@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from "http";
+import { Http2ServerRequest } from "http2";
 
 import { Extension } from "./mimeTypes";
 import {
@@ -39,7 +39,7 @@ export const createDevServer = ({
   importsTransform: ImportsTransform;
   downwind: Downwind;
 }) =>
-  createServer(config, (url, searchParams, res: ServerResponse) => {
+  createServer(config, (url, searchParams, res) => {
     if (url.startsWith(RDS_PREFIX)) {
       if (url === RDS_CLIENT) return cachedJS(clientCode);
       if (url === RDS_OPEN_IN_EDITOR) {
@@ -136,7 +136,7 @@ const cachedJS = (content: string | Buffer): LoadedFile => ({
   browserCache: true,
 });
 
-const getBodyJson = <T>(req: IncomingMessage) =>
+const getBodyJson = <T>(req: Http2ServerRequest) =>
   new Promise<T>((resolve, reject) => {
     let body = "";
     req.on("data", (chunk: string) => {

@@ -1,28 +1,42 @@
+import { request } from "http";
 import {
-  createServer as createHTTPServer,
-  IncomingMessage,
-  request,
-  ServerResponse,
-} from "http";
+  createSecureServer,
+  Http2ServerRequest,
+  Http2ServerResponse,
+  SecureServerOptions,
+} from "http2";
+import { existsSync, readFileSync } from "fs";
+import { execSync } from "child_process";
 import { getHash } from "@arnaud-barre/config-loader";
 
 import { LoadedFile } from "./types";
 import { mimeTypes } from "./mimeTypes";
 import { logger } from "./logger";
 import { ResolvedConfig } from "./loadConfig";
+import { join } from "path";
+import { cacheDir } from "./utils";
 
 export const createServer = (
   config: ResolvedConfig,
   handleRequest: (
     url: string,
     query: URLSearchParams,
-    res: ServerResponse,
+    res: Http2ServerResponse,
   ) => LoadedFile | "HANDLED" | "NOT_FOUND" | undefined,
 ) => {
   const proxy = config.server.proxy;
+  if (!existsSync(join(cacheDir, "localhost-cert.pem"))) {
+    execSync("mkcert localhost", { cwd: cacheDir, stdio: "ignore" });
+  }
+  const options: SecureServerOptions = {
+    maxSessionMemory: 1000, // Manually increase the session memory to prevent 502 ENHANCE_YOUR_CALM errors on large numbers of requests
+    cert: readFileSync(join(cacheDir, "localhost.pem")),
+    key: readFileSync(join(cacheDir, "localhost-key.pem")),
+    allowHTTP1: true,
+  };
 
-  const server = createHTTPServer((req, res) => {
-    const [url, query] = req.url!.split("?") as [string, string | undefined];
+  const server = createSecureServer(options, (req, res) => {
+    const [url, query] = req.url.split("?") as [string, string | undefined];
     if (proxy && (url.startsWith("/api/") || url === "/api")) {
       req.pipe(
         request(rewriteReq(req, proxy), (proxyRes) => {
@@ -114,12 +128,12 @@ export const createServer = (
 };
 
 const rewriteReq = (
-  req: IncomingMessage,
+  req: Http2ServerRequest,
   proxy: NonNullable<ResolvedConfig["server"]["proxy"]>,
 ) => ({
   host: proxy.host,
   port: proxy.port,
-  path: proxy.pathRewrite?.(req.url!) ?? req.url!,
+  path: proxy.pathRewrite?.(req.url) ?? req.url,
   method: req.method,
   headers: proxy.headersRewrite?.(req.headers) ?? req.headers,
 });
