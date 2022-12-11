@@ -1,6 +1,6 @@
 {
   "name": "@arnaud-barre/rds",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "MIT",
   "scripts": {
     "dev": "scripts/bundle.ts --dev",
@@ -29,7 +29,7 @@
     "ws": "^8.11.0"
   },
   "devDependencies": {
-    "@arnaud-barre/downwind": "^0.4.2",
+    "@arnaud-barre/downwind": "^0.4.3",
     "@arnaud-barre/eslint-config": "^1.0.18",
     "@nabla/tnode": "^0.8.0",
     "@types/eslint": "^8.4.10",
