@@ -2,10 +2,10 @@
 
 ## Unreleased
 
-- Fix tooltip position for elements on the right side of the screen
-- Click to component: don't show outline for non-clickable targets and use debug log
-- Improve error logging on failed dependencies pre-bundling
+- Support JSON imports
 - Support CSS data URL
+- Click to component: fix tooltip position, better handling of non-clickable targets
+- Improve error logging on failed dependencies pre-bundling
 
 ## 0.5.1
 

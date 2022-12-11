@@ -4,6 +4,12 @@ declare module "*.module.css" {
   export default classes;
 }
 
+// JSON URL
+declare module "*.json?url" {
+  const src: string;
+  export default src;
+}
+
 // SVG
 declare module "*.svg" {
   import { FunctionComponent, SVGProps } from "react";

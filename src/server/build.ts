@@ -64,6 +64,19 @@ export const main = commandWrapper(async (config) => {
             });
           },
         },
+        {
+          name: "json-url",
+          setup: (pluginBuild) => {
+            pluginBuild.onResolve({ filter: /\.json\?url$/ }, (args) => ({
+              path: join(args.resolveDir, args.path.slice(0, -4)),
+              namespace: "json-url",
+            }));
+            pluginBuild.onLoad(
+              { filter: /\.json$/, namespace: "json-url" },
+              (args) => ({ loader: "file", contents: readFileSync(args.path) }),
+            );
+          },
+        },
       ],
     });
   } catch {

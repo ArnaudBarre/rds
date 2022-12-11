@@ -6,6 +6,7 @@ import {
   getHashedUrl,
   isCSS,
   isJS,
+  isJSON,
   isSVG,
   readCacheFile,
 } from "./utils";
@@ -29,6 +30,7 @@ import { ResolvedConfig } from "./loadConfig";
 import { openInEditor } from "./openInEditor";
 import { Downwind } from "./downwind";
 import { LoadedFile } from "./types";
+import { jsonCache } from "./json";
 
 export const createDevServer = ({
   config,
@@ -67,6 +69,9 @@ export const createDevServer = ({
       if (isJS(url) || isCSS(url)) return cachedJS(importsTransform.get(path));
       if (isSVG(url) && !searchParams.has("url")) {
         return cachedJS(svgCache.get(path));
+      }
+      if (isJSON(url) && !searchParams.has("url")) {
+        return cachedJS(jsonCache.get(path));
       }
       return {
         type: getExtension(url) as Extension,

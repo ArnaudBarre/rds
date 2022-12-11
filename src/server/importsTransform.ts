@@ -1,5 +1,5 @@
 import { cache } from "./cache";
-import { getHashedUrl, isInnerNode, isSVG } from "./utils";
+import { getHashedUrl, isInnerNode, isJSON, isSVG } from "./utils";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
 import { Scanner } from "./scanner";
@@ -93,7 +93,8 @@ export const initImportsTransform = ({
           isInnerNode(imp.r) ||
           (isSVG(imp.r) &&
             !imp.n.endsWith("?url") &&
-            !imp.n.endsWith("?inline"))
+            !imp.n.endsWith("?inline")) ||
+          (isJSON(imp.r) && !imp.n.endsWith("?url"))
         ) {
           output = toHashedUrl(imp.r) + content.slice(imp.e, index) + output;
           index = imp.s;
@@ -106,7 +107,7 @@ export const initImportsTransform = ({
             : `const ${name} = "${getHashedUrl(
                 `${FS_PREFIX}/${imp.r}`,
                 assetsCache.get(imp.r),
-              )}${isSVG(imp.r) ? "&url" : ""}"`;
+              )}${isSVG(imp.r) || isJSON(imp.r) ? "&url" : ""}"`;
           output = statement + content.slice(imp.se, index) + output;
           index = imp.ss;
         }

@@ -13,7 +13,7 @@
     "moduleResolution": "node", // Allow `index` imports
     "resolveJsonModule": true, // Allow json import
     "forceConsistentCasingInFileNames": true, // Avoid difference in case between filename and import
-    "esModuleInterop": false, // Support CommonJS modules
+    "allowSyntheticDefaultImports": true, // Required for json import
     "noEmit": true, // Transpilation done by SWC or esbuild
     "isolatedModules": true, // Required by esbuild for parallelization
 

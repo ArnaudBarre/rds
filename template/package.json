@@ -5,7 +5,7 @@
     "postinstall": "bun local-css",
     "dev": "rds dev --open",
     "build": "tsc && rds build",
-    "serve": "rds serve",
+    "preview": "rds preview",
     "local-css": "downwind -o src/local.css",
     "lint": "bun lint-ci --fix --cache",
     "lint-ci": "eslint ./ --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
