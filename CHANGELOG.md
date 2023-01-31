@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix HMR for JSON imports
+
 ## 0.5.2
 
 - Support JSON imports

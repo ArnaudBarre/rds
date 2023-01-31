@@ -2,6 +2,7 @@ import { cache } from "./cache";
 import { getHashedUrl, isInnerNode, isJSON, isSVG } from "./utils";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
+import { jsonCache } from "./json";
 import { Scanner } from "./scanner";
 import { dependenciesCache, getDependencyMetadata } from "./dependencies";
 import { Downwind } from "./downwind";
@@ -123,6 +124,8 @@ export const initImportsTransform = ({
         ? importsTransformCache.get(url)
         : isSVG(url)
         ? svgCache.get(url)
+        : isJSON(url)
+        ? jsonCache.get(url)
         : assetsCache.get(url),
     );
 

@@ -6,9 +6,10 @@ import { colors } from "./colors";
 import { SWCCache } from "./swc";
 import { resolveExtensionCache } from "./resolve";
 import { ImportsTransform } from "./importsTransform";
-import { isCSS, isJS, isSVG } from "./utils";
+import { isCSS, isJS, isJSON, isSVG } from "./utils";
 import { svgCache } from "./svg";
 import { assetsCache } from "./assets";
+import { jsonCache } from "./json";
 import { WS } from "./ws";
 import { Scanner } from "./scanner";
 import { RDSError } from "./errors";
@@ -68,6 +69,8 @@ export const setupHmr = ({
     } else if (isSVG(path)) {
       svgCache.delete(path);
       assetsCache.delete(path);
+    } else if (isJSON(path)) {
+      jsonCache.delete(path);
     } else {
       assetsCache.delete(path);
     }
