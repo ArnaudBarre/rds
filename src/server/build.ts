@@ -25,6 +25,7 @@ export const main = commandWrapper(async (config) => {
       outdir: "dist/assets",
       sourcemap: true,
       metafile: true,
+      splitting: true,
       format: "esm",
       platform: "browser",
       target: config.build.target,
@@ -88,11 +89,19 @@ export const main = commandWrapper(async (config) => {
   execSync("cp -r public/ dist", { shell: "/bin/bash" });
 
   const outputs = Object.entries(bundleResult.metafile.outputs);
-  const jsEntry = outputs.find(([p]) => p.endsWith(".js"))!;
+  const jsEntryPoint = outputs.find(([p]) => p.endsWith(".js"))!;
+  const jsImports = [
+    ...jsEntryPoint[1].imports
+      .filter((i) => i.kind === "import-statement")
+      .map((i) => i.path.slice(4)),
+    jsEntryPoint[0].slice(4),
+  ]
+    .map((path) => `<script type="module" src="${path}"></script>`)
+    .join("\n    ");
   const html = readFileSync("dist/index.html", "utf-8").replace(
     "</head>",
-    `  <link rel="stylesheet" href="${jsEntry[1].cssBundle!.slice(4)}">
-    <script type="module" src="${jsEntry[0].slice(4)}"></script>
+    `  <link rel="stylesheet" href="${jsEntryPoint[1].cssBundle!.slice(4)}">
+    ${jsImports}
   </head>`,
   );
   writeFileSync("dist/index.html", html);

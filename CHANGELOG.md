@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Support dynamic imports
 - Fix HMR for JSON imports
 
 ## 0.5.2

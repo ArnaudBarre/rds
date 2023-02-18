@@ -1,5 +1,4 @@
 import { parse } from "es-module-lexer";
-import { codeToFrame, RDSError } from "./errors";
 import { resolveJSImport } from "./resolve";
 import { run } from "./utils";
 
@@ -17,14 +16,6 @@ export type JSImport = {
 export const scanImports = (url: string, code: string) => {
   const importSpecifiers = parse(code)[0];
   return importSpecifiers.map((i): JSImport => {
-    if (i.d !== -1) {
-      throw new RDSError({
-        message: "Dynamic imports are not supported (yet)",
-        file: url,
-        frame: codeToFrame(code.slice(i.ss, i.se), null),
-      });
-    }
-
     const dep = !i.n!.startsWith(".");
     return {
       n: i.n!,
@@ -45,8 +36,9 @@ export const scanImports = (url: string, code: string) => {
               });
           })
         : [],
-      s: i.s,
-      e: i.e,
+      // https://github.com/guybedford/es-module-lexer/issues/144
+      s: i.d === -1 ? i.s : i.s + 1,
+      e: i.d === -1 ? i.e : i.e - 1,
       ss: i.ss,
       se: i.se,
     };
