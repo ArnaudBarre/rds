@@ -22,17 +22,27 @@ if (cmd === "--help" || cmd === undefined) {
 }
 
 const main = () => {
+  if (cmd === "build") {
+    require("./build").main({
+      build: {
+        metafile: process.argv.includes("--meta") ? true : undefined,
+      },
+    } satisfies InlineConfig);
+    return;
+  }
+  const indexPort = process.argv.indexOf("--port");
+  const port =
+    indexPort !== -1 ? parseInt(process.argv[indexPort + 1]) : undefined;
   const inlineConfig: InlineConfig = {
     force: process.argv.includes("--force") ? true : undefined,
     server: {
       open: process.argv.includes("--open") ? true : undefined,
       host: process.argv.includes("--host") ? true : undefined,
+      port: port && !isNaN(port) ? port : undefined,
     },
   };
   if (cmd === "start" || cmd === "dev") {
     require("./start").main(inlineConfig);
-  } else if (cmd === "build") {
-    require("./build").main(inlineConfig);
   } else if (cmd === "serve" || cmd === "preview") {
     require("./serve").main(inlineConfig);
   } else {

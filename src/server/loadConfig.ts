@@ -46,6 +46,7 @@ export const loadConfig = async (
         "chrome87",
         "safari13",
       ],
+      metafile: mergedConfig.build?.metafile ?? false,
     },
   };
   logger.debug(`Load config: ${(debugNow() - start).toFixed(2)}ms`);

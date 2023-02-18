@@ -3,7 +3,9 @@
 ## Unreleased
 
 - Support dynamic imports
+- Output metafile to dist with build.metafile config option or --meta in the build command
 - Fix HMR for JSON imports
+- Add --port <number> to the CLI
 
 ## 0.5.2
 

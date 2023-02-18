@@ -105,6 +105,9 @@ export const main = commandWrapper(async (config) => {
   </head>`,
   );
   writeFileSync("dist/index.html", html);
+  if (config.build.metafile) {
+    writeFileSync("dist/meta.json", JSON.stringify(bundleResult.metafile));
+  }
 
   const files = [{ path: "dist/index.html", bytes: Buffer.byteLength(html) }];
   let longest = 0;

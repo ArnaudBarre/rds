@@ -55,6 +55,11 @@ type UserConfig = {
      * @default ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari13'] (same as Vite)
      */
     target?: string[];
+    /**
+     * Adds metafile to dist output. Can then be visualized in https://esbuild.github.io/analyze/
+     * @default false
+     */
+    metafile?: boolean;
   };
 };
 

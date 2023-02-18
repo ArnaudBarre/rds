@@ -10,9 +10,9 @@ CSS is handled via [downwind](https://github.com/ArnaudBarre/downwind), a lightw
 
 ## CLI
 
-- `rds (start|dev) [--host] [--open] [--force]`: Starts the dev server
-- `rds build`: Builds the app for production
-- `rds (serve|preview) [--host] [--open]`: Serves the production build
+- `rds (start|dev) [--host] [--open] [--force] [--port <number>]`: Starts the dev server
+- `rds build [--meta]`: Builds the app for production
+- `rds (serve|preview) [--host] [--open] [--port <number>]`: Serves the production build
 
 ## Defaults
 
