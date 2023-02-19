@@ -2,7 +2,7 @@
 import { readFileSync, rmSync, writeFileSync } from "fs";
 import { execSync } from "child_process";
 import { Worker } from "worker_threads";
-import { build, BuildOptions } from "esbuild";
+import { build, BuildOptions, context } from "esbuild";
 
 import * as packageJSON from "../package.json";
 import { esbuildFilesLoaders } from "../src/server/mimeTypes";
@@ -18,15 +18,19 @@ const serverOptions: BuildOptions = {
   target: "node16",
   legalComments: "inline",
   define: { __VERSION__: `"${packageJSON.version}"` },
-  watch: dev,
+};
+
+const buildOrWatch = async (options: BuildOptions) => {
+  if (dev) await (await context(options)).watch();
+  else await build(options);
 };
 
 Promise.all([
-  build({
+  buildOrWatch({
     entryPoints: ["src/server/index.ts", "src/server/cli.ts"],
     ...serverOptions,
   }),
-  build({
+  buildOrWatch({
     bundle: true,
     entryPoints: [
       "src/server/start.ts",
@@ -42,7 +46,7 @@ Promise.all([
     ],
     ...serverOptions,
   }),
-  build({
+  buildOrWatch({
     bundle: true,
     entryPoints: ["src/client/index.ts"],
     outdir: `${outdir}/client`,
@@ -50,7 +54,6 @@ Promise.all([
     format: "esm",
     target: "safari13",
     legalComments: "inline",
-    watch: dev,
   }),
 ]).then(() => {
   execSync(`cp -r src/types.d.ts bin LICENSE README.md ${outdir}/`);

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "module": "ES2020",
     "target": "ES2021", // Target node 16
+    "skipLibCheck": true,
     "noEmit": true, // Compile via esbuild
 
     /* Imports */

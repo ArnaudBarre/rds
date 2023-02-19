@@ -7,7 +7,6 @@
 
     /* Options for bundlers & React integration  */
     "jsx": "react-jsx",
-    "allowJs": false,
     "types": ["@arnaud-barre/rds/client"], // Provide types for assets imports
     "skipLibCheck": true, // Report mostly false positive
     "moduleResolution": "node", // Allow `index` imports
@@ -21,6 +20,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": true
   }
 }
