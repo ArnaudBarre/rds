@@ -20,10 +20,11 @@ export const loadConfig = async (
     : undefined;
   const resolvedConfig = {
     server: {
-      host: false,
       port: 3000,
       strictPort: false,
       open: false,
+      host: false,
+      qrCode: false,
       ...mergedConfig.server,
       eslint: { cache: true, fix: false, ...mergedConfig.server?.eslint },
       proxy: proxyUrl

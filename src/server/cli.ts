@@ -36,9 +36,10 @@ const main = () => {
   const inlineConfig: InlineConfig = {
     force: process.argv.includes("--force") ? true : undefined,
     server: {
+      port: port && !isNaN(port) ? port : undefined,
       open: process.argv.includes("--open") ? true : undefined,
       host: process.argv.includes("--host") ? true : undefined,
-      port: port && !isNaN(port) ? port : undefined,
+      qrCode: process.argv.includes("--qr") ? true : undefined,
     },
   };
   if (cmd === "start" || cmd === "dev") {

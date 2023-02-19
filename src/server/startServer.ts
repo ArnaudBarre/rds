@@ -21,6 +21,7 @@ export const startServer = async (
   );
   const localUrl = `http://localhost:${port}`;
   if (config.server.host) {
+    let printQRCode = config.server.qrCode;
     Object.values(networkInterfaces())
       .flatMap((nInterface) => nInterface ?? [])
       .filter(
@@ -29,12 +30,18 @@ export const startServer = async (
           // Node 18 breaking change
           (detail.family === "IPv4" || (detail.family as any) === 4),
       )
-      .map((detail) =>
-        detail.address.includes("127.0.0.1")
-          ? `  > Local:   ${localUrl}`
-          : `  > Network: http://${detail.address}:${port}`,
-      )
-      .forEach((msg) => logger.info(msg));
+      .forEach((detail) => {
+        if (detail.address.includes("127.0.0.1")) {
+          logger.info(`  > Local:   ${localUrl}`);
+        } else {
+          const url = `http://${detail.address}:${port}`;
+          logger.info(`  > Network: ${url}`);
+          if (printQRCode) {
+            printQRCode = false;
+            logger.info(require("./qrcode/qrcode").generate(url, "    "));
+          }
+        }
+      });
   } else {
     logger.info(`  > Local: ${localUrl}`);
     logger.info(`  > Network: ${colors.dim("use `--host` to expose")}`);

@@ -39,5 +39,6 @@ Each of the three mode (dev, build, preview) is exposed via JS. See the types de
 
 ## Planned features
 
-- qrCode
+- plugins
+- improve client inspector
 - workers

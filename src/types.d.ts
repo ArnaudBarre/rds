@@ -3,14 +3,9 @@ import { DefineConfig } from "@arnaud-barre/config-loader";
 type UserConfig = {
   server?: {
     /**
-     * Set to true to listen on all addresses, including LAN and public addresses.
-     * This can be set via the CLI using --host
-     * @default false
-     */
-    host?: boolean;
-    /**
      * Specify server port. Note if the port is already being used, RDS will automatically try
      * the next available port so this may not be the actual port the server ends up listening on.
+     * --port <number> in CLI
      * @default 3000
      */
     port?: number;
@@ -22,10 +17,22 @@ type UserConfig = {
     /**
      * Automatically open the app in the browser on server start.
      * Only works for Chrome on Mac.
-     * This can be set via the CLI using --open
+     * --open in CLI
      * @default false
      */
     open?: boolean;
+    /**
+     * Set to true to listen on all addresses, including LAN and public addresses.
+     * --host in CLI
+     * @default false
+     */
+    host?: boolean;
+    /**
+     * When host is true, prints a QR code for the first non-local address.
+     * --qr in CLI
+     * @default false
+     */
+    qrCode?: boolean;
     /**
      * Option for the eslint worker (start only)
      * @default { cache: true; fix: false }
