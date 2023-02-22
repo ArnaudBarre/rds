@@ -1,6 +1,6 @@
 import { HMR_HEADER, HMRPayload } from "../hmr";
 import { ErrorOverlay, overlayId } from "./overlay";
-import "./click-handler";
+import "./inspector";
 import "./css-devtools";
 import * as RefreshRuntime from "./refresh-runtime";
 import { newStyleSheet } from "./utils";

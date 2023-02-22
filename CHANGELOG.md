@@ -2,10 +2,18 @@
 
 ## Unreleased
 
+## 0.5.4
+
+Client inspector: Context menu on option+right click to see all the intermediate components and jump to the right place!
+Direct click is remove for two reasons:
+
+- It doesn't play well with buttons and links
+- In large apps, you often end up on the generic component instead of going inside the usage of it
+
 ## 0.5.3
 
 - Support dynamic imports
-- Output metafile to dist with build.metafile config option or `--meta` in the build command
+- Output metafile to `/dist` with `build.metafile` config option or `--meta` in the build command
 - Fix HMR for JSON imports
 - Add `--port <number>` to the CLI
 - Add `server.qrCode` option to print network URL as QR code (`--qr` in the CLI)
