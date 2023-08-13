@@ -3,13 +3,12 @@ import {
   IncomingMessage,
   request,
   ServerResponse,
-} from "http";
+} from "node:http";
 import { getHash } from "@arnaud-barre/config-loader";
-
-import { LoadedFile } from "./types";
-import { mimeTypes } from "./mimeTypes";
-import { logger } from "./logger";
-import { ResolvedConfig } from "./loadConfig";
+import type { ResolvedConfig } from "./loadConfig.ts";
+import { logger } from "./logger.ts";
+import { mimeTypes } from "./mimeTypes.ts";
+import type { LoadedFile } from "./types.ts";
 
 export const createServer = (
   config: ResolvedConfig,

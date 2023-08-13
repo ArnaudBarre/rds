@@ -1,11 +1,10 @@
 #!/usr/bin/env tnode
-import { readFileSync, rmSync, writeFileSync } from "fs";
-import { execSync } from "child_process";
-import { Worker } from "worker_threads";
-import { build, BuildOptions, context } from "esbuild";
-
-import * as packageJSON from "../package.json";
-import { esbuildFilesLoaders } from "../src/server/mimeTypes";
+import { execSync } from "node:child_process";
+import { cpSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { Worker } from "node:worker_threads";
+import { build, type BuildOptions, context } from "esbuild";
+import packageJSON from "../package.json";
+import { esbuildFilesLoaders } from "../src/server/mimeTypes.ts";
 
 const dev = process.argv.includes("--dev");
 const outdir = dev ? "template/node_modules/@arnaud-barre/rds" : "dist";
@@ -15,7 +14,8 @@ rmSync(outdir, { force: true, recursive: true });
 const serverOptions: BuildOptions = {
   outdir: `${outdir}/server`,
   platform: "node",
-  target: "node16",
+  format: "esm",
+  target: "node18",
   legalComments: "inline",
   define: { __VERSION__: `"${packageJSON.version}"` },
 };
@@ -27,17 +27,13 @@ const buildOrWatch = async (options: BuildOptions) => {
   await c.rebuild();
 };
 
-Promise.all([
-  buildOrWatch({
-    entryPoints: ["src/server/index.ts", "src/server/cli.ts"],
-    ...serverOptions,
-  }),
+await Promise.all([
   buildOrWatch({
     bundle: true,
+    splitting: true,
     entryPoints: [
-      "src/server/start.ts",
-      "src/server/build.ts",
-      "src/server/serve.ts",
+      "src/server/index.ts",
+      "src/server/cli.ts",
       "src/server/tscWorker.ts",
       "src/server/eslintWorker.ts",
     ],
@@ -54,46 +50,52 @@ Promise.all([
     outdir: `${outdir}/client`,
     platform: "browser",
     format: "esm",
-    target: "safari13",
+    target: "safari14",
     legalComments: "inline",
   }),
-]).then(() => {
-  execSync(`cp -r src/types.d.ts bin LICENSE README.md ${outdir}/`);
+]);
 
-  writeFileSync(
-    `${outdir}/client.d.ts`,
-    readFileSync("src/client.d.ts", "utf-8") +
-      Object.keys(esbuildFilesLoaders)
-        .flatMap((ext) => [
-          `declare module "*${ext}" {\n  const src: string;\n  export default src;\n}\n`,
-          `declare module "*${ext}?inline" {\n  const data: string;\n  export default data;\n}\n`,
-        ])
-        .join(""),
-  );
+execSync(`cp -r bin LICENSE README.md ${outdir}/`);
+cpSync("src/types.d.ts", `${outdir}/server/index.d.ts`);
 
-  writeFileSync(
-    `${outdir}/package.json`,
-    JSON.stringify(
-      {
-        name: packageJSON.name,
-        description:
-          "React Development Server: A modern CRA inspired by Vite and powered by SWC, esbuild & Lightning CSS",
-        version: packageJSON.version,
-        author: "Arnaud Barré (https://github.com/ArnaudBarre)",
-        license: packageJSON.license,
-        repository: "github:ArnaudBarre/rds",
-        main: "server/index.js",
-        types: "types",
-        bin: { rds: "server/cli.js" },
-        keywords: ["react", "dev-server"],
-        peerDependencies: packageJSON.peerDependencies,
-        dependencies: packageJSON.dependencies,
+writeFileSync(
+  `${outdir}/client.d.ts`,
+  readFileSync("src/client.d.ts", "utf-8") +
+    Object.keys(esbuildFilesLoaders)
+      .flatMap((ext) => [
+        `declare module "*${ext}" {\n  const src: string;\n  export default src;\n}\n`,
+        `declare module "*${ext}?inline" {\n  const data: string;\n  export default data;\n}\n`,
+      ])
+      .join(""),
+);
+
+writeFileSync(
+  `${outdir}/package.json`,
+  JSON.stringify(
+    {
+      name: packageJSON.name,
+      description:
+        "React Development Server: A modern CRA inspired by Vite and powered by SWC, esbuild & Lightning CSS",
+      type: "module",
+      version: packageJSON.version,
+      author: "Arnaud Barré (https://github.com/ArnaudBarre)",
+      license: packageJSON.license,
+      repository: "github:ArnaudBarre/rds",
+      keywords: ["react", "dev-server"],
+      bin: { rds: "server/cli.js" },
+      exports: {
+        ".": "./server/index.js",
+        "./client": {
+          types: "./client.d.ts",
+        },
       },
-      null,
-      2,
-    ),
-  );
+      peerDependencies: packageJSON.peerDependencies,
+      dependencies: packageJSON.dependencies,
+    },
+    null,
+    2,
+  ),
+);
 
-  // eslint-disable-next-line no-new
-  if (dev) new Worker(`./${outdir}/server/tscWorker`);
-});
+// eslint-disable-next-line no-new
+if (dev) new Worker(`./${outdir}/server/tscWorker`);

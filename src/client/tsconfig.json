@@ -1,19 +1,16 @@
 {
-  "include": ["src", "scripts"],
-  "exclude": ["src/client"],
+  "include": ["."],
   "compilerOptions": {
-    /* Target node 16 */
-    "target": "ES2022",
-    "module": "ES2022",
+    "target": "ES2020",
+    "module": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2022"],
-    "allowJs": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
     "noEmit": true,
 
     /* Linting */

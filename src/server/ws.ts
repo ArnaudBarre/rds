@@ -1,11 +1,9 @@
-import { IncomingMessage } from "http";
+import { IncomingMessage } from "node:http";
+import { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
-import { Duplex } from "stream";
-
-import { HMR_HEADER, RDSErrorPayload, HMRPayload } from "../hmr";
-
-import { colors } from "./colors";
-import { logger } from "./logger";
+import { HMR_HEADER, type HMRPayload, type RDSErrorPayload } from "../hmr.ts";
+import { colors } from "./colors.ts";
+import { logger } from "./logger.ts";
 
 export type WS = ReturnType<typeof initWS>;
 
@@ -45,14 +43,17 @@ export const initWS = () => {
         return;
       }
       const stringified = JSON.stringify(payload);
-      wss.clients.forEach((client) => {
+      for (const client of wss.clients) {
         if (client.readyState === 1) client.send(stringified);
-      });
+      }
     },
     close: () =>
-      new Promise((_, reject) => {
-        wss.clients.forEach((client) => client.terminate());
-        wss.close((err) => err && reject(err));
+      new Promise<void>((resolve, reject) => {
+        for (const client of wss.clients) client.terminate();
+        wss.close((err) => {
+          if (err) reject(err);
+          resolve();
+        });
       }),
   };
 };

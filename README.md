@@ -6,7 +6,7 @@ CSS is handled via [downwind](https://github.com/ArnaudBarre/downwind), a lightw
 
 ## Create a new project
 
-`npx degit ArnaudBarre/rds/template my-app && cd my-app && bun i && bun run dev`
+`bunx degit ArnaudBarre/rds/template my-app && cd my-app && bun i && bun run dev`
 
 ## CLI
 

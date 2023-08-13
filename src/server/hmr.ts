@@ -1,19 +1,17 @@
 import { FSWatcher } from "chokidar";
-
-import { GraphNode } from "./types";
-import { logger } from "./logger";
-import { colors } from "./colors";
-import { SWCCache } from "./swc";
-import { resolveExtensionCache } from "./resolve";
-import { ImportsTransform } from "./importsTransform";
-import { isCSS, isJS, isJSON, isSVG } from "./utils";
-import { svgCache } from "./svg";
-import { assetsCache } from "./assets";
-import { jsonCache } from "./json";
-import { WS } from "./ws";
-import { Scanner } from "./scanner";
-import { RDSError } from "./errors";
-import { Downwind } from "./downwind";
+import { assetsCache } from "./assets.ts";
+import { colors } from "./colors.ts";
+import type { Downwind } from "./downwind.ts";
+import { RDSError } from "./errors.ts";
+import type { ImportsTransform } from "./importsTransform.ts";
+import { jsonCache } from "./json.ts";
+import { logger } from "./logger.ts";
+import type { Scanner } from "./scanner.ts";
+import { svgCache } from "./svg.ts";
+import type { SWCCache } from "./swc.ts";
+import type { GraphNode } from "./types.ts";
+import { isCSS, isJS, isJSON, isSVG } from "./utils.ts";
+import type { WS } from "./ws.ts";
 
 export const setupHmr = ({
   downwind,
@@ -129,15 +127,7 @@ export const setupHmr = ({
     })
     .on("unlink", (path) => {
       logger.debug(`unlink ${path}`);
-      if (isJS(path)) {
-        const pathWithoutExt = path.slice(0, path.lastIndexOf("."));
-        resolveExtensionCache.delete(pathWithoutExt);
-        if (pathWithoutExt.endsWith("/index")) {
-          resolveExtensionCache.delete(pathWithoutExt.slice(0, -6));
-        }
-      } else if (isCSS(path)) {
-        ws.send({ type: "prune-css", paths: [path] });
-      }
+      if (isCSS(path)) ws.send({ type: "prune-css", paths: [path] });
       clearCache(path, false);
       const node = scanner.graph.get(path)!;
       invalidate(node);

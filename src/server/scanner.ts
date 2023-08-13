@@ -1,12 +1,13 @@
-import { cache } from "./cache";
-import { isCSS, isInnerNode, split } from "./utils";
-import { SWCCache } from "./swc";
-import { ENTRY_POINT } from "./consts";
-import { Graph, GraphNode } from "./types";
-import { addDependency } from "./dependencies";
-import { RDSError } from "./errors";
-import { CSSImport, Downwind } from "./downwind";
-import { JSImport } from "./scanImports";
+import { cache } from "./cache.ts";
+import { ENTRY_POINT } from "./consts.ts";
+import { addDependency } from "./dependencies.ts";
+import type { CSSImport, Downwind } from "./downwind.ts";
+import { RDSError } from "./errors.ts";
+import type { JSImport } from "./scanImports.ts";
+import type { SWCCache } from "./swc.ts";
+import type { Graph, GraphNode } from "./types.ts";
+import { isCSS, isInnerNode, split } from "./utils.ts";
+import type { WS } from "./ws.ts";
 
 export type Scanner = ReturnType<typeof initScanner>;
 
@@ -15,11 +16,13 @@ export const initScanner = ({
   swcCache,
   lintFile,
   watchFile,
+  ws,
 }: {
   downwind: Downwind;
   swcCache: SWCCache;
   lintFile: (path: string) => void;
   watchFile: (path: string) => void;
+  ws: WS;
 }) => {
   const graph: Graph = new Map([
     [
@@ -32,8 +35,6 @@ export const initScanner = ({
       },
     ],
   ]);
-
-  let cssPruneCallback: ((paths: string[]) => void) | undefined;
 
   const scanCache = cache("scan", (url) => {
     const graphNode = graph.get(url)!;
@@ -68,7 +69,9 @@ export const initScanner = ({
           cssImportsToPrune.push(oldImp);
         }
       }
-      if (cssImportsToPrune.length) cssPruneCallback?.(cssImportsToPrune);
+      if (cssImportsToPrune.length) {
+        ws.send({ type: "prune-css", paths: cssImportsToPrune });
+      }
 
       output = { isCSS: false, code, imports };
     }
@@ -100,12 +103,7 @@ export const initScanner = ({
     return output;
   });
 
-  return {
-    ...scanCache,
-    onCSSPrune: (callback: (paths: string[]) => void) =>
-      (cssPruneCallback = callback),
-    graph,
-  };
+  return { ...scanCache, graph };
 };
 
 const hasCycle = (node: GraphNode, to: string): boolean => {

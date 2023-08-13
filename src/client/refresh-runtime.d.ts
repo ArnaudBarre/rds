@@ -1,7 +1,9 @@
-export const enqueueUpdate: () => void;
-export const getRefreshReg: (filename: string) => void;
-export const injectIntoGlobalHook: (window: Window) => void;
-export const createSignatureFunctionForTransform: () => void;
+export const RefreshRuntime: {
+  enqueueUpdate: () => void;
+  getRefreshReg: (filename: string) => void;
+  injectIntoGlobalHook: (window: Window) => void;
+  createSignatureFunctionForTransform: () => void;
+};
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions

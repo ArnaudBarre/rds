@@ -1,9 +1,8 @@
-import { rmSync } from "fs";
+import { rmSync } from "node:fs";
 import { loadConfig as configLoader } from "@arnaud-barre/config-loader";
-
-import { InlineConfig, UserConfig } from "../types";
-import { debugNow, logger } from "./logger";
-import { cacheDir } from "./utils";
+import type { InlineConfig, UserConfig } from "../types.d.ts";
+import { debugNow, logger } from "./logger.ts";
+import { cacheDir } from "./utils.ts";
 
 export type ResolvedConfig = Awaited<ReturnType<typeof loadConfig>>;
 

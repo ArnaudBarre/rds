@@ -1,8 +1,8 @@
-import { cache } from "./cache";
-import { getHashedUrl, readFile } from "./utils";
-import { svgToJS } from "./svgToJS";
-import { DEPENDENCY_PREFIX } from "./consts";
-import { dependenciesCache } from "./dependencies";
+import { cache } from "./cache.ts";
+import { DEPENDENCY_PREFIX } from "./consts.ts";
+import { dependenciesCache } from "./dependencies.ts";
+import { svgToJS } from "./svgToJS.ts";
+import { getHashedUrl, readFile } from "./utils.ts";
 
 export const svgCache = cache("svg", (url) =>
   svgToJS(

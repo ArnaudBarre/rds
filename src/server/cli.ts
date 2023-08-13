@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { InlineConfig } from "../types";
+import type { InlineConfig } from "../types.d.ts";
 
 global.__rds_start = performance.now();
 const cmd = process.argv[2] as string | undefined;
@@ -11,9 +11,9 @@ if (cmd === "-v" || cmd === "--version") {
 
 const help = () => {
   console.log(`\x1b[36mRDS ${__VERSION__}\x1b[39m
- \x1b[35m start, dev \x1b[39m      Starts dev server
- \x1b[35m build \x1b[39m           Bundles and minify into /dist
- \x1b[35m serve, preview \x1b[39m  Serves build output`);
+ \x1b[35m dev, start \x1b[39m      start dev server
+ \x1b[35m build \x1b[39m           bundle and minify into /dist
+ \x1b[35m preview, serve \x1b[39m  preview build output`);
 };
 
 if (cmd === "--help" || cmd === undefined) {
@@ -21,14 +21,13 @@ if (cmd === "--help" || cmd === undefined) {
   process.exit();
 }
 
-const main = () => {
+const main = async () => {
   if (cmd === "build") {
-    require("./build").main({
+    return (await import("./build.ts")).main({
       build: {
         metafile: process.argv.includes("--meta") ? true : undefined,
       },
     } satisfies InlineConfig);
-    return;
   }
   const indexPort = process.argv.indexOf("--port");
   const port =
@@ -42,19 +41,19 @@ const main = () => {
       qrCode: process.argv.includes("--qr") ? true : undefined,
     },
   };
-  if (cmd === "start" || cmd === "dev") {
-    require("./start").main(inlineConfig);
-  } else if (cmd === "serve" || cmd === "preview") {
-    require("./serve").main(inlineConfig);
-  } else {
-    console.error(`\x1b[31mUnsupported command: ${cmd}\x1b[39m`);
-    help();
-    process.exit(1);
+  if (cmd === "dev" || cmd === "start") {
+    return (await import("./dev.ts")).main(inlineConfig);
+  } else if (cmd === "preview" || cmd === "serve") {
+    return (await import("./preview.ts")).main(inlineConfig);
   }
+
+  console.error(`\x1b[31mUnsupported command: ${cmd}\x1b[39m`);
+  help();
+  process.exit(1);
 };
 
 if (process.argv.includes("--profile")) {
-  const inspector = require("inspector");
+  const inspector = await import("inspector");
   const session = new inspector.Session();
   global.__rds_profile_session = session;
   session.connect();
@@ -62,5 +61,5 @@ if (process.argv.includes("--profile")) {
     session.post("Profiler.start", main);
   });
 } else {
-  main();
+  await main();
 }

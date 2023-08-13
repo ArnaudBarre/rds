@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.6.0
+
+- TS 5 update: requires explicit extensions
+- Publish as ESM
+- Downwind 0.6.0 with Tailwind 3.3 update
+- Commands to open browser, enable host & show QR Code
+
 ## 0.5.4
 
 Client inspector: Context menu on option+right click to see all the intermediate components and jump to the right place!

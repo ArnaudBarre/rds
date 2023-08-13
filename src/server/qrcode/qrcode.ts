@@ -1,6 +1,6 @@
-import { getMatrix } from "./qr.min";
+import { getMatrix } from "./qr.min.js";
 
-export const generate = (url: string, indent: string) => {
+export const generateQRCode = (url: string, indent: string) => {
   const matrix = getMatrix(url);
   const map = { "00": "█", "01": "▀", 10: "▄", 11: " " };
 

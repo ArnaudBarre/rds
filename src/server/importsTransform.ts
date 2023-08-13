@@ -1,14 +1,19 @@
-import { cache } from "./cache";
-import { getHashedUrl, isInnerNode, isJSON, isSVG } from "./utils";
-import { svgCache } from "./svg";
-import { assetsCache } from "./assets";
-import { jsonCache } from "./json";
-import { Scanner } from "./scanner";
-import { dependenciesCache, getDependencyMetadata } from "./dependencies";
-import { Downwind } from "./downwind";
-import { RDSError } from "./errors";
-import { DEPENDENCY_PREFIX, FS_PREFIX, RDS_CLIENT, RDS_PREFIX } from "./consts";
-import { clientUrl } from "./client";
+import { assetsCache } from "./assets.ts";
+import { cache } from "./cache.ts";
+import { clientUrl } from "./client.ts";
+import {
+  DEPENDENCY_PREFIX,
+  FS_PREFIX,
+  RDS_CLIENT,
+  RDS_PREFIX,
+} from "./consts.ts";
+import { dependenciesCache, getDependencyMetadata } from "./dependencies.ts";
+import type { Downwind } from "./downwind.ts";
+import { RDSError } from "./errors.ts";
+import { jsonCache } from "./json.ts";
+import type { Scanner } from "./scanner.ts";
+import { svgCache } from "./svg.ts";
+import { getHashedUrl, isInnerNode, isJSON, isSVG } from "./utils.ts";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
 

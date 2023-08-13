@@ -1,9 +1,9 @@
-import { HMR_HEADER, HMRPayload } from "../hmr";
-import { ErrorOverlay, overlayId } from "./overlay";
-import "./inspector";
-import "./css-devtools";
-import * as RefreshRuntime from "./refresh-runtime";
-import { newStyleSheet } from "./utils";
+import { HMR_HEADER, type HMRPayload } from "../hmr.ts";
+import { ErrorOverlay, overlayId } from "./overlay.ts";
+import "./inspector.ts";
+import "./css-devtools.ts";
+import { RefreshRuntime } from "./refresh-runtime.js";
+import { newStyleSheet } from "./utils.ts";
 
 RefreshRuntime.injectIntoGlobalHook(window);
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -64,7 +64,7 @@ socket.addEventListener("message", ({ data }) => {
       window.location.reload();
       break;
     case "prune-css":
-      payload.paths.forEach(removeStyle);
+      for (const id of payload.paths) removeStyle(id);
       break;
     case "error":
       clearErrorOverlay();

@@ -1,7 +1,7 @@
-import { RDS_OPEN_IN_EDITOR } from "../server/consts";
+import { RDS_OPEN_IN_EDITOR } from "../server/consts.ts";
 
 export const openInEditor = (file: string) => {
-  fetch(`/${RDS_OPEN_IN_EDITOR}?file=${encodeURIComponent(file)}`);
+  void fetch(`/${RDS_OPEN_IN_EDITOR}?file=${encodeURIComponent(file)}`);
 };
 
 export const newStyleSheet = (id: string, content: string) => {

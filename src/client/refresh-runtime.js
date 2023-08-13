@@ -266,7 +266,7 @@ function debounce(fn, delay) {
   };
 }
 
-export const enqueueUpdate = debounce(performReactRefresh, 16);
+const enqueueUpdate = debounce(performReactRefresh, 16);
 
 function register(type, id) {
   if (type === null) {
@@ -313,7 +313,7 @@ function register(type, id) {
   }
 }
 
-export function getRefreshReg(filename) {
+function getRefreshReg(filename) {
   return (type, id) => register(type, filename + " " + id);
 }
 
@@ -355,7 +355,7 @@ function collectCustomHooksForSignature(type) {
   }
 }
 
-export function injectIntoGlobalHook(globalObject) {
+function injectIntoGlobalHook(globalObject) {
   // For React Native, the global hook will be set up by require('react-devtools-core').
   // That code will run before us. So we need to monkeypatch functions on existing hook.
   // For React Web, the global hook will be set up by the extension.
@@ -512,7 +512,7 @@ export function injectIntoGlobalHook(globalObject) {
 //   'useState{[foo, setFoo]}(0)',
 //   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
 // );
-export function createSignatureFunctionForTransform() {
+function createSignatureFunctionForTransform() {
   let savedType;
   let hasCustomHooks;
   let didCollectHooks = false;
@@ -549,3 +549,10 @@ export function createSignatureFunctionForTransform() {
     }
   };
 }
+
+export const RefreshRuntime = {
+  enqueueUpdate,
+  getRefreshReg,
+  injectIntoGlobalHook,
+  createSignatureFunctionForTransform,
+};

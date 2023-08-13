@@ -1,43 +1,48 @@
 {
   "name": "@arnaud-barre/rds",
-  "version": "0.5.4",
+  "private": true,
+  "type": "module",
+  "version": "0.6.0",
   "license": "MIT",
   "scripts": {
     "dev": "scripts/bundle.ts --dev",
     "build": "scripts/bundle.ts",
-    "tsc": "tsc",
+    "tsc": "tsc && tsc -p src/client/tsconfig.json",
     "lint": "bun lint-ci --fix --cache",
     "lint-ci": "eslint src scripts --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "prettier": "bun prettier-ci --write",
     "prettier-ci": "prettier --cache --check '*.{js,json,md}' '{.github,src,scripts}/**/*.{js,ts,yml}' '!**/*.min.js'",
-    "ci": "tsc && bun lint-ci && bun prettier-ci && bun run build && cd template && bun ci"
+    "ci": "tsc && bun lint-ci && bun prettier-ci && bun run build && cd dist && bun link && cd ../template && bun link @arnaud-barre/rds && bun ci"
   },
   "prettier": {
-    "trailingComma": "all"
+    "plugins": [
+      "@arnaud-barre/prettier-plugin-sort-imports"
+    ]
   },
   "peerDependencies": {
-    "@arnaud-barre/downwind": "^0.4.5",
+    "@arnaud-barre/downwind": "^0.6.2",
     "eslint": "^8",
-    "typescript": "^4"
+    "typescript": "^5"
   },
   "dependencies": {
-    "@arnaud-barre/config-loader": "^0.5.3",
-    "@swc/core": "^1.3.35",
+    "@arnaud-barre/config-loader": "^0.7.1",
+    "@swc/core": "^1.3.76",
     "chokidar": "^3.5.3",
-    "es-module-lexer": "^1.1.1",
-    "esbuild": "^0.17.8",
-    "ws": "^8.12.1"
+    "es-module-lexer": "^1.3.1",
+    "esbuild": "^0.19",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
-    "@arnaud-barre/downwind": "^0.4.5",
-    "@arnaud-barre/eslint-config": "^1.0.19",
-    "@nabla/tnode": "^0.9.0",
-    "@types/eslint": "^8.21.1",
-    "@types/node": "^18.14.0",
-    "@types/react": "^18.0.28",
-    "@types/ws": "^8.5.4",
-    "eslint": "^8.34.0",
-    "prettier": "^2.8.4",
-    "typescript": "^4.9.5"
+    "@arnaud-barre/downwind": "^0.6.2",
+    "@arnaud-barre/eslint-config": "^3.1.1",
+    "@arnaud-barre/prettier-plugin-sort-imports": "^0.1.2",
+    "@arnaud-barre/tnode": "^0.19.1",
+    "@types/eslint": "^8.44.3",
+    "@types/node": "^20.4.10",
+    "@types/react": "^18.2.24",
+    "@types/ws": "^8.5.6",
+    "eslint": "^8.50.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
   }
 }

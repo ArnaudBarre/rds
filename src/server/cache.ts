@@ -1,4 +1,4 @@
-import { debugNow, logger } from "./logger";
+import { debugNow, logger } from "./logger.ts";
 
 export const cache = <Value>(name: string, load: (key: string) => Value) => {
   const map = new Map<string, Value>();

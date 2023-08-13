@@ -1,4 +1,4 @@
-import { newStyleSheet, openInEditor } from "./utils";
+import { newStyleSheet, openInEditor } from "./utils.ts";
 
 /** Inspired by https://github.com/ericclemmons/click-to-component */
 
@@ -58,7 +58,7 @@ window.addEventListener("mousemove", (event) => {
   if (event.target === currentTarget) return;
   clearOverlay();
   currentTarget = event.target;
-  event.target.dataset.clickToComponentTarget = "true";
+  event.target.dataset["clickToComponentTarget"] = "true";
 });
 
 window.addEventListener("contextmenu", (event) => {
@@ -126,7 +126,8 @@ const clearOverlay = () => {
   const current = document.querySelector<HTMLElement>(
     "[data-click-to-component-target]",
   );
-  if (current) delete current.dataset.clickToComponentTarget;
+  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+  if (current) delete current.dataset["clickToComponentTarget"];
   currentTarget = undefined;
 };
 

@@ -1,11 +1,11 @@
-import { relative } from "path";
-import { createWatchCompilerHost, createWatchProgram, sys } from "typescript";
+import { relative } from "node:path";
+import ts from "typescript";
 
-createWatchProgram(
-  createWatchCompilerHost(
+ts.createWatchProgram(
+  ts.createWatchCompilerHost(
     "tsconfig.json",
     undefined,
-    sys,
+    ts.sys,
     undefined,
     (log) => {
       const message =

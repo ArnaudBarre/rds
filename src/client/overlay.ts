@@ -1,5 +1,5 @@
-import type { RDSErrorPayload } from "../hmr";
-import { openInEditor } from "./utils";
+import type { RDSErrorPayload } from "../hmr.ts";
+import { openInEditor } from "./utils.ts";
 
 const template = /* html */ `
 <style>

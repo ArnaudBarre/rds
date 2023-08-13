@@ -1,10 +1,9 @@
-import { readFileSync } from "fs";
-
-import { createServer } from "./createServer";
-import { startServer } from "./startServer";
-import { getExtension } from "./utils";
-import { Extension } from "./mimeTypes";
-import { commandWrapper } from "./commandWrapper";
+import { readFileSync } from "node:fs";
+import { commandWrapper } from "./commandWrapper.ts";
+import { createServer } from "./createServer.ts";
+import type { Extension } from "./mimeTypes.ts";
+import { startServer } from "./startServer.ts";
+import { getExtension } from "./utils.ts";
 
 export const main = commandWrapper(async (config) => {
   const server = createServer(config, (url) => {

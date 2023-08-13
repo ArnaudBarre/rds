@@ -1,4 +1,4 @@
-import { writeFileSync } from "fs";
+import { writeFileSync } from "node:fs";
 
 export const stopProfiler = () => {
   if (global.__rds_profile_session) {

@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, promises } from "fs";
-import { dirname, extname, join } from "path";
+import { existsSync, promises, readFileSync } from "node:fs";
+import { dirname, extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { getHash } from "@arnaud-barre/config-loader";
 
 export const isCSS = (path: string) => path.endsWith(".css");
@@ -18,6 +19,9 @@ export const readFileAsync = (path: string) => promises.readFile(path, "utf-8");
 
 export const cacheDir = "node_modules/.rds";
 export const readCacheFile = (path: string) => readFile(join(cacheDir, path));
+
+export const getPathFromServerOutput = (path: string) =>
+  join(dirname(fileURLToPath(import.meta.url)), path);
 
 export const run = <T>(cb: () => T) => cb();
 

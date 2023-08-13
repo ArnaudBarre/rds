@@ -1,17 +1,18 @@
 module.exports = {
   root: true,
   extends: ["@arnaud-barre"],
+  parserOptions: {
+    project: ["./tsconfig.json", "./src/client/tsconfig.json"],
+  },
   rules: {
     "require-unicode-regexp": "off",
-    "@typescript-eslint/no-require-imports": "off",
     "no-param-reassign": "off",
   },
   overrides: [
     {
       files: "src/client.d.ts",
       rules: {
-        "import/no-unresolved": "off",
-        "import/no-default-export": "off",
+        "@arnaud-barre/no-default-export": "off",
       },
     },
   ],

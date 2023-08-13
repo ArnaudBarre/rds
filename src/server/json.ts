@@ -1,5 +1,5 @@
-import { cache } from "./cache";
-import { readFile } from "./utils";
+import { cache } from "./cache.ts";
+import { readFile } from "./utils.ts";
 
 export const jsonCache = cache(
   "json",

@@ -1,17 +1,15 @@
-import { readFileSync, rmSync, writeFileSync } from "fs";
-import { join } from "path";
-import { build, BuildResult, Metafile } from "esbuild";
-import { execSync } from "child_process";
+import { cpSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { logEsbuildErrors } from "@arnaud-barre/config-loader";
 import { downwind } from "@arnaud-barre/downwind/esbuild";
-
-import { svgToJS } from "./svgToJS";
-import { colors } from "./colors";
-import { readFile } from "./utils";
-import { esbuildFilesLoaders } from "./mimeTypes";
-import { ENTRY_POINT } from "./consts";
-import { stopProfiler } from "./stopProfiler";
-import { commandWrapper } from "./commandWrapper";
+import { build, type BuildResult, type Metafile } from "esbuild";
+import { colors } from "./colors.ts";
+import { commandWrapper } from "./commandWrapper.ts";
+import { ENTRY_POINT } from "./consts.ts";
+import { esbuildFilesLoaders } from "./mimeTypes.ts";
+import { stopProfiler } from "./stopProfiler.ts";
+import { svgToJS } from "./svgToJS.ts";
+import { readFile } from "./utils.ts";
 
 export const main = commandWrapper(async (config) => {
   if (config.build.emptyOutDir) {
@@ -86,7 +84,7 @@ export const main = commandWrapper(async (config) => {
   }
   logEsbuildErrors(bundleResult);
 
-  execSync("cp -r public/ dist", { shell: "/bin/bash" });
+  cpSync("public", "dist", { recursive: true });
 
   const outputs = Object.entries(bundleResult.metafile.outputs);
   const jsEntryPoint = outputs.find(([p]) => p.endsWith(".js"))!;
@@ -118,7 +116,7 @@ export const main = commandWrapper(async (config) => {
   }
   files.sort((a, z) => a.bytes - z.bytes);
   const maxFileSize = Math.trunc(Math.log10(files.at(-1)!.bytes)) + 1;
-  files.forEach(({ path, bytes }) => {
+  for (const { path, bytes } of files) {
     const printer = path.endsWith(".css")
       ? colors.magenta
       : path.endsWith(".js")
@@ -129,6 +127,6 @@ export const main = commandWrapper(async (config) => {
         printer(path.slice(5).padEnd(longest - 3)) +
         colors.dim(`${(bytes / 1e3).toFixed(2).padStart(maxFileSize)} kB`),
     );
-  });
+  }
   stopProfiler();
 });

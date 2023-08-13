@@ -1,5 +1,5 @@
-import { Extension } from "./mimeTypes";
-import { Session } from "inspector";
+import { Session } from "node:inspector";
+import type { Extension } from "./mimeTypes.ts";
 
 export type LoadedFile = {
   content: string | Buffer;

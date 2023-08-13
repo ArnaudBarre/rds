@@ -1,7 +1,7 @@
-import { loadConfig, ResolvedConfig } from "./loadConfig";
-import { InlineConfig } from "../types";
-import { RDSError } from "./errors";
-import { logger } from "./logger";
+import type { InlineConfig } from "../types.d.ts";
+import { RDSError } from "./errors.ts";
+import { loadConfig, type ResolvedConfig } from "./loadConfig.ts";
+import { logger } from "./logger.ts";
 
 export const commandWrapper =
   <T>(main: (config: ResolvedConfig) => Promise<T>) =>

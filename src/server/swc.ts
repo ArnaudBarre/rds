@@ -1,22 +1,21 @@
 import {
-  readdirSync,
-  writeFileSync,
-  promises,
   existsSync,
   mkdirSync,
-} from "fs";
-import { extname, join } from "path";
-import type { SourceMapPayload } from "module";
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import type { SourceMapPayload } from "node:module";
+import { extname, join } from "node:path";
 import { jsonCache } from "@arnaud-barre/config-loader";
-import { ParserConfig, transformFileSync, version } from "@swc/core";
+import { type ParserConfig, transformFileSync, version } from "@swc/core";
 import { init } from "es-module-lexer";
-
-import { cacheDir, readFile, readFileAsync, run } from "./utils";
-import { ResolvedConfig } from "./loadConfig";
-import { codeToFrame, RDSError } from "./errors";
-import { debugNow, logger } from "./logger";
-import { JSImport, scanImports } from "./scanImports";
-import { RDS_CLIENT } from "./consts";
+import { RDS_CLIENT } from "./consts.ts";
+import { codeToFrame, RDSError } from "./errors.ts";
+import type { ResolvedConfig } from "./loadConfig.ts";
+import { debugNow, logger } from "./logger.ts";
+import { type JSImport, scanImports } from "./scanImports.ts";
+import { cacheDir, readFile, readFileAsync, run } from "./utils.ts";
 
 export type SWCCache = Awaited<ReturnType<typeof initSWC>>;
 
@@ -203,7 +202,7 @@ RefreshRuntime.enqueueUpdate();
     },
     delete: (url: string) => {
       logger.debug(`swc: delete - ${url}`);
-      promises.rm(toCachePah(url));
+      rmSync(toCachePah(url));
     },
   };
 };

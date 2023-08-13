@@ -1,14 +1,13 @@
-import { readFileSync, statSync } from "fs";
-import { dirname, join } from "path";
-import { build } from "esbuild";
+import { readFileSync, statSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { getHash, jsonCache } from "@arnaud-barre/config-loader";
-
-import { cache } from "./cache";
-import { cacheDir, lookup, readCacheFile } from "./utils";
-import { colors } from "./colors";
-import { debugNow, logger } from "./logger";
-import { RDSError } from "./errors";
-import { DEPENDENCY_PREFIX, RDS_PREFIX } from "./consts";
+import { build } from "esbuild";
+import { cache } from "./cache.ts";
+import { colors } from "./colors.ts";
+import { DEPENDENCY_PREFIX, RDS_PREFIX } from "./consts.ts";
+import { RDSError } from "./errors.ts";
+import { debugNow, logger } from "./logger.ts";
+import { cacheDir, lookup, readCacheFile } from "./utils.ts";
 
 const dependencies = new Map<string, string>();
 
@@ -142,7 +141,6 @@ export const dependenciesCache = cache("dependencies", (dependency) => {
         );
         const updatedPath = join(dirname(dependency), path);
         content =
-          // eslint-disable-next-line prefer-template
           content.slice(0, sourceMapIndex) +
           `# sourceMappingURL=/${DEPENDENCY_PREFIX}/${updatedPath}` +
           content.slice(dotMapIndex);

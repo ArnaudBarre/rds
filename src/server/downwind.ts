@@ -1,19 +1,18 @@
 import {
   convertTargets,
   cssModuleToJS,
-  initDownwind,
   DownwindError,
+  initDownwind,
 } from "@arnaud-barre/downwind";
-import { CSSModuleExports } from "lightningcss";
 import { watch } from "chokidar";
-
-import { cache } from "./cache";
-import { run } from "./utils";
-import { codeToFrame, RDSError } from "./errors";
-import { resolve } from "./resolve";
-import { clientUrl } from "./client";
-import { debugNow, logger } from "./logger";
-import { colors } from "./colors";
+import type { CSSModuleExports } from "lightningcss";
+import { cache } from "./cache.ts";
+import { clientUrl } from "./client.ts";
+import { colors } from "./colors.ts";
+import { codeToFrame, RDSError } from "./errors.ts";
+import { debugNow, logger } from "./logger.ts";
+import { resolve } from "./resolve.ts";
+import { run } from "./utils.ts";
 
 export type Downwind = Awaited<ReturnType<typeof getDownwind>>;
 export type CSSImport = [resolvedUrl: string, placeholder: string];

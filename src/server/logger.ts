@@ -1,9 +1,8 @@
-import { BuildResult } from "esbuild";
 import { logEsbuildErrors } from "@arnaud-barre/config-loader";
-
-import { RDSErrorPayload } from "../hmr";
-import { colors } from "./colors";
-import { run } from "./utils";
+import type { BuildResult } from "esbuild";
+import type { RDSErrorPayload } from "../hmr.ts";
+import { colors } from "./colors.ts";
+import { run } from "./utils.ts";
 
 export const isDebug = process.argv.includes("--debug");
 
@@ -72,7 +71,6 @@ export const logger: {
   rdsError: (error) => {
     ensureNewLine();
     console.log(
-      // eslint-disable-next-line prefer-template
       colors.cyan(error.file.includes(":") ? error.file : `${error.file}:1:1`) +
         " " +
         colors.red(error.message),

@@ -1,4 +1,4 @@
-import { RDSErrorPayload } from "../hmr";
+import type { RDSErrorPayload } from "../hmr.ts";
 
 export class RDSError extends Error {
   payload: RDSErrorPayload;
