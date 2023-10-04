@@ -25,7 +25,6 @@ export const loadConfig = async (
       host: false,
       qrCode: false,
       ...mergedConfig.server,
-      eslint: { cache: true, fix: false, ...mergedConfig.server?.eslint },
       proxy: proxyUrl
         ? {
             host: proxyUrl.hostname,
@@ -36,6 +35,7 @@ export const loadConfig = async (
         : undefined,
     },
     define: mergedConfig.define ?? {},
+    plugins: mergedConfig.plugins ?? [],
     build: {
       emptyOutDir: mergedConfig.build?.emptyOutDir ?? true,
       // https://github.com/vitejs/vite/blob/main/packages/vite/src/node/constants.ts#L14-L23

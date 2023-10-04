@@ -12,15 +12,15 @@ import type { WS } from "./ws.ts";
 export type Scanner = ReturnType<typeof initScanner>;
 
 export const initScanner = ({
-  downwind,
-  swcCache,
-  lintFile,
+  ws,
+  // downwind,
+  // swcCache,
   watchFile,
   ws,
 }: {
+  ws: WS;
   downwind: Downwind;
   swcCache: SWCCache;
-  lintFile: (path: string) => void;
   watchFile: (path: string) => void;
   ws: WS;
 }) => {
@@ -49,7 +49,6 @@ export const initScanner = ({
       graphNode.imports = imports.map((i) => i[0]);
       output = { isCSS: true, code, imports };
     } else {
-      lintFile(url);
       downwind.scanCache.get(url);
       const oldSrcImports = graphNode.imports;
       const { code, imports, selfUpdate } = swcCache.get(url, true);

@@ -52,7 +52,7 @@ export const initWS = () => {
         for (const client of wss.clients) client.terminate();
         wss.close((err) => {
           if (err) reject(err);
-          resolve();
+          else resolve();
         });
       }),
   };

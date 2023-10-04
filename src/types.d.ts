@@ -1,4 +1,18 @@
 import { DefineConfig } from "@arnaud-barre/config-loader";
+import { Plugin, PluginBuild } from "esbuild";
+
+export type RDSPlugin = {
+  dev?: {
+    name: string;
+    setup: (build: {
+      onStart: (callback: () => void) => void;
+      onResolve: PluginBuild["onResolve"];
+      onLoad: PluginBuild["onLoad"];
+      onDispose: (callback: () => void) => void;
+    }) => void | Promise<void>;
+  };
+  build?: Plugin;
+};
 
 type UserConfig = {
   server?: {
@@ -34,11 +48,6 @@ type UserConfig = {
      */
     qrCode?: boolean;
     /**
-     * Option for the eslint worker (start only)
-     * @default { cache: true; fix: false }
-     */
-    eslint?: { cache?: boolean; fix?: boolean };
-    /**
      * If set, configure where /api/* requests are redirect
      */
     proxy?: {
@@ -54,6 +63,7 @@ type UserConfig = {
    * process.env.NODE_ENV will be set to "development" in dev and "production" during build.
    */
   define?: Record<string, string>;
+  plugins?: RDSPlugin[];
   build?: {
     /** @default true */
     emptyOutDir?: boolean;

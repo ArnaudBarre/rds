@@ -14,12 +14,11 @@ import { isCSS, isJS, isJSON, isSVG } from "./utils.ts";
 import type { WS } from "./ws.ts";
 
 export const setupHmr = ({
-  downwind,
+  // downwind,
   srcWatcher,
-  swcCache,
+  // swcCache,
   scanner,
   importsTransform,
-  lintFile,
   ws,
 }: {
   downwind: Downwind;
@@ -27,7 +26,6 @@ export const setupHmr = ({
   swcCache: SWCCache;
   scanner: Scanner;
   importsTransform: ImportsTransform;
-  lintFile: (path: string) => void;
   ws: WS;
 }) => {
   const invalidate = (node: GraphNode) => {
@@ -82,7 +80,7 @@ export const setupHmr = ({
       logger.debug(`change ${path}`);
       if (clearCache(path, true)) {
         // Type or whitespace only change, but can impact lint result
-        lintFile(path);
+        // lintFile(path);
         return;
       }
       const graphNode = scanner.graph.get(path)!;

@@ -19,8 +19,8 @@ export type ImportsTransform = ReturnType<typeof initImportsTransform>;
 
 export const initImportsTransform = ({
   scanner,
-  downwind,
-}: {
+} // downwind,
+: {
   scanner: Scanner;
   downwind: Downwind;
 }) => {

@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync } from "node:fs";
 import type { IncomingMessage } from "node:http";
-import { Worker } from "node:worker_threads";
 import { watch } from "chokidar";
+import type { PluginBuild } from "esbuild";
+import type { RDSPlugin } from "../types.d.ts";
 import { assetsCache } from "./assets.ts";
 import { clientCode, clientUrl } from "./client.ts";
 import { colors } from "./colors.ts";
@@ -34,7 +35,6 @@ import {
   cacheDir,
   getExtension,
   getHashedUrl,
-  getPathFromServerOutput,
   isCSS,
   isJS,
   isJSON,
@@ -49,22 +49,38 @@ export const main = commandWrapper(async (config) => {
     ignoreInitial: true,
     disableGlobbing: true,
   });
-  // eslint-disable-next-line no-new
-  new Worker(getPathFromServerOutput("./tscWorker"));
-  const eslintWorker = new Worker(getPathFromServerOutput("./eslintWorker"), {
-    workerData: config.server.eslint,
-  });
-  const lintFile = (path: string) => eslintWorker.postMessage(path);
-
-  if (!existsSync(cacheDir)) mkdirSync(cacheDir);
+  const watchFile = (path: string) => srcWatcher.add(path);
   const ws = initWS();
+  if (!existsSync(cacheDir)) mkdirSync(cacheDir);
+
+  const startCallbacks: (() => void)[] = [];
+  const resolveCallbacks: Parameters<PluginBuild["onResolve"]>[] = [];
+  const loadCallbacks: Parameters<PluginBuild["onLoad"]>[] = [];
+  const disposeCallbacks: (() => void)[] = [];
+  const pluginBuild: Parameters<NonNullable<RDSPlugin["dev"]>["setup"]>[0] = {
+    onStart(cb) {
+      startCallbacks.push(cb);
+    },
+    onResolve(options, callback) {
+      resolveCallbacks.push([options, callback]);
+    },
+    onLoad(options, callback) {
+      loadCallbacks.push([options, callback]);
+    },
+    onDispose(cb) {
+      disposeCallbacks.push(cb);
+    },
+  };
+  for (const plugin of config.plugins) await plugin.dev?.setup(pluginBuild);
+
+  await Promise.all(startCallbacks.map((cb) => cb()));
+
   const swcCache = await initSWC(config);
   const scanner = initScanner({
+    ws,
     downwind,
     swcCache,
-    lintFile,
-    watchFile: (path) => srcWatcher.add(path),
-    ws,
+    watchFile,
   });
   scanner.get(ENTRY_POINT);
   await bundleDependencies(config.build.target);
@@ -79,7 +95,6 @@ export const main = commandWrapper(async (config) => {
     swcCache,
     scanner,
     importsTransform,
-    lintFile,
     ws,
   });
   downwind.onUtilsUpdate((from) => {
@@ -214,6 +229,7 @@ export const main = commandWrapper(async (config) => {
   await startServer(server, config);
 
   return async () => {
+    await Promise.all(disposeCallbacks.map((cb) => cb()));
     await srcWatcher.close();
     await downwind.closeConfigWatcher();
     await publicWatcher.close();

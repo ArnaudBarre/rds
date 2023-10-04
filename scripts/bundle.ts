@@ -34,8 +34,10 @@ await Promise.all([
     entryPoints: [
       "src/server/index.ts",
       "src/server/cli.ts",
-      "src/server/tscWorker.ts",
-      "src/server/eslintWorker.ts",
+      "src/server/plugins/eslint/eslintPlugin.ts",
+      "src/server/plugins/eslint/eslintWorker.ts",
+      "src/server/plugins/tscWatch/tscWatchPlugin.ts",
+      "src/server/plugins/tscWatch/tscWatchWorker.ts",
     ],
     external: [
       ...Object.keys(packageJSON.peerDependencies),
@@ -98,4 +100,4 @@ writeFileSync(
 );
 
 // eslint-disable-next-line no-new
-if (dev) new Worker(`./${outdir}/server/tscWorker`);
+if (dev) new Worker(`./${outdir}/server/plugins/tscWatch/tscWatchWorker`);
