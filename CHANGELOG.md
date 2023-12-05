@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1
+
+- Add `build.downwindIntervalCheckMs` to config
+
 ## 0.7.0
 
 - Downwind 0.7

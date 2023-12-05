@@ -67,6 +67,10 @@ type UserConfig = {
      * @default false
      */
     metafile?: boolean;
+    /**
+     * Pass to downwind, number of millisecond to wait without new scan before generating utils
+     */
+    downwindIntervalCheckMs?: number;
   };
 };
 

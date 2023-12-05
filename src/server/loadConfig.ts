@@ -47,6 +47,7 @@ export const loadConfig = async (
         "safari13",
       ],
       metafile: mergedConfig.build?.metafile ?? false,
+      downwindIntervalCheckMs: mergedConfig.build?.downwindIntervalCheckMs,
     },
   };
   logger.debug(`Load config: ${(debugNow() - start).toFixed(2)}ms`);

@@ -36,7 +36,7 @@ export const main = commandWrapper(async (config) => {
       entryNames: "[name].[hash]",
       loader: esbuildFilesLoaders,
       plugins: [
-        downwind(),
+        downwind({ intervalCheckMs: config.build.downwindIntervalCheckMs }),
         {
           name: "svg",
           setup: (pluginBuild) => {
