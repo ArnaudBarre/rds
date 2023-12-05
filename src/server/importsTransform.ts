@@ -1,6 +1,5 @@
 import { assetsCache } from "./assets.ts";
 import { cache } from "./cache.ts";
-import { clientUrl } from "./client.ts";
 import {
   DEPENDENCY_PREFIX,
   FS_PREFIX,
@@ -13,7 +12,7 @@ import { RDSError } from "./errors.ts";
 import { jsonCache } from "./json.ts";
 import type { Scanner } from "./scanner.ts";
 import { svgCache } from "./svg.ts";
-import { getHashedUrl, isInnerNode, isJSON, isSVG } from "./utils.ts";
+import { getHashedUrl, isInnerNode, isJSON, isSVG, run } from "./utils.ts";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
 
@@ -49,28 +48,23 @@ export const initImportsTransform = ({
       const imp = scanResult.imports[i];
       if (imp.dep) {
         if (imp.n.startsWith("virtual:") || imp.n.startsWith(RDS_PREFIX)) {
-          if (imp.n === "virtual:@downwind/utils.css") {
-            output =
-              getHashedUrl("virtual:@downwind/utils.css", downwind.generate()) +
-              content.slice(imp.e, index) +
-              output;
-            index = imp.s;
-            continue;
-          }
-          if (imp.n === "virtual:@downwind/base.css") {
-            output =
-              getHashedUrl("virtual:@downwind/base.css", downwind.getBase()) +
-              content.slice(imp.e, index) +
-              output;
-            index = imp.s;
-            continue;
-          }
-          if (imp.n === RDS_CLIENT) {
-            output = clientUrl + content.slice(imp.e, index) + output;
-            index = imp.s;
-            continue;
-          }
-          throw new Error(`Unhandled entry "${imp.n}"`);
+          const esmURL = run(() => {
+            switch (imp.n) {
+              case "virtual:@downwind/utils.css":
+                return getHashedUrl(imp.n, downwind.generate());
+              case "virtual:@downwind/base.css":
+                return getHashedUrl(imp.n, downwind.getBase());
+              case "virtual:@downwind/devtools":
+                return getHashedUrl(imp.n, downwind.devtoolsGenerate());
+              case RDS_CLIENT:
+                return `/${RDS_CLIENT}`;
+              default:
+                throw new Error(`Unhandled entry "${imp.n}"`);
+            }
+          });
+          output = esmURL + content.slice(imp.e, index) + output;
+          index = imp.s;
+          continue;
         }
         const depMetadata = getDependencyMetadata(imp.n);
         if (!depMetadata) {

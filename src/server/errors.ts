@@ -15,3 +15,13 @@ export const codeToFrame = (code: string, line: number | null) => {
   const padding = " ".repeat(length + 1);
   return `${padding}|\n${line ?? "?"} | ${code}\n${padding}|`;
 };
+
+export const getFrameForLine = (code: string, line: number) => {
+  let index = 0;
+  let currentLine = 1;
+  while (currentLine !== line) {
+    index = code.indexOf("\n", index) + 1;
+    currentLine++;
+  }
+  return codeToFrame(code.slice(index, code.indexOf("\n", index)), line);
+};

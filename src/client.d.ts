@@ -12,7 +12,7 @@ declare module "*.json?url" {
 
 // SVG
 declare module "*.svg" {
-  import { FunctionComponent, SVGProps } from "react";
+  import type { FunctionComponent, SVGProps } from "react";
   const ReactComponent: FunctionComponent<
     SVGProps<SVGSVGElement> & { title?: string }
   >;

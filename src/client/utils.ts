@@ -9,6 +9,5 @@ export const newStyleSheet = (id: string, content: string) => {
   newStyle.setAttribute("type", "text/css");
   newStyle.setAttribute("data-id", id);
   newStyle.innerHTML = content;
-  document.head.appendChild(newStyle);
   return newStyle;
 };

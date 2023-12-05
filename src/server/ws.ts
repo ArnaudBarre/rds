@@ -1,5 +1,5 @@
-import { IncomingMessage } from "node:http";
-import { Duplex } from "node:stream";
+import type { IncomingMessage } from "node:http";
+import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
 import { HMR_HEADER, type HMRPayload, type RDSErrorPayload } from "../hmr.ts";
 import { colors } from "./colors.ts";

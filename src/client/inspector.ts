@@ -2,7 +2,7 @@ import { newStyleSheet, openInEditor } from "./utils.ts";
 
 /** Inspired by https://github.com/ericclemmons/click-to-component */
 
-newStyleSheet(
+const style = newStyleSheet(
   "click-to-component",
   `[data-click-to-component-target] {
   outline: auto 1px !important;
@@ -35,6 +35,7 @@ newStyleSheet(
 }
 `,
 );
+document.head.appendChild(style);
 
 let currentTarget: HTMLElement | undefined;
 let hasMenu = false;

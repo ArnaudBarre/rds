@@ -1,5 +1,5 @@
 import { exec } from "node:child_process";
-import { Server as HttpServer } from "node:http";
+import type { Server as HttpServer } from "node:http";
 import type { Socket } from "node:net";
 import { networkInterfaces } from "node:os";
 import { colors } from "./colors.ts";

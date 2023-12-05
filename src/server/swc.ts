@@ -60,12 +60,7 @@ export const initSWC = async (config: ResolvedConfig) => {
             target: "es2020",
             parser: parserMap[extname(url)],
             transform: {
-              react: {
-                refresh: true,
-                development: true,
-                useBuiltins: true,
-                runtime: "automatic",
-              },
+              react: { refresh: true, development: true, runtime: "automatic" },
               optimizer: {
                 globals: {
                   vars: {

@@ -1,4 +1,4 @@
-import { FSWatcher } from "chokidar";
+import type { FSWatcher } from "chokidar";
 import { assetsCache } from "./assets.ts";
 import { colors } from "./colors.ts";
 import type { Downwind } from "./downwind.ts";
@@ -76,6 +76,7 @@ export const setupHmr = ({
 
   const successPaths = new Set<string>();
   const errorPaths = new Set<string>();
+  let currentCSSList = scanner.getCSSList();
 
   srcWatcher
     .on("change", (path) => {
@@ -121,13 +122,17 @@ export const setupHmr = ({
         }
         if (hasError) return;
         ws.send({ type: "update", paths: Array.from(successPaths) });
+        const newCSSList = scanner.getCSSList();
+        if (JSON.stringify(currentCSSList) !== JSON.stringify(newCSSList)) {
+          currentCSSList = newCSSList;
+          ws.send({ type: "css-list-update", paths: newCSSList });
+        }
         errorPaths.clear();
         successPaths.clear();
       }
     })
     .on("unlink", (path) => {
       logger.debug(`unlink ${path}`);
-      if (isCSS(path)) ws.send({ type: "prune-css", paths: [path] });
       clearCache(path, false);
       const node = scanner.graph.get(path)!;
       invalidate(node);

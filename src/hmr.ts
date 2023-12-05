@@ -3,7 +3,7 @@ export const HMR_HEADER = "rds-hmr";
 export type HMRPayload =
   | { type: "connected" }
   | { type: "update"; paths: string[] }
-  | { type: "prune-css"; paths: string[] }
+  | { type: "css-list-update"; paths: string[] }
   | { type: "reload" }
   | { type: "error"; error: RDSErrorPayload };
 

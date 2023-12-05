@@ -1,8 +1,8 @@
 import {
   createServer as createHTTPServer,
-  IncomingMessage,
+  type IncomingMessage,
   request,
-  ServerResponse,
+  type ServerResponse,
 } from "node:http";
 import { getHash } from "@arnaud-barre/config-loader";
 import type { ResolvedConfig } from "./loadConfig.ts";

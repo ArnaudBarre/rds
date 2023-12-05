@@ -86,19 +86,40 @@ export const main = commandWrapper(async (config) => {
 
   cpSync("public", "dist", { recursive: true });
 
-  const outputs = Object.entries(bundleResult.metafile.outputs);
-  const jsEntryPoint = outputs.find(([p]) => p.endsWith(".js"))!;
+  const outputs = bundleResult.metafile.outputs;
+  let jsEntryPoint: string | undefined;
+  const secondaryCssOutputs: string[] = [];
+  for (const outputPath in outputs) {
+    if (outputPath.endsWith(".js")) {
+      if (jsEntryPoint) {
+        const { cssBundle } = outputs[outputPath];
+        if (cssBundle) secondaryCssOutputs.push(cssBundle);
+      } else {
+        jsEntryPoint = outputPath;
+      }
+    }
+  }
+  for (const cssPath of secondaryCssOutputs) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete outputs[cssPath];
+    rmSync(cssPath);
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete outputs[`${cssPath}.map`];
+    rmSync(`${cssPath}.map`);
+  }
+
+  const jsOutputMetadata = outputs[jsEntryPoint!];
   const jsImports = [
-    ...jsEntryPoint[1].imports
+    ...jsOutputMetadata.imports
       .filter((i) => i.kind === "import-statement")
       .map((i) => i.path.slice(4)),
-    jsEntryPoint[0].slice(4),
+    jsEntryPoint!.slice(4),
   ]
     .map((path) => `<script type="module" src="${path}"></script>`)
     .join("\n    ");
   const html = readFileSync("dist/index.html", "utf-8").replace(
     "</head>",
-    `  <link rel="stylesheet" href="${jsEntryPoint[1].cssBundle!.slice(4)}">
+    `  <link rel="stylesheet" href="${jsOutputMetadata.cssBundle!.slice(4)}">
     ${jsImports}
   </head>`,
   );
@@ -109,10 +130,10 @@ export const main = commandWrapper(async (config) => {
 
   const files = [{ path: "dist/index.html", bytes: Buffer.byteLength(html) }];
   let longest = 0;
-  for (const [path, { bytes }] of outputs) {
+  for (const path in outputs) {
     if (path.endsWith(".map")) continue;
     if (path.length > longest) longest = path.length;
-    files.push({ path, bytes });
+    files.push({ path, bytes: outputs[path].bytes });
   }
   files.sort((a, z) => a.bytes - z.bytes);
   const maxFileSize = Math.trunc(Math.log10(files.at(-1)!.bytes)) + 1;

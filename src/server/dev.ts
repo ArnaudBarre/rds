@@ -3,7 +3,7 @@ import type { IncomingMessage } from "node:http";
 import { Worker } from "node:worker_threads";
 import { watch } from "chokidar";
 import { assetsCache } from "./assets.ts";
-import { clientCode, clientUrl } from "./client.ts";
+import { clientCode } from "./client.ts";
 import { colors } from "./colors.ts";
 import { commandWrapper } from "./commandWrapper.ts";
 import {
@@ -64,7 +64,6 @@ export const main = commandWrapper(async (config) => {
     swcCache,
     lintFile,
     watchFile: (path) => srcWatcher.add(path),
-    ws,
   });
   scanner.get(ENTRY_POINT);
   await bundleDependencies(config.build.target);
@@ -98,9 +97,7 @@ export const main = commandWrapper(async (config) => {
     importsTransform.get(ENTRY_POINT);
     logger.info(
       colors.green("hmr update ") +
-        colors.dim(
-          [...changedCSS, "virtual:@downwind/devtools.css"].join(", "),
-        ),
+        colors.dim([...changedCSS, "virtual:@downwind/devtools"].join(", ")),
     );
     ws.send({
       type: "update",
@@ -108,17 +105,23 @@ export const main = commandWrapper(async (config) => {
         ...changedCSS.map((path) =>
           getHashedUrl(`${FS_PREFIX}/${path}`, importsTransform.get(path)),
         ),
-        getHashedUrl(
-          "virtual:@downwind/devtools.css",
-          downwind.devtoolsGenerate(),
-        ),
+        getHashedUrl("virtual:@downwind/devtools", downwind.devtoolsGenerate()),
       ],
     });
   });
 
   const server = createServer(config, (url, searchParams, res) => {
     if (url.startsWith(RDS_PREFIX)) {
-      if (url === RDS_CLIENT) return cachedJS(clientCode);
+      if (url === RDS_CLIENT) {
+        return {
+          type: "js",
+          content:
+            clientCode +
+            `\nlet orderedStylesList = ${JSON.stringify(scanner.getCSSList())}`,
+          // Not using hash because the browser serves a cached index.html on history back
+          browserCache: false,
+        };
+      }
       if (url === RDS_OPEN_IN_EDITOR) {
         openInEditor(searchParams.get("file")!);
         return;
@@ -141,12 +144,12 @@ export const main = commandWrapper(async (config) => {
 
     if (url.startsWith(FS_PREFIX)) {
       const path = url.slice(FS_PREFIX.length + 1);
-      if (isJS(url) || isCSS(url)) return cachedJS(importsTransform.get(path));
-      if (isSVG(url) && !searchParams.has("url")) {
-        return cachedJS(svgCache.get(path));
+      if (isJS(url) || isCSS(url)) {
+        return js(importsTransform.get(path), searchParams.has("h"));
       }
+      if (isSVG(url) && !searchParams.has("url")) return js(svgCache.get(path));
       if (isJSON(url) && !searchParams.has("url")) {
-        return cachedJS(jsonCache.get(path));
+        return js(jsonCache.get(path));
       }
       return {
         type: getExtension(url) as Extension,
@@ -156,14 +159,10 @@ export const main = commandWrapper(async (config) => {
     }
 
     if (url.startsWith("virtual:")) {
-      if (url === "virtual:@downwind/base.css") {
-        return cachedJS(downwind.getBase());
-      }
-      if (url === "virtual:@downwind/utils.css") {
-        return cachedJS(downwind.generate());
-      }
-      if (url === "virtual:@downwind/devtools.css") {
-        return cachedJS(downwind.devtoolsGenerate());
+      if (url === "virtual:@downwind/base.css") return js(downwind.getBase());
+      if (url === "virtual:@downwind/utils.css") return js(downwind.generate());
+      if (url === "virtual:@downwind/devtools") {
+        return js(downwind.devtoolsGenerate());
       }
       throw new Error(`Unexpect entry point: ${url}`);
     }
@@ -174,7 +173,7 @@ export const main = commandWrapper(async (config) => {
         const content = readCacheFile(path);
         return { type: "json", content, browserCache: false };
       }
-      return cachedJS(dependenciesCache.get(path));
+      return js(dependenciesCache.get(path));
     }
 
     if (url.includes(".")) {
@@ -187,24 +186,19 @@ export const main = commandWrapper(async (config) => {
     }
 
     const content = publicFilesCache.get("index.html");
-    const entryUrl = importsTransform.toHashedUrl(ENTRY_POINT);
-    const devtoolsUrl = getHashedUrl(
-      "virtual:@downwind/devtools.css",
-      downwind.devtoolsGenerate(),
-    );
+    // Not using hash urls here because the browser serves a cached index.html on history back
     return {
       type: "html",
       content: content
         .toString()
         .replace(
           "</head>",
-          `  <script type="module" src="${clientUrl}"></script>
-    <script type="module" src="${devtoolsUrl}"></script>
+          `  <script type="module" src="/${RDS_CLIENT}"></script>
   </head>`,
         )
         .replace(
           "</body>",
-          `  <script type="module" src="${entryUrl}"></script>\n  </body>`,
+          `  <script type="module" src="${FS_PREFIX}/${ENTRY_POINT}"></script>\n  </body>`,
         ),
       browserCache: false,
     };
@@ -222,10 +216,10 @@ export const main = commandWrapper(async (config) => {
   };
 });
 
-const cachedJS = (content: string | Buffer): LoadedFile => ({
+const js = (content: string | Buffer, browserCache = true): LoadedFile => ({
   type: "js",
   content,
-  browserCache: true,
+  browserCache,
 });
 
 const getBodyJson = <T>(req: IncomingMessage) =>

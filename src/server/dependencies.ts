@@ -110,7 +110,8 @@ export const bundleDependencies = async (target: string[]) => {
     if (dep.endsWith(".css")) {
       metadata.deps[dep] = { needInterop: false };
     } else {
-      const { exports } = output[join(cacheDir, `${dep}.js`)];
+      const { exports } =
+        output[join(cacheDir, dep.endsWith(".js") ? dep : `${dep}.js`)];
       metadata.deps[dep] = {
         needInterop:
           exports.length === 0 ||

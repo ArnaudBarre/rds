@@ -63,8 +63,19 @@ socket.addEventListener("message", ({ data }) => {
     case "reload":
       window.location.reload();
       break;
-    case "prune-css":
-      for (const id of payload.paths) removeStyle(id);
+    case "css-list-update":
+      orderedStylesList = payload.paths;
+      for (const node of document.head.querySelectorAll("[data-id]")) {
+        const id = node.getAttribute("data-id")!;
+        if (id.endsWith(".css")) {
+          const style = stylesMap.get(id);
+          if (style) document.head.removeChild(style);
+        }
+      }
+      for (const id of orderedStylesList) {
+        const style = stylesMap.get(id);
+        if (style) document.head.appendChild(style);
+      }
       break;
     case "error":
       clearErrorOverlay();
@@ -90,6 +101,9 @@ socket.addEventListener("close", async ({ wasClean }) => {
   window.location.reload();
 });
 
+// Injected by server at runtime
+declare let orderedStylesList: string[];
+
 const stylesMap = new Map<string, HTMLStyleElement>();
 
 export const updateStyle = (id: string, content: string) => {
@@ -97,13 +111,21 @@ export const updateStyle = (id: string, content: string) => {
   if (style) {
     style.innerHTML = content;
   } else {
-    stylesMap.set(id, newStyleSheet(id, content));
+    const newStyle = newStyleSheet(id, content);
+    stylesMap.set(id, newStyle);
+    const index = orderedStylesList.indexOf(id);
+    if (index > -1) {
+      for (const node of document.head.querySelectorAll("[data-id]")) {
+        const dataId = node.getAttribute("data-id")!;
+        if (!id.endsWith(".css")) continue;
+        const dataIndex = orderedStylesList.indexOf(dataId);
+        if (dataIndex === -1) continue;
+        if (dataIndex > index) {
+          document.head.insertBefore(newStyle, node);
+          return;
+        }
+      }
+    }
+    document.head.appendChild(newStyle);
   }
-};
-
-const removeStyle = (id: string) => {
-  const style = stylesMap.get(id);
-  if (!style) return;
-  document.head.removeChild(style);
-  stylesMap.delete(id);
 };

@@ -1,4 +1,4 @@
-import { Session } from "node:inspector";
+import type { Session } from "node:inspector";
 import type { Extension } from "./mimeTypes.ts";
 
 export type LoadedFile = {
@@ -10,7 +10,8 @@ export type LoadedFile = {
 export type GraphNode = {
   url: string;
   selfUpdate: boolean;
-  imports: string[];
+  srcAndCSSImports: string[];
+  srcImports: string[];
   importers: Set<GraphNode>;
 };
 export type Graph = Map<string, GraphNode>;
