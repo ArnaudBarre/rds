@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2
+
+- Fix regression on initial entry point from 0.7
+
 ## 0.7.1
 
 - Add `build.downwindIntervalCheckMs` to config

@@ -198,7 +198,7 @@ export const main = commandWrapper(async (config) => {
         )
         .replace(
           "</body>",
-          `  <script type="module" src="${FS_PREFIX}/${ENTRY_POINT}"></script>\n  </body>`,
+          `  <script type="module" src="/${FS_PREFIX}/${ENTRY_POINT}"></script>\n  </body>`,
         ),
       browserCache: false,
     };
