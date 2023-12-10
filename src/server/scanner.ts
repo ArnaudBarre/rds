@@ -45,7 +45,7 @@ export const initScanner = ({
     if (isCSS(url)) {
       const { code, imports, selfUpdate } = downwind.transformCache.get(url);
       graphNode.selfUpdate = selfUpdate;
-      graphNode.srcImports = imports.map((i) => i[0]);
+      graphNode.srcImports = imports.map((i) => i[1]);
       output = { isCSS: true, code, imports };
     } else {
       lintFile(url);

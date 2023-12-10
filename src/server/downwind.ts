@@ -16,7 +16,7 @@ import { resolve } from "./resolve.ts";
 import { run } from "./utils.ts";
 
 export type Downwind = Awaited<ReturnType<typeof getDownwind>>;
-export type CSSImport = [resolvedUrl: string, placeholder: string];
+export type CSSImport = [raw: string, resolvedUrl: string, placeholder: string];
 
 export const getDownwind = async (target: string[]) => {
   const targets = convertTargets(target);
@@ -36,7 +36,12 @@ export const getDownwind = async (target: string[]) => {
     if (hasNew) invalidate("hmr");
   });
   const transformCache = cache("cssTransform", (url) => {
-    const { code, exports, dependencies, invalidateUtils } = run(() => {
+    const {
+      code: _code,
+      exports,
+      dependencies,
+      invalidateUtils,
+    } = run(() => {
       try {
         const preTransform = downwind.current.preTransformCSS(
           readFileSync(url, "utf-8"),
@@ -81,6 +86,7 @@ export const getDownwind = async (target: string[]) => {
     });
     if (invalidateUtils) invalidate("hmr");
 
+    let code = _code;
     const imports: CSSImport[] = [];
     for (const d of dependencies) {
       if (d.type === "import") {
@@ -91,7 +97,11 @@ export const getDownwind = async (target: string[]) => {
         });
       }
       if (d.url.startsWith("data:")) continue;
-      imports.push([resolve(url, d.url), d.placeholder]);
+      if (d.url.startsWith("http")) {
+        code = code.replace(d.placeholder, d.url);
+        continue;
+      }
+      imports.push([d.url, resolve(url, d.url), d.placeholder]);
     }
 
     return {

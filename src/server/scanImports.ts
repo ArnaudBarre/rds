@@ -19,7 +19,7 @@ export const scanImports = (url: string, code: string) => {
     const dep = !i.n!.startsWith(".");
     return {
       n: i.n!,
-      r: dep ? i.n! : resolve(url, stripQuery(i.n!)),
+      r: dep ? i.n! : resolve(url, i.n!),
       dep,
       specifiers: dep
         ? run(() => {
@@ -43,9 +43,4 @@ export const scanImports = (url: string, code: string) => {
       se: i.se,
     };
   });
-};
-
-const stripQuery = (url: string) => {
-  const index = url.indexOf("?");
-  return index > -1 ? url.slice(0, index) : url;
 };

@@ -9,7 +9,7 @@ import { ENTRY_POINT } from "./consts.ts";
 import { esbuildFilesLoaders } from "./mimeTypes.ts";
 import { stopProfiler } from "./stopProfiler.ts";
 import { svgToJS } from "./svgToJS.ts";
-import { readFile } from "./utils.ts";
+import { isCSS, readFile } from "./utils.ts";
 
 export const main = commandWrapper(async (config) => {
   if (config.build.emptyOutDir) {
@@ -41,16 +41,24 @@ export const main = commandWrapper(async (config) => {
           name: "svg",
           setup: (pluginBuild) => {
             pluginBuild.onResolve({ filter: /\.svg/ }, (args) => {
-              const [path, namespace] = args.path.split("?");
-              return { path: join(args.resolveDir, path), namespace };
-            });
-            pluginBuild.onLoad({ filter: /\.svg$/u }, ({ path, namespace }) => {
-              const contents = readFile(path);
-              if (namespace === "inline") {
-                return { contents, loader: "dataurl" };
-              }
-              if (namespace === "url") return { contents, loader: "file" };
+              const [path, namespace] = args.path.split("?") as [
+                string,
+                string | undefined,
+              ];
               return {
+                path: join(args.resolveDir, path),
+                namespace:
+                  namespace ?? (isCSS(args.importer) ? "url" : undefined),
+              };
+            });
+            pluginBuild.onLoad({ filter: /\.svg$/u }, (args) => {
+              const contents = readFile(args.path);
+              if (args.namespace === "inline") {
+                return { loader: "dataurl", contents };
+              }
+              if (args.namespace === "url") return { loader: "file", contents };
+              return {
+                loader: "js",
                 contents: svgToJS(
                   contents,
                   'import { jsx } from "react/jsx-runtime";',
@@ -58,9 +66,24 @@ export const main = commandWrapper(async (config) => {
                   'import { forwardRef } from "react";',
                   "forwardRef",
                 ),
-                loader: "js",
               };
             });
+          },
+        },
+        {
+          name: "assets-inline",
+          setup: (pluginBuild) => {
+            pluginBuild.onResolve({ filter: /\?inline$/ }, (args) => ({
+              path: join(args.resolveDir, args.path.slice(0, -7)),
+              namespace: "assets-inline",
+            }));
+            pluginBuild.onLoad(
+              { filter: /./, namespace: "assets-inline" },
+              (args) => ({
+                loader: "dataurl",
+                contents: readFileSync(args.path),
+              }),
+            );
           },
         },
         {

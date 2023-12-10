@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.3
+
+- Fix multiple issues with assets handling:
+  - `?inline` now works for all assets
+  - `http` assets in CSS are kept intact
+  - `.svg` from CSS resolve to the URL (and not the React component)
+
 ## 0.7.2
 
 - Fix regression on initial entry point from 0.7
