@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.4
+
+- Always use base64 for inlined SVG to avoid issues when used inside `url()`
+
 ## 0.7.3
 
 - Fix multiple issues with assets handling:

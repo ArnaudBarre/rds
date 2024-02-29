@@ -1,4 +1,4 @@
-import { assetsCache } from "./assets.ts";
+import { assetsCache, toBase64Url } from "./assets.ts";
 import { cache } from "./cache.ts";
 import {
   DEPENDENCY_PREFIX,
@@ -10,17 +10,9 @@ import { dependenciesCache, getDependencyMetadata } from "./dependencies.ts";
 import type { Downwind } from "./downwind.ts";
 import { RDSError } from "./errors.ts";
 import { jsonCache } from "./json.ts";
-import { type Extension, mimeTypes } from "./mimeTypes.ts";
 import type { Scanner } from "./scanner.ts";
 import { svgCache } from "./svg.ts";
-import {
-  getExtension,
-  getHashedUrl,
-  isInnerNode,
-  isJSON,
-  isSVG,
-  run,
-} from "./utils.ts";
+import { getHashedUrl, isInnerNode, isJSON, isSVG, run } from "./utils.ts";
 
 export type ImportsTransform = ReturnType<typeof initImportsTransform>;
 
@@ -128,10 +120,7 @@ export const initImportsTransform = ({
 
 const getAssetUrl = (raw: string, resolveUrl: string) => {
   const content = assetsCache.get(resolveUrl);
-  if (raw.endsWith("?inline")) {
-    const mimeType = mimeTypes[getExtension(resolveUrl) as Extension];
-    return `data:${mimeType};base64,${content.toString("base64")}`;
-  }
+  if (raw.endsWith("?inline")) return toBase64Url(resolveUrl, content);
   const hashed = getHashedUrl(`${FS_PREFIX}/${resolveUrl}`, content);
   if (isSVG(resolveUrl) || isJSON(resolveUrl)) return `${hashed}&url`;
   return hashed;

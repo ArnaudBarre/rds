@@ -3,13 +3,14 @@ import { join } from "node:path";
 import { logEsbuildErrors } from "@arnaud-barre/config-loader";
 import { downwind } from "@arnaud-barre/downwind/esbuild";
 import { build, type BuildResult, type Metafile } from "esbuild";
+import { toBase64Url } from "./assets.ts";
 import { colors } from "./colors.ts";
 import { commandWrapper } from "./commandWrapper.ts";
 import { ENTRY_POINT } from "./consts.ts";
 import { esbuildFilesLoaders } from "./mimeTypes.ts";
 import { stopProfiler } from "./stopProfiler.ts";
 import { svgToJS } from "./svgToJS.ts";
-import { isCSS, readFile } from "./utils.ts";
+import { isCSS } from "./utils.ts";
 
 export const main = commandWrapper(async (config) => {
   if (config.build.emptyOutDir) {
@@ -52,15 +53,21 @@ export const main = commandWrapper(async (config) => {
               };
             });
             pluginBuild.onLoad({ filter: /\.svg$/u }, (args) => {
-              const contents = readFile(args.path);
+              const contents = readFileSync(args.path);
               if (args.namespace === "inline") {
-                return { loader: "dataurl", contents };
+                return {
+                  loader: "js",
+                  contents: `export default "${toBase64Url(
+                    args.path,
+                    contents,
+                  )}"`,
+                };
               }
               if (args.namespace === "url") return { loader: "file", contents };
               return {
                 loader: "js",
                 contents: svgToJS(
-                  contents,
+                  contents.toString(),
                   'import { jsx } from "react/jsx-runtime";',
                   "jsx",
                   'import { forwardRef } from "react";',
