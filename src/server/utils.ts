@@ -5,6 +5,7 @@ import { getHash } from "@arnaud-barre/config-loader";
 
 export const isCSS = (path: string) => path.endsWith(".css");
 export const isJS = (path: string) => /\.[jt]sx?$/.test(path);
+export const isWorker = (path: string) => path.endsWith("?worker");
 export const isSVG = (path: string) => path.endsWith(".svg");
 export const isJSON = (path: string) => path.endsWith(".json");
 export const isInnerNode = (path: string) => isJS(path) || isCSS(path);

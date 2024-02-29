@@ -10,6 +10,12 @@ declare module "*.json?url" {
   export default src;
 }
 
+// Worker
+declare module "*?worker" {
+  const src: string;
+  export default src;
+}
+
 // SVG
 declare module "*.svg" {
   import type { FunctionComponent, SVGProps } from "react";

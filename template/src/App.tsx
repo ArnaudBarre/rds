@@ -1,5 +1,10 @@
 import { useState } from "react";
+import workerUrl from "./worker.ts?worker";
 import Logo from "./react.svg";
+
+console.log(workerUrl);
+const worker = new Worker(workerUrl, {type: "module"})
+worker.postMessage("Hello")
 
 export const App = () => {
   const [count, setCount] = useState(0);

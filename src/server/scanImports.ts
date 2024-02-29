@@ -1,6 +1,7 @@
+import { dirname, join } from "node:path";
 import { parse } from "es-module-lexer";
 import { resolve } from "./resolve.ts";
-import { run } from "./utils.ts";
+import { isWorker, run } from "./utils.ts";
 
 export type JSImport = {
   n: string;
@@ -19,7 +20,11 @@ export const scanImports = (url: string, code: string) => {
     const dep = !i.n!.startsWith(".");
     return {
       n: i.n!,
-      r: dep ? i.n! : resolve(url, i.n!),
+      r: dep
+        ? i.n!
+        : isWorker(i.n!)
+        ? join(dirname(url), i.n!)
+        : resolve(url, i.n!),
       dep,
       specifiers: dep
         ? run(() => {

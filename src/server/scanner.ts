@@ -1,22 +1,26 @@
 import { statSync } from "node:fs";
+import { bundleWorker } from "./bundleWorker.ts";
 import { cache } from "./cache.ts";
 import { ENTRY_POINT } from "./consts.ts";
 import { addDependency } from "./dependencies.ts";
 import type { CSSImport, Downwind } from "./downwind.ts";
 import { RDSError } from "./errors.ts";
+import type { ResolvedConfig } from "./loadConfig.ts";
 import type { JSImport } from "./scanImports.ts";
 import type { SWCCache } from "./swc.ts";
 import type { Graph, GraphNode } from "./types.ts";
-import { isCSS, isInnerNode, split } from "./utils.ts";
+import { isCSS, isInnerNode, isWorker, split } from "./utils.ts";
 
 export type Scanner = ReturnType<typeof initScanner>;
 
 export const initScanner = ({
+  config,
   downwind,
   swcCache,
   lintFile,
   watchFile,
 }: {
+  config: ResolvedConfig;
   downwind: Downwind;
   swcCache: SWCCache;
   lintFile: (path: string) => void;
@@ -39,14 +43,23 @@ export const initScanner = ({
     const graphNode = graph.get(url)!;
 
     let output:
-      | { isCSS: true; code: string; imports: CSSImport[] }
-      | { isCSS: false; code: string; imports: JSImport[] };
+      | { type: "CSS"; code: string; imports: CSSImport[] }
+      | { type: "JS"; code: string; imports: JSImport[] }
+      | { type: "Worker"; code: string; files: string[] };
 
     if (isCSS(url)) {
       const { code, imports, selfUpdate } = downwind.transformCache.get(url);
       graphNode.selfUpdate = selfUpdate;
       graphNode.srcImports = imports.map((i) => i[1]);
-      output = { isCSS: true, code, imports };
+      output = { type: "CSS", code, imports };
+    } else if (isWorker(url)) {
+      const { code, inputs } = bundleWorker({
+        config,
+        path: url.slice(0, -7),
+        minify: false,
+      });
+      // TODO: watch & lint inputs
+      output = { type: "Worker", code, files: inputs };
     } else {
       lintFile(url);
       downwind.scanCache.get(url);
@@ -68,7 +81,7 @@ export const initScanner = ({
         prunedNode.importers.delete(graphNode);
       }
 
-      output = { isCSS: false, code, imports };
+      output = { type: "JS", code, imports };
     }
 
     for (const resolvedUrl of graphNode.srcImports) {
@@ -84,6 +97,7 @@ export const initScanner = ({
           impGraphNode.importers.add(graphNode);
         }
       } else {
+        // TODO: handle ?worker
         const result = statSync(resolvedUrl, { throwIfNoEntry: false });
         if (!result || !result.isFile()) {
           throw new RDSError({

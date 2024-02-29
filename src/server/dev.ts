@@ -60,6 +60,7 @@ export const main = commandWrapper(async (config) => {
   const ws = initWS();
   const swcCache = await initSWC(config);
   const scanner = initScanner({
+    config,
     downwind,
     swcCache,
     lintFile,

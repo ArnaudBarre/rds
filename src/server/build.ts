@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { logEsbuildErrors } from "@arnaud-barre/config-loader";
 import { downwind } from "@arnaud-barre/downwind/esbuild";
 import { build, type BuildResult, type Metafile } from "esbuild";
+import { bundleWorker } from "./bundleWorker.ts";
 import { colors } from "./colors.ts";
 import { commandWrapper } from "./commandWrapper.ts";
 import { ENTRY_POINT } from "./consts.ts";
@@ -96,6 +97,26 @@ export const main = commandWrapper(async (config) => {
             pluginBuild.onLoad(
               { filter: /\.json$/, namespace: "json-url" },
               (args) => ({ loader: "file", contents: readFileSync(args.path) }),
+            );
+          },
+        },
+        {
+          name: "worker",
+          setup: (pluginBuild) => {
+            pluginBuild.onResolve({ filter: /\?worker$/ }, (args) => ({
+              path: join(args.resolveDir, args.path.slice(0, -7)),
+              namespace: "worker",
+            }));
+            pluginBuild.onLoad(
+              { filter: /./, namespace: "worker" },
+              (args) => ({
+                loader: "js",
+                contents: bundleWorker({
+                  path: args.path,
+                  minify: true,
+                  config,
+                }).code,
+              }),
             );
           },
         },

@@ -34,7 +34,8 @@ export const initImportsTransform = ({
   const importsTransformCache = cache("importsTransform", (url) => {
     const scanResult = scanner.get(url);
 
-    if (scanResult.isCSS) {
+    if (scanResult.type === "Worker") return scanResult.code;
+    if (scanResult.type === "CSS") {
       let content = scanResult.code;
       for (const [raw, resolvedUrl, placeholder] of scanResult.imports) {
         content = content.replace(placeholder, getAssetUrl(raw, resolvedUrl));
