@@ -1,4 +1,5 @@
 import type { DefineConfig } from "@arnaud-barre/config-loader";
+import type { BuildOptions } from "esbuild";
 
 type UserConfig = {
   server?: {
@@ -67,6 +68,11 @@ type UserConfig = {
      * @default false
      */
     metafile?: boolean;
+    /**
+     * Change the sourcemap behavior: https://esbuild.github.io/api/#sourcemap
+     * @default true (.i.e linked)
+     */
+    sourcemap?: BuildOptions["sourcemap"];
     /**
      * Pass to downwind, number of millisecond to wait without new scan before generating utils
      */

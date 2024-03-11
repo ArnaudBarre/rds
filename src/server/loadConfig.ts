@@ -47,6 +47,7 @@ export const loadConfig = async (
         "safari13",
       ],
       metafile: mergedConfig.build?.metafile ?? false,
+      sourcemap: mergedConfig.build?.sourcemap,
       downwindIntervalCheckMs: mergedConfig.build?.downwindIntervalCheckMs,
     },
   };

@@ -22,7 +22,7 @@ export const main = commandWrapper(async (config) => {
       entryPoints: [ENTRY_POINT],
       bundle: true,
       outdir: "dist/assets",
-      sourcemap: true,
+      sourcemap: config.build.sourcemap ?? true,
       metafile: true,
       splitting: true,
       format: "esm",

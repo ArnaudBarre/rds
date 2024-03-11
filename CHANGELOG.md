@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.5
+
+- Add build.sourcemap option
+
 ## 0.7.4
 
 - Always use base64 for inlined SVG to avoid issues when used inside `url()`
