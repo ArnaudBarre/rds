@@ -50,11 +50,15 @@ export const main = commandWrapper(async (config) => {
     disableGlobbing: true,
   });
   // eslint-disable-next-line no-new
-  new Worker(getPathFromServerOutput("./tscWorker"));
-  const eslintWorker = new Worker(getPathFromServerOutput("./eslintWorker"), {
-    workerData: config.server.eslint,
+  new Worker(getPathFromServerOutput("./tscWorker"), {
+    resourceLimits: { stackSizeMb: 16 },
   });
-  const lintFile = (path: string) => eslintWorker.postMessage(path);
+  const eslintWorker = config.server.eslint
+    ? new Worker(getPathFromServerOutput("./eslintWorker"), {
+        workerData: config.server.eslint,
+      })
+    : undefined;
+  const lintFile = (path: string) => eslintWorker?.postMessage(path);
 
   if (!existsSync(cacheDir)) mkdirSync(cacheDir);
   const ws = initWS();

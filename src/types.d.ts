@@ -35,10 +35,10 @@ type UserConfig = {
      */
     qrCode?: boolean;
     /**
-     * Option for the eslint worker (start only)
+     * Option for the eslint worker (dev only)
      * @default { cache: true; fix: false }
      */
-    eslint?: { cache?: boolean; fix?: boolean };
+    eslint?: { cache?: boolean; fix?: boolean } | false;
     /**
      * If set, configure where /api/* requests are redirect
      */

@@ -2,6 +2,11 @@
 
 ## 0.7.5
 
+- Increase tsc worker memory
+- Support `server.eslint: false` to disable ESLint worker.
+
+## 0.7.5
+
 - Add build.sourcemap option
 
 ## 0.7.4
