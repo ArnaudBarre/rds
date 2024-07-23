@@ -15,11 +15,14 @@ export type JSImport = {
 
 export const scanImports = (url: string, code: string) => {
   const importSpecifiers = parse(code)[0];
-  return importSpecifiers.map((i): JSImport => {
-    const dep = !i.n!.startsWith(".");
-    return {
-      n: i.n!,
-      r: dep ? i.n! : resolve(url, i.n!),
+  const localImports: JSImport[] = [];
+  for (const i of importSpecifiers) {
+    if (!i.n) continue; // dynamic, ex: import(variable), unhandled
+    if (i.n.startsWith("https://")) continue; // external
+    const dep = !i.n.startsWith(".");
+    localImports.push({
+      n: i.n,
+      r: dep ? i.n : resolve(url, i.n),
       dep,
       specifiers: dep
         ? run(() => {
@@ -41,6 +44,7 @@ export const scanImports = (url: string, code: string) => {
       e: i.d === -1 ? i.e : i.e - 1,
       ss: i.ss,
       se: i.se,
-    };
-  });
+    });
+  }
+  return localImports;
 };

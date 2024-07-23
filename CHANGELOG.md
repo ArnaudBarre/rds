@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.7.5
+## 0.7.7
+
+- Support https imports
+
+## 0.7.6
 
 - Increase tsc worker memory
 - Support `server.eslint: false` to disable ESLint worker.
