@@ -3,17 +3,20 @@ import { resolve } from "node:path";
 
 const positionRE = /:(\d+)(:(\d+))?$/;
 
-let useVSCode: boolean | undefined;
+let editor: "code" | "cursor" | "idea" | undefined;
 
 export const openInEditor = (file: string) => {
-  if (useVSCode === undefined) {
+  if (editor === undefined) {
     try {
       const processes = execSync("ps x -o comm=", {
         stdio: ["pipe", "pipe", "ignore"],
       }).toString();
-      useVSCode =
-        processes.includes("Visual Studio Code.app") ||
-        processes.includes("\ncode");
+      editor = processes.includes("Cursor.app")
+        ? "cursor"
+        : processes.includes("Visual Studio Code.app") ||
+          processes.includes("\ncode")
+        ? "code"
+        : "idea";
     } catch (e) {
       console.log(e);
     }
@@ -24,8 +27,8 @@ export const openInEditor = (file: string) => {
   const columnNumber = match?.[3] ?? 1;
   try {
     spawn(
-      useVSCode ? "code" : "idea",
-      useVSCode
+      editor ?? "cursor",
+      editor !== "idea"
         ? ["-r", "-g", `${filename}:${lineNumber}:${columnNumber}`]
         : [
             "--line",

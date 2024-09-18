@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.8
+
+- Add support for Cursor in open in editor
+
 ## 0.7.7
 
 - Support https imports
