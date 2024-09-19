@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.9
+
+- Allow to disable the tsc worker via `server.tsc: false`
+
 ## 0.7.8
 
 - Add support for Cursor in open in editor

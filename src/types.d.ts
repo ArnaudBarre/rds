@@ -40,6 +40,11 @@ type UserConfig = {
      */
     eslint?: { cache?: boolean; fix?: boolean } | false;
     /**
+     * Option to enable the tsc worker (dev only)
+     * @default true
+     */
+    tsc?: boolean;
+    /**
      * If set, configure where /api/* requests are redirect
      */
     proxy?: {

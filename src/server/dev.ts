@@ -49,10 +49,12 @@ export const main = commandWrapper(async (config) => {
     ignoreInitial: true,
     disableGlobbing: true,
   });
-  // eslint-disable-next-line no-new
-  new Worker(getPathFromServerOutput("./tscWorker"), {
-    resourceLimits: { stackSizeMb: 16 },
-  });
+  if (config.server.tsc) {
+    // eslint-disable-next-line no-new
+    new Worker(getPathFromServerOutput("./tscWorker"), {
+      resourceLimits: { stackSizeMb: 16 },
+    });
+  }
   const eslintWorker = config.server.eslint
     ? new Worker(getPathFromServerOutput("./eslintWorker"), {
         workerData: config.server.eslint,
