@@ -85,7 +85,7 @@ export const initScanner = ({
         }
       } else {
         const result = statSync(resolvedUrl, { throwIfNoEntry: false });
-        if (!result || !result.isFile()) {
+        if (!result?.isFile()) {
           throw new RDSError({
             message: `${resolvedUrl} is not a file`,
             file: url,

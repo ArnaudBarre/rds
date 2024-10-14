@@ -266,7 +266,7 @@ const convertTargets = (
           .map((v) => parseInt(v, 10));
         if (!isNaN(major) && !isNaN(minor)) {
           const version = (major << 16) | (minor << 8);
-          if (!targets[browser] || version < targets[browser]!) {
+          if (!targets[browser] || version < targets[browser]) {
             targets[browser] = version;
           }
           continue;
