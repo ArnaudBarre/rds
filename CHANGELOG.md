@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.10
+
+- Add `declare module "*.css" {}` to client types for the project to work with TS 5.6 `noUncheckedSideEffectImports`
+
 ## 0.7.9
 
 - Allow to disable the tsc worker via `server.tsc: false`
