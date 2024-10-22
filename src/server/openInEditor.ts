@@ -11,12 +11,13 @@ export const openInEditor = (file: string) => {
       const processes = execSync("ps x -o comm=", {
         stdio: ["pipe", "pipe", "ignore"],
       }).toString();
-      editor = processes.includes("Cursor.app")
-        ? "cursor"
-        : processes.includes("Visual Studio Code.app") ||
-          processes.includes("\ncode")
-        ? "code"
-        : "idea";
+      editor =
+        processes.includes("Cursor.app") || processes.includes("\ncursor")
+          ? "cursor"
+          : processes.includes("Visual Studio Code.app") ||
+            processes.includes("\ncode")
+          ? "code"
+          : "idea";
     } catch (e) {
       console.log(e);
     }
