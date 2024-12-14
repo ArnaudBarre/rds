@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.12
+
+- Fix detects cursor process on linux systems
+
 ## 0.7.11
 
 - Add `declare module "*.css" {}` to client types for the project to work with TS 5.6 `noUncheckedSideEffectImports`
