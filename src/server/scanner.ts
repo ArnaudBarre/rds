@@ -4,8 +4,8 @@ import { ENTRY_POINT } from "./consts.ts";
 import { addDependency } from "./dependencies.ts";
 import type { CSSImport, Downwind } from "./downwind.ts";
 import { RDSError } from "./errors.ts";
+import type { OXCCache } from "./oxc.ts";
 import type { JSImport } from "./scanImports.ts";
-import type { SWCCache } from "./swc.ts";
 import type { Graph, GraphNode } from "./types.ts";
 import { isCSS, isInnerNode, split } from "./utils.ts";
 
@@ -13,12 +13,12 @@ export type Scanner = ReturnType<typeof initScanner>;
 
 export const initScanner = ({
   downwind,
-  swcCache,
+  oxcCache,
   lintFile,
   watchFile,
 }: {
   downwind: Downwind;
-  swcCache: SWCCache;
+  oxcCache: OXCCache;
   lintFile: (path: string) => void;
   watchFile: (path: string) => void;
 }) => {
@@ -51,7 +51,7 @@ export const initScanner = ({
       lintFile(url);
       downwind.scanCache.get(url);
       const oldSrcImports = graphNode.srcImports;
-      const { code, imports, selfUpdate } = swcCache.get(url, true);
+      const { code, imports, selfUpdate } = oxcCache.get(url, true);
       graphNode.selfUpdate = selfUpdate;
       graphNode.srcAndCSSImports = imports
         .filter((i) => !i.dep || i.r.endsWith(".css"))

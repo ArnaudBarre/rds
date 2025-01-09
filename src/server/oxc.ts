@@ -2,14 +2,14 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
-import type { SourceMapPayload } from "node:module";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { jsonCache } from "@arnaud-barre/config-loader";
-import { type ParserConfig, transformFileSync, version } from "@swc/core";
 import { init } from "es-module-lexer";
+import { transform } from "oxc-transform";
 import { RDS_CLIENT } from "./consts.ts";
 import { codeToFrame, RDSError } from "./errors.ts";
 import type { ResolvedConfig } from "./loadConfig.ts";
@@ -17,59 +17,40 @@ import { debugNow, logger } from "./logger.ts";
 import { type JSImport, scanImports } from "./scanImports.ts";
 import { cacheDir, readFile, readFileAsync, run } from "./utils.ts";
 
-export type SWCCache = Awaited<ReturnType<typeof initSWC>>;
+export type OXCCache = Awaited<ReturnType<typeof initOXC>>;
 
-const swcCachePath = join(cacheDir, "swcCache");
-type SWCOutput = {
+const oxcCachePath = join(cacheDir, "oxcCache");
+type OXCOutput = {
   code: string;
   input: string;
   imports: JSImport[];
   selfUpdate: boolean;
 };
 
-const parserMap: Record<string, ParserConfig> = {
-  ".tsx": { syntax: "typescript", tsx: true },
-  ".ts": { syntax: "typescript", tsx: false },
-  ".jsx": { syntax: "ecmascript", jsx: true },
-  ".js": { syntax: "ecmascript", jsx: false },
-};
-
-export const initSWC = async (config: ResolvedConfig) => {
-  if (!existsSync(swcCachePath)) mkdirSync(swcCachePath);
+export const initOXC = async (config: ResolvedConfig) => {
+  if (!existsSync(oxcCachePath)) mkdirSync(oxcCachePath);
   const mainCache = jsonCache<{
     define: Record<string, string>;
-  }>(join(swcCachePath, "main.json"), `2-${version}`);
+  }>(join(oxcCachePath, "main.json"), `1-${__OXC_VERSION__}`);
   const start = debugNow();
-  const transformations: Record<string, SWCOutput | undefined> = {};
+  const transformations: Record<string, OXCOutput | undefined> = {};
   const toCachePah = (url: string) =>
-    `${swcCachePath}/${url.replaceAll("/", "|")}.json`;
+    `${oxcCachePath}/${url.replaceAll("/", "|")}.json`;
 
-  const get = (url: string, withCache: boolean): SWCOutput => {
-    logger.debug(`swc: get - ${url} ${withCache ? "with cache" : "no cache"}`);
+  const get = (url: string, withCache: boolean): OXCOutput => {
+    logger.debug(`oxc: get - ${url} ${withCache ? "with cache" : "no cache"}`);
     const cached = withCache && transformations[url];
     if (cached) return cached;
-
+    const content = readFileSync(url, "utf-8");
     const startGet = debugNow();
     const transformed = run(() => {
       try {
-        return transformFileSync(url, {
-          configFile: false,
-          swcrc: false,
-          sourceMaps: true,
-          jsc: {
-            target: "es2020",
-            parser: parserMap[extname(url)],
-            transform: {
-              react: { refresh: true, development: true, runtime: "automatic" },
-              optimizer: {
-                globals: {
-                  vars: {
-                    "process.env.NODE_ENV": '"development"',
-                    ...config.define,
-                  },
-                },
-              },
-            },
+        return transform(url, content, {
+          sourcemap: true,
+          jsx: { refresh: true, development: true, runtime: "automatic" },
+          define: {
+            "process.env.NODE_ENV": '"development"',
+            ...config.define,
           },
         });
       } catch (err) {
@@ -107,9 +88,11 @@ export const initSWC = async (config: ResolvedConfig) => {
     const hasFastRefresh = transformed.code.includes("$RefreshReg$");
     const code = run(() => {
       if (!hasFastRefresh) {
-        return inlineSourceMap(transformed.code, transformed.map!);
+        return inlineSourceMap(
+          transformed.code,
+          JSON.stringify(transformed.map!),
+        );
       }
-      const sourceMap: SourceMapPayload = JSON.parse(transformed.map!);
       const header = `import { RefreshRuntime } from "${RDS_CLIENT}";
 const prevRefreshReg = window.$RefreshReg$;
 const prevRefreshSig = window.$RefreshSig$;
@@ -122,19 +105,19 @@ window.$RefreshReg$ = prevRefreshReg;
 window.$RefreshSig$ = prevRefreshSig;
 RefreshRuntime.enqueueUpdate();
 `;
-      sourceMap.mappings = `;;;;;;${sourceMap.mappings}`;
+      transformed.map!.mappings = `;;;;;;${transformed.map!.mappings}`;
       return inlineSourceMap(
         header + transformed.code + footer,
-        JSON.stringify(sourceMap),
+        JSON.stringify(transformed.map!),
       );
     });
-    const output: SWCOutput = {
+    const output: OXCOutput = {
       code,
       input: readFile(url),
       imports: scanImports(url, code),
       selfUpdate: hasFastRefresh,
     };
-    logger.debug(`swc: load - ${url}: ${Math.round(debugNow() - startGet)}ms`);
+    logger.debug(`oxc: load - ${url}: ${Math.round(debugNow() - startGet)}ms`);
     transformations[url] = output;
     writeFileSync(toCachePah(url), JSON.stringify(output));
     return output;
@@ -156,19 +139,19 @@ RefreshRuntime.enqueueUpdate();
       }
     }
     const contents = await Promise.all(
-      readdirSync(swcCachePath)
+      readdirSync(oxcCachePath)
         .filter((f) => f.endsWith(".json") && f !== "main.json")
         .map((f) => {
           const path = f.replaceAll("|", "/").slice(0, -5);
           return Promise.all([
             path,
             readFileAsync(path).catch(() => null),
-            readFileAsync(`${swcCachePath}/${f}`),
+            readFileAsync(`${oxcCachePath}/${f}`),
           ]);
         }),
     );
     for (const [path, content, json] of contents) {
-      const previous = JSON.parse(json) as SWCOutput;
+      const previous = JSON.parse(json) as OXCOutput;
       if (
         content &&
         previous.input === content &&
@@ -182,7 +165,7 @@ RefreshRuntime.enqueueUpdate();
         transformations[path] = previous;
       }
     }
-    logger.debug(`Load SWC fs cache: ${(debugNow() - start).toFixed(2)}ms`);
+    logger.debug(`Load OXC fs cache: ${(debugNow() - start).toFixed(2)}ms`);
   }
   mainCache.write({ define: config.define });
 
@@ -196,7 +179,7 @@ RefreshRuntime.enqueueUpdate();
       return stripSourceMap(newOutput.code) !== previous;
     },
     delete: (url: string) => {
-      logger.debug(`swc: delete - ${url}`);
+      logger.debug(`oxc: delete - ${url}`);
       rmSync(toCachePah(url));
     },
   };

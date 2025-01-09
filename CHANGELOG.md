@@ -1,8 +1,11 @@
 # Changelog
 
-## 0.7.13
+## 0.8.0
 
 - Use Chokidar v4
+- Replace SWC with OXC
+- Support `bun.lock`
+- Fix security issue with WS connection
 
 ## 0.7.12
 

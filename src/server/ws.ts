@@ -3,11 +3,12 @@ import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
 import { HMR_HEADER, type HMRPayload, type RDSErrorPayload } from "../hmr.ts";
 import { colors } from "./colors.ts";
+import type { ResolvedConfig } from "./loadConfig.ts";
 import { logger } from "./logger.ts";
 
 export type WS = ReturnType<typeof initWS>;
 
-export const initWS = () => {
+export const initWS = (config: ResolvedConfig) => {
   const wss = new WebSocketServer({ noServer: true });
 
   // On page reloads, if a file fails to compile and returns 500, the server
@@ -26,7 +27,11 @@ export const initWS = () => {
 
   return {
     handleUpgrade: (req: IncomingMessage, duplex: Duplex, head: Buffer) => {
-      if (req.headers["sec-websocket-protocol"] === HMR_HEADER) {
+      if (
+        req.headers["sec-websocket-protocol"] === HMR_HEADER &&
+        // Avoid connection from unknown origins
+        (!req.headers.origin || config.server.urls.includes(req.headers.origin))
+      ) {
         wss.handleUpgrade(req, duplex, head, (socket) => {
           const connectedPayload: HMRPayload = { type: "connected" };
           socket.send(JSON.stringify(connectedPayload));

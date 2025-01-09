@@ -81,6 +81,7 @@ export const startServer = async (
       const help = host ? "qr to show QR Code" : "h to enable host";
       logger.info(colors.dim(`${logIndent} o to open browser, ${help}`));
     }
+    config.server.urls = hostUrl ? [localUrl, hostUrl] : [localUrl];
     return { localUrl, hostUrl };
   };
 
@@ -90,10 +91,10 @@ export const startServer = async (
         `   ready in ${(performance.now() - global.__rds_start).toFixed(0)} ms`,
       ),
   );
-  let { localUrl, hostUrl } = await listen(config.server.host);
+  let urls = await listen(config.server.host);
 
   const openBrowser = () => {
-    exec(`osascript openChrome.applescript ${localUrl}`, {
+    exec(`osascript openChrome.applescript ${urls.localUrl}`, {
       cwd: getPathFromServerOutput("../bin"),
     });
   };
@@ -101,7 +102,7 @@ export const startServer = async (
   process.stdin.on("data", async (data) => {
     const input = data.toString();
     if (input === "o\n") openBrowser();
-    if (input === "h\n" && !hostUrl) {
+    if (input === "h\n" && !urls.hostUrl) {
       for (const socket of sockets) {
         socket.destroy();
         sockets.delete(socket);
@@ -112,13 +113,11 @@ export const startServer = async (
           else resolve();
         });
       });
-      const urls = await listen(true);
-      localUrl = urls.localUrl;
       // eslint-disable-next-line require-atomic-updates
-      hostUrl = urls.hostUrl;
+      urls = await listen(true);
     }
-    if (input === "qr\n" && hostUrl) {
-      logger.info(generateQRCode(hostUrl, "    "));
+    if (input === "qr\n" && urls.hostUrl) {
+      logger.info(generateQRCode(urls.hostUrl, "    "));
     }
   });
 

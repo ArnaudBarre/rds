@@ -3,6 +3,7 @@ import { execSync } from "node:child_process";
 import { cpSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { Worker } from "node:worker_threads";
 import { build, type BuildOptions, context } from "esbuild";
+import oxcPackageJson from "oxc-transform/package.json";
 import packageJSON from "../package.json";
 import { esbuildFilesLoaders } from "../src/server/mimeTypes.ts";
 
@@ -17,7 +18,10 @@ const serverOptions: BuildOptions = {
   format: "esm",
   target: "node18",
   legalComments: "inline",
-  define: { __VERSION__: `"${packageJSON.version}"` },
+  define: {
+    __VERSION__: `"${packageJSON.version}"`,
+    __OXC_VERSION__: `"${oxcPackageJson.version}"`,
+  },
 };
 
 const buildOrWatch = async (options: BuildOptions) => {
@@ -75,7 +79,7 @@ writeFileSync(
     {
       name: packageJSON.name,
       description:
-        "React Development Server: A modern CRA inspired by Vite and powered by SWC, esbuild & Lightning CSS",
+        "React Development Server: A modern CRA inspired by Vite and powered by OXC, esbuild & Lightning CSS",
       type: "module",
       version: packageJSON.version,
       author: "Arnaud Barré (https://github.com/ArnaudBarre)",
