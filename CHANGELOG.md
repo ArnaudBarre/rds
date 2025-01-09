@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.13
+
+- Use Chokidar v4
+
 ## 0.7.12
 
 - Fix detects cursor process on linux systems

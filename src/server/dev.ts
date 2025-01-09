@@ -45,10 +45,7 @@ import { initWS } from "./ws.ts";
 
 export const main = commandWrapper(async (config) => {
   const downwind = await getDownwind(config.build.target);
-  const srcWatcher = watch([ENTRY_POINT], {
-    ignoreInitial: true,
-    disableGlobbing: true,
-  });
+  const srcWatcher = watch([ENTRY_POINT], { ignoreInitial: true });
   if (config.server.tsc) {
     // eslint-disable-next-line no-new
     new Worker(getPathFromServerOutput("./tscWorker"), {
