@@ -6,9 +6,9 @@ import { RDSError } from "./errors.ts";
 import type { ImportsTransform } from "./importsTransform.ts";
 import { jsonCache } from "./json.ts";
 import { logger } from "./logger.ts";
+import type { OXCCache } from "./oxc.ts";
 import type { Scanner } from "./scanner.ts";
 import { svgCache } from "./svg.ts";
-import type { SWCCache } from "./swc.ts";
 import type { GraphNode } from "./types.ts";
 import { isCSS, isJS, isJSON, isSVG } from "./utils.ts";
 import type { WS } from "./ws.ts";
@@ -16,7 +16,7 @@ import type { WS } from "./ws.ts";
 export const setupHmr = ({
   downwind,
   srcWatcher,
-  swcCache,
+  oxcCache,
   scanner,
   importsTransform,
   lintFile,
@@ -24,7 +24,7 @@ export const setupHmr = ({
 }: {
   downwind: Downwind;
   srcWatcher: FSWatcher;
-  swcCache: SWCCache;
+  oxcCache: OXCCache;
   scanner: Scanner;
   importsTransform: ImportsTransform;
   lintFile: (path: string) => void;
@@ -44,7 +44,7 @@ export const setupHmr = ({
     if (isJS(path)) {
       if (update) {
         try {
-          const outputChanged = swcCache.update(path);
+          const outputChanged = oxcCache.update(path);
           if (!outputChanged) return true;
         } catch (error) {
           if (error instanceof RDSError) {
@@ -57,7 +57,7 @@ export const setupHmr = ({
           return true;
         }
       } else {
-        swcCache.delete(path);
+        oxcCache.delete(path);
       }
       scanner.delete(path);
       downwind.scanCache.delete(path);

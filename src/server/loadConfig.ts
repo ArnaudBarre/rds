@@ -38,6 +38,7 @@ export const loadConfig = async (
             headersRewrite: mergedConfig.server?.proxy?.headersRewrite,
           }
         : undefined,
+      urls: [] as string[],
     },
     define: mergedConfig.define ?? {},
     build: {

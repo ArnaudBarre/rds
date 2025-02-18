@@ -26,9 +26,10 @@ let dependenciesHash: string;
 const initDependencyHash = () => {
   if (!dependenciesHash) {
     const lockPath = lookup([
+      "pnpm-lock.yaml",
+      "bun.lock",
       "package-lock.json",
       "yarn.lock",
-      "pnpm-lock.yaml",
       "bun.lockb",
     ]);
     if (!lockPath) {
