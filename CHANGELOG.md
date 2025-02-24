@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- Bump OXC to 0.52
+
 ## 0.8.0
 
 - Use Chokidar v4
