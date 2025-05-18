@@ -38,7 +38,7 @@
     "@arnaud-barre/downwind": "^0.7.7",
     "@arnaud-barre/eslint-config": "^5.3.1",
     "@arnaud-barre/prettier-plugin-sort-imports": "^0.2.1",
-    "@arnaud-barre/tnode": "^0.24.0",
+    "@arnaud-barre/tnode": "^0.25.0",
     "@types/eslint": "^9.6.1",
     "@types/node": "^20.17.47",
     "@types/react": "^18.3.11",
