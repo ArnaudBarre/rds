@@ -324,8 +324,8 @@ function setSignature(type, key, forceReset = false, getCustomHooks) {
       ownKey: key,
       fullKey: null,
       getCustomHooks:
-        getCustomHooks ||
-        function () {
+        getCustomHooks
+        || function () {
           return [];
         },
     });
@@ -384,8 +384,8 @@ function injectIntoGlobalHook(globalObject) {
     // of DevTools integration and associated warnings and logs.
     // Using console['warn'] to evade Babel and ESLint
     console["warn"](
-      "Something has shimmed the React DevTools global hook (__REACT_DEVTOOLS_GLOBAL_HOOK__). " +
-        "Fast Refresh is not compatible with this shim and will be disabled.",
+      "Something has shimmed the React DevTools global hook (__REACT_DEVTOOLS_GLOBAL_HOOK__). "
+        + "Fast Refresh is not compatible with this shim and will be disabled.",
     );
     return;
   }
@@ -397,8 +397,8 @@ function injectIntoGlobalHook(globalObject) {
     let id = oldInject.apply(this, arguments);
 
     if (
-      typeof injected.scheduleRefresh === "function" &&
-      typeof injected.setRefreshHandler === "function"
+      typeof injected.scheduleRefresh === "function"
+      && typeof injected.setRefreshHandler === "function"
     ) {
       // This version supports React Refresh.
       helpersByRendererID.set(id, injected);
@@ -412,8 +412,8 @@ function injectIntoGlobalHook(globalObject) {
   // https://github.com/facebook/react/issues/17626
   hook.renderers.forEach(function (injected, id) {
     if (
-      typeof injected.scheduleRefresh === "function" &&
-      typeof injected.setRefreshHandler === "function"
+      typeof injected.scheduleRefresh === "function"
+      && typeof injected.setRefreshHandler === "function"
     ) {
       // This version supports React Refresh.
       helpersByRendererID.set(id, injected);
@@ -450,11 +450,11 @@ function injectIntoGlobalHook(globalObject) {
       // If this breaks with some refactoring, you'll want to update DevTools too.
       if (alternate !== null) {
         let wasMounted =
-          alternate.memoizedState != null &&
-          alternate.memoizedState.element != null;
+          alternate.memoizedState != null
+          && alternate.memoizedState.element != null;
         let isMounted =
-          current.memoizedState != null &&
-          current.memoizedState.element != null;
+          current.memoizedState != null
+          && current.memoizedState.element != null;
 
         if (!wasMounted && isMounted) {
           // Mount a new root.
@@ -531,8 +531,8 @@ function createSignatureFunctionForTransform() {
       // they have no signatures of their own. This is to prevent
       // problems like https://github.com/facebook/react/issues/20417.
       if (
-        type != null &&
-        (typeof type === "function" || typeof type === "object")
+        type != null
+        && (typeof type === "function" || typeof type === "object")
       ) {
         setSignature(type, key, forceReset, getCustomHooks);
       }

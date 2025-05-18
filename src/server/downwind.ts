@@ -152,7 +152,7 @@ export const getDownwind = async (target: string[]) => {
     scanCache,
     transformCache,
     generate: (): string => {
-      if (!utils) utils = downwind.current.generate();
+      utils ??= downwind.current.generate();
       return cssToHMR("virtual:@downwind/utils.css", utils, undefined);
     },
     devtoolsScan: (classes: string[]) => {

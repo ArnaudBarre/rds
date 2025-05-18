@@ -86,8 +86,8 @@ export const main = commandWrapper(async (config) => {
   });
   downwind.onUtilsUpdate((from) => {
     logger.info(
-      colors.green(`${from} update `) +
-        colors.dim("virtual:@downwind/utils.css"),
+      colors.green(`${from} update `)
+        + colors.dim("virtual:@downwind/utils.css"),
     );
     ws.send({
       type: "update",
@@ -99,8 +99,8 @@ export const main = commandWrapper(async (config) => {
     importsTransform.clear();
     importsTransform.get(ENTRY_POINT);
     logger.info(
-      colors.green("hmr update ") +
-        colors.dim([...changedCSS, "virtual:@downwind/devtools"].join(", ")),
+      colors.green("hmr update ")
+        + colors.dim([...changedCSS, "virtual:@downwind/devtools"].join(", ")),
     );
     ws.send({
       type: "update",
@@ -119,8 +119,8 @@ export const main = commandWrapper(async (config) => {
         return {
           type: "js",
           content:
-            clientCode +
-            `\nlet orderedStylesList = ${JSON.stringify(scanner.getCSSList())}`,
+            clientCode
+            + `\nlet orderedStylesList = ${JSON.stringify(scanner.getCSSList())}`,
           // Not using hash because the browser serves a cached index.html on history back
           browserCache: false,
         };

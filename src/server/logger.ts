@@ -71,9 +71,9 @@ export const logger: {
   rdsError: (error) => {
     ensureNewLine();
     console.log(
-      colors.cyan(error.file.includes(":") ? error.file : `${error.file}:1:1`) +
-        " " +
-        colors.red(error.message),
+      colors.cyan(error.file.includes(":") ? error.file : `${error.file}:1:1`)
+        + " "
+        + colors.red(error.message),
     );
     if (error.frame) console.log(colors.yellow(error.frame));
   },

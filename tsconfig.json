@@ -2,7 +2,7 @@
   "include": ["src", "scripts"],
   "exclude": ["src/client"],
   "compilerOptions": {
-    /* Target node 18 */
+    /* Target node 20 */
     "target": "ES2022",
     "module": "ESNext",
     "lib": ["ES2023"],
@@ -11,6 +11,7 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
 

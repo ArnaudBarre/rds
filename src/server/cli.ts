@@ -23,11 +23,14 @@ if (cmd === "--help" || cmd === undefined) {
 
 const main = async () => {
   if (cmd === "build") {
-    return (await import("./build.ts")).main({
+    await (
+      await import("./build.ts")
+    ).main({
       build: {
         metafile: process.argv.includes("--meta") ? true : undefined,
       },
     } satisfies InlineConfig);
+    return;
   }
   const indexPort = process.argv.indexOf("--port");
   const port =
@@ -42,9 +45,9 @@ const main = async () => {
     },
   };
   if (cmd === "dev" || cmd === "start") {
-    return (await import("./dev.ts")).main(inlineConfig);
+    return await (await import("./dev.ts")).main(inlineConfig);
   } else if (cmd === "preview" || cmd === "serve") {
-    return (await import("./preview.ts")).main(inlineConfig);
+    return await (await import("./preview.ts")).main(inlineConfig);
   }
 
   console.error(`\x1b[31mUnsupported command: ${cmd}\x1b[39m`);

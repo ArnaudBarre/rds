@@ -84,11 +84,11 @@ export const initImportsTransform = ({
         }
       } else {
         if (
-          isInnerNode(imp.r) ||
-          (isSVG(imp.r) &&
-            !imp.n.endsWith("?url") &&
-            !imp.n.endsWith("?inline")) ||
-          (isJSON(imp.r) && !imp.n.endsWith("?url"))
+          isInnerNode(imp.r)
+          || (isSVG(imp.r)
+            && !imp.n.endsWith("?url")
+            && !imp.n.endsWith("?inline"))
+          || (isJSON(imp.r) && !imp.n.endsWith("?url"))
         ) {
           output = toHashedUrl(imp.r) + content.slice(imp.e, index) + output;
           index = imp.s;
@@ -103,19 +103,26 @@ export const initImportsTransform = ({
     return content.slice(0, index) + output;
   });
 
+  const lastEdits = new Map<string, number>();
   const toHashedUrl = (url: string) =>
     getHashedUrl(
       `${FS_PREFIX}/${url}`,
       isInnerNode(url)
         ? importsTransformCache.get(url)
         : isSVG(url)
-        ? svgCache.get(url)
-        : isJSON(url)
-        ? jsonCache.get(url)
-        : assetsCache.get(url),
+          ? svgCache.get(url)
+          : isJSON(url)
+            ? jsonCache.get(url)
+            : assetsCache.get(url),
+      lastEdits.get(url),
     );
 
-  return { ...importsTransformCache, toHashedUrl };
+  return {
+    ...importsTransformCache,
+    toHashedUrl,
+    setLastEdit: (url: string, lastEdit: number) =>
+      lastEdits.set(url, lastEdit),
+  };
 };
 
 const getAssetUrl = (raw: string, resolveUrl: string) => {

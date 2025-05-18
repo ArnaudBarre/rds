@@ -28,9 +28,10 @@ export const initWS = (config: ResolvedConfig) => {
   return {
     handleUpgrade: (req: IncomingMessage, duplex: Duplex, head: Buffer) => {
       if (
-        req.headers["sec-websocket-protocol"] === HMR_HEADER &&
+        req.headers["sec-websocket-protocol"] === HMR_HEADER
         // Avoid connection from unknown origins
-        (!req.headers.origin || config.server.urls.includes(req.headers.origin))
+        && (!req.headers.origin
+          || config.server.urls.includes(req.headers.origin))
       ) {
         wss.handleUpgrade(req, duplex, head, (socket) => {
           const connectedPayload: HMRPayload = { type: "connected" };

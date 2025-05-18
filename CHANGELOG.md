@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2
+
+- Fix HMR updates for CSS modules when reverting changes
+
 ## 0.8.1
 
 - Bump OXC to 0.52

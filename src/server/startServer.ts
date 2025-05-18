@@ -56,9 +56,9 @@ export const startServer = async (
         .flatMap((nInterface) => nInterface ?? [])
         .filter(
           (detail) =>
-            detail.address &&
+            detail.address
             // Node 18 breaking change
-            (detail.family === "IPv4" || (detail.family as any) === 4),
+            && (detail.family === "IPv4" || (detail.family as any) === 4),
         )) {
         if (detail1.address.includes("127.0.0.1")) {
           logger.info(`${logIndent} Local:   ${localUrl}`);
@@ -86,8 +86,8 @@ export const startServer = async (
   };
 
   logger.info(
-    colors.cyan(`RDS v${__VERSION__}`) +
-      colors.dim(
+    colors.cyan(`RDS v${__VERSION__}`)
+      + colors.dim(
         `   ready in ${(performance.now() - global.__rds_start).toFixed(0)} ms`,
       ),
   );

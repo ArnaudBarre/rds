@@ -153,13 +153,13 @@ RefreshRuntime.enqueueUpdate();
     for (const [path, content, json] of contents) {
       const previous = JSON.parse(json) as OXCOutput;
       if (
-        content &&
-        previous.input === content &&
-        (!definedHasChanged ||
-          !allDefineKeys.some(
+        content
+        && previous.input === content
+        && (!definedHasChanged
+          || !allDefineKeys.some(
             (key) =>
-              content.includes(key) &&
-              previousCache.define[key] !== config.define[key],
+              content.includes(key)
+              && previousCache.define[key] !== config.define[key],
           ))
       ) {
         transformations[path] = previous;

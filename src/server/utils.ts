@@ -1,6 +1,5 @@
 import { existsSync, promises, readFileSync } from "node:fs";
 import { dirname, extname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { getHash } from "@arnaud-barre/config-loader";
 
 export const isCSS = (path: string) => path.endsWith(".css");
@@ -11,8 +10,14 @@ export const isInnerNode = (path: string) => isJS(path) || isCSS(path);
 
 export const getExtension = (path: string) => extname(path).slice(1);
 
-export const getHashedUrl = (base: string, content: string | Buffer) =>
-  `/${base}?h=${getHash(content).slice(0, 8)}`;
+export const getHashedUrl = (
+  base: string,
+  content: string | Buffer,
+  lastEdit?: number,
+) =>
+  `/${base}?h=${getHash(content).slice(0, 8)}${
+    lastEdit ? `&t=${lastEdit}` : ""
+  }`;
 
 export const readFile = (path: string) => readFileSync(path, "utf-8");
 export const readFileAsync = (path: string) => promises.readFile(path, "utf-8");
@@ -21,7 +26,7 @@ export const cacheDir = "node_modules/.rds";
 export const readCacheFile = (path: string) => readFile(join(cacheDir, path));
 
 export const getPathFromServerOutput = (path: string) =>
-  join(dirname(fileURLToPath(import.meta.url)), path);
+  join(import.meta.dirname, path);
 
 export const run = <T>(cb: () => T) => cb();
 

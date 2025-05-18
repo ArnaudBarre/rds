@@ -16,7 +16,7 @@ const serverOptions: BuildOptions = {
   outdir: `${outdir}/server`,
   platform: "node",
   format: "esm",
-  target: "node18",
+  target: "node20",
   legalComments: "inline",
   define: {
     __VERSION__: `"${packageJSON.version}"`,
@@ -25,7 +25,7 @@ const serverOptions: BuildOptions = {
 };
 
 const buildOrWatch = async (options: BuildOptions) => {
-  if (!dev) return build(options);
+  if (!dev) return await build(options);
   const c = await context(options);
   await c.watch();
   await c.rebuild();
@@ -64,8 +64,8 @@ cpSync("src/types.d.ts", `${outdir}/server/index.d.ts`);
 
 writeFileSync(
   `${outdir}/client.d.ts`,
-  readFileSync("src/client.d.ts", "utf-8") +
-    Object.keys(esbuildFilesLoaders)
+  readFileSync("src/client.d.ts", "utf-8")
+    + Object.keys(esbuildFilesLoaders)
       .flatMap((ext) => [
         `declare module "*${ext}" {\n  const src: string;\n  export default src;\n}\n`,
         `declare module "*${ext}?inline" {\n  const data: string;\n  export default data;\n}\n`,

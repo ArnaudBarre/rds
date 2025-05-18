@@ -14,10 +14,10 @@ export const openInEditor = (file: string) => {
       editor =
         processes.includes("Cursor.app") || processes.includes("\ncursor")
           ? "cursor"
-          : processes.includes("Visual Studio Code.app") ||
-            processes.includes("\ncode")
-          ? "code"
-          : "idea";
+          : processes.includes("Visual Studio Code.app")
+              || processes.includes("\ncode")
+            ? "code"
+            : "idea";
     } catch (e) {
       console.log(e);
     }

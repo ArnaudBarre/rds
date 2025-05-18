@@ -39,8 +39,8 @@ const initDependencyHash = () => {
     }
     const patchesDir = lookup(["patches"]);
     dependenciesHash = getHash(
-      readFileSync(lockPath, "utf-8") +
-        (patchesDir ? statSync(patchesDir).mtimeMs.toString() : ""),
+      readFileSync(lockPath, "utf-8")
+        + (patchesDir ? statSync(patchesDir).mtimeMs.toString() : ""),
     );
   }
 };
@@ -71,8 +71,8 @@ export const bundleDependencies = async (target: string[]) => {
 
   logger.startLine(
     "bundleDependencies",
-    colors.green("Bundling dependencies: ") +
-      colors.yellow(
+    colors.green("Bundling dependencies: ")
+      + colors.yellow(
         deps.length > 5
           ? `${deps.slice(0, 4).join(", ")} and ${deps.length - 4} more`
           : deps.join(", "),
@@ -115,8 +115,8 @@ export const bundleDependencies = async (target: string[]) => {
         output[join(cacheDir, dep.endsWith(".js") ? dep : `${dep}.js`)];
       metadata.deps[dep] = {
         needInterop:
-          exports.length === 0 ||
-          (exports.length === 1 && exports[0] === "default"),
+          exports.length === 0
+          || (exports.length === 1 && exports[0] === "default"),
       };
     }
   }
@@ -143,9 +143,9 @@ export const dependenciesCache = cache("dependencies", (dependency) => {
         );
         const updatedPath = join(dirname(dependency), path);
         content =
-          content.slice(0, sourceMapIndex) +
-          `# sourceMappingURL=/${DEPENDENCY_PREFIX}/${updatedPath}` +
-          content.slice(dotMapIndex);
+          content.slice(0, sourceMapIndex)
+          + `# sourceMappingURL=/${DEPENDENCY_PREFIX}/${updatedPath}`
+          + content.slice(dotMapIndex);
       }
     }
     return `const style = document.createElement("style");

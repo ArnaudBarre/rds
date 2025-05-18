@@ -16,6 +16,7 @@
     "ci": "tsc && bun lint-ci && bun prettier-ci && bun run build"
   },
   "prettier": {
+    "experimentalOperatorPosition": "start",
     "xmlWhitespaceSensitivity": "ignore",
     "plugins": [
       "@arnaud-barre/prettier-plugin-sort-imports",
@@ -28,13 +29,13 @@
   },
   "devDependencies": {
     "@arnaud-barre/downwind": "^0.7.7",
-    "@arnaud-barre/eslint-config": "^5.2.0",
-    "@arnaud-barre/prettier-plugin-sort-imports": "^0.1.3",
-    "@arnaud-barre/rds": "^0.7.11",
+    "@arnaud-barre/eslint-config": "^5.3.1",
+    "@arnaud-barre/prettier-plugin-sort-imports": "^0.2.1",
+    "@arnaud-barre/rds": "^0.8.1",
     "@prettier/plugin-xml": "^3.4.1",
-    "@types/react-dom": "^18.3.1",
-    "eslint": "^9.17.0",
-    "prettier": "3.0.3",
-    "typescript": "~5.7"
+    "@types/react-dom": "^18.3.7",
+    "eslint": "^9.27.0",
+    "prettier": "^3.5.3",
+    "typescript": "~5.8"
   }
 }

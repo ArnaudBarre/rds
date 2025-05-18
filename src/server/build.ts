@@ -52,7 +52,7 @@ export const main = commandWrapper(async (config) => {
                   namespace ?? (isCSS(args.importer) ? "url" : undefined),
               };
             });
-            pluginBuild.onLoad({ filter: /\.svg$/u }, (args) => {
+            pluginBuild.onLoad({ filter: /\.svg$/ }, (args) => {
               const contents = readFileSync(args.path);
               if (args.namespace === "inline") {
                 return {
@@ -108,8 +108,11 @@ export const main = commandWrapper(async (config) => {
         },
       ],
     });
-  } catch {
-    // esbuild has already logged perfect errors, no need to add anything
+  } catch (e) {
+    const isBuildFailure =
+      typeof e === "object" && e && ("warnings" in e || "errors" in e);
+    // for build failues, esbuild has already logged perfect errors, no need to add anything
+    if (!isBuildFailure) console.error(e);
     process.exit(1);
   }
   logEsbuildErrors(bundleResult);
@@ -171,12 +174,12 @@ export const main = commandWrapper(async (config) => {
     const printer = path.endsWith(".css")
       ? colors.magenta
       : path.endsWith(".js")
-      ? colors.cyan
-      : colors.green;
+        ? colors.cyan
+        : colors.green;
     console.log(
-      colors.dim("dist/") +
-        printer(path.slice(5).padEnd(longest - 3)) +
-        colors.dim(`${(bytes / 1e3).toFixed(2).padStart(maxFileSize)} kB`),
+      colors.dim("dist/")
+        + printer(path.slice(5).padEnd(longest - 3))
+        + colors.dim(`${(bytes / 1e3).toFixed(2).padStart(maxFileSize)} kB`),
     );
   }
   stopProfiler();

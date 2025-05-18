@@ -86,6 +86,7 @@ export const setupHmr = ({
         lintFile(path);
         return;
       }
+      importsTransform.setLastEdit(path, Date.now());
       const graphNode = scanner.graph.get(path)!;
       invalidate(graphNode);
       const updates = new Set<string>();
@@ -134,6 +135,7 @@ export const setupHmr = ({
     .on("unlink", (path) => {
       logger.debug(`unlink ${path}`);
       clearCache(path, false);
+      importsTransform.setLastEdit(path, Date.now());
       const node = scanner.graph.get(path)!;
       invalidate(node);
       if (node.importers.size) {
