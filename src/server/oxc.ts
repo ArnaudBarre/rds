@@ -45,7 +45,7 @@ export const initOXC = async (config: ResolvedConfig) => {
     const startGet = debugNow();
     const transformed = run(() => {
       try {
-        return transform(url, content, {
+        return transform(`/@fs/${url}`, content, {
           sourcemap: true,
           jsx: { refresh: true, development: true, runtime: "automatic" },
           define: {

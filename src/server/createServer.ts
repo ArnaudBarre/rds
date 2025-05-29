@@ -36,6 +36,20 @@ export const createServer = (
       return;
     }
 
+    if (url === "/.well-known/appspecific/com.chrome.devtools.json") {
+      res.setHeader("Content-Type", "application/json");
+      res.writeHead(200);
+      const root = process.cwd();
+      const base = "cd0e3e1f-e211-4644-9baa-e9a0a662c5fe";
+      const hash = getHash(root).slice(0, 8);
+      res.end(
+        JSON.stringify({
+          workspace: { root, uuid: `${hash}${base.slice(hash.length)}` },
+        }),
+      );
+      return;
+    }
+
     const loadedFile = handleRequest(
       url.slice(1),
       new URLSearchParams(query),

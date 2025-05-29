@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.3
+
+- Implement automatic workspace folders support for Chrome DevTools
+- Preserve breakpoints after HMR updates
+
 ## 0.8.2
 
 - Fix HMR updates for CSS modules when reverting changes
