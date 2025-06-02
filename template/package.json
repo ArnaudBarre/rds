@@ -24,17 +24,17 @@
     ]
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@arnaud-barre/downwind": "^0.7.7",
-    "@arnaud-barre/eslint-config": "^5.3.1",
+    "@arnaud-barre/eslint-config": "^5.3.3",
     "@arnaud-barre/prettier-plugin-sort-imports": "^0.2.1",
-    "@arnaud-barre/rds": "^0.8.1",
+    "@arnaud-barre/rds": "^0.8.3",
     "@prettier/plugin-xml": "^3.4.1",
-    "@types/react-dom": "^18.3.7",
-    "eslint": "^9.27.0",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.28.0",
     "prettier": "^3.5.3",
     "typescript": "~5.8"
   }

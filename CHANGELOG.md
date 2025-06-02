@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.4
+
+- Fix inspector for React 19
+
 ## 0.8.3
 
 - Implement automatic workspace folders support for Chrome DevTools

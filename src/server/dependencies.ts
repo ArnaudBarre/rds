@@ -155,7 +155,19 @@ style.innerHTML = ${JSON.stringify(content)};
 document.head.appendChild(style);
 `;
   }
-  return readCacheFile(
+  const code = readCacheFile(
     dependency.endsWith(".js") ? dependency : `${dependency}.js`,
+  );
+
+  // Patch jsx-dev-runtime v19 to provide debugSource for inspector
+  // https://github.com/facebook/react/issues/31981
+  if (dependency !== "react/jsx-dev-runtime") return code;
+  if (code.includes("_source")) return code;
+  const defineIndex = code.indexOf('"_debugInfo"');
+  if (defineIndex === -1) return code;
+  const valueIndex = code.indexOf("value: null", defineIndex);
+  if (valueIndex === -1) return code;
+  return (
+    code.slice(0, valueIndex) + "value: source" + code.slice(valueIndex + 11)
   );
 });

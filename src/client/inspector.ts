@@ -9,7 +9,7 @@ const style = newStyleSheet(
 }
 #click-to-component-menu {
   position: fixed !important;
-  z-index: 1000 !important;
+  z-index: 1000;
   margin-top: 8px !important;
   margin-bottom: 8px !important;
   background: #222 !important;
@@ -62,6 +62,16 @@ window.addEventListener("mousemove", (event) => {
   event.target.dataset["clickToComponentTarget"] = "true";
 });
 
+const getMaxZIndex = (target: HTMLElement, current: number) => {
+  const parent = target.parentElement;
+  if (!parent || parent === document.body) return current;
+  const zIndex = parseInt(window.getComputedStyle(parent).zIndex);
+  return getMaxZIndex(
+    parent,
+    isNaN(zIndex) ? current : Math.max(zIndex, current),
+  );
+};
+
 window.addEventListener("contextmenu", (event) => {
   if (!event.altKey) return;
   const target = event.target;
@@ -69,6 +79,8 @@ window.addEventListener("contextmenu", (event) => {
   event.preventDefault();
   const layers = getLayersForElement(target);
   if (layers.length === 0) return;
+  const zIndex = getMaxZIndex(target, 999);
+  if (zIndex > 999) menuElement.style.zIndex = `${zIndex + 1}`;
   const rect = target.getBoundingClientRect();
   if (rect.bottom < window.innerHeight / 2) {
     menuElement.style.top = `${rect.bottom}px`;
@@ -79,9 +91,14 @@ window.addEventListener("contextmenu", (event) => {
     menuElement.style.top = "";
     menuElement.style.maxHeight = `${rect.top - 16}px`;
   } else {
-    menuElement.style.bottom = `${window.innerHeight - rect.bottom}px`;
+    const bottomVisible = rect.bottom < window.innerHeight;
+    menuElement.style.bottom = `${
+      bottomVisible ? window.innerHeight - rect.bottom : 0
+    }px`;
     menuElement.style.top = "";
-    menuElement.style.maxHeight = `${rect.bottom - 16}px`;
+    menuElement.style.maxHeight = `${
+      (bottomVisible ? rect.bottom : window.innerHeight) - 16
+    }px`;
   }
   if (rect.left < window.innerWidth / 2) {
     menuElement.style.left = `${rect.left}px`;
@@ -103,10 +120,11 @@ window.addEventListener("contextmenu", (event) => {
     spanL.textContent = `<${layer.name} />`;
     item.appendChild(spanL);
     const spanR = document.createElement("span");
-    spanR.textContent = layer.path;
+    const path = layer.path.replace("/@fs/", "");
+    spanR.textContent = path;
     item.appendChild(spanR);
     item.addEventListener("click", () => {
-      openInEditor(layer.path);
+      openInEditor(path);
       cleanUp();
     });
     menuElement.appendChild(item);
@@ -147,7 +165,10 @@ const getLayersForElement = (element: Element) => {
       const name =
         typeof instance.type === "string"
           ? instance.type
-          : (instance.type.displayName ?? instance.type.name);
+          : (instance.type.displayName
+            ?? instance.type.name
+            ?? instance.type.render?.name
+            ?? "undefined");
       layers.push({ name, path });
     }
     instance = instance._debugOwner;
@@ -157,22 +178,27 @@ const getLayersForElement = (element: Element) => {
 };
 
 const getPath = (fiber: Fiber) => {
-  if (!fiber._debugSource) {
+  const source = fiber._debugSource ?? fiber._debugInfo;
+  if (!source) {
     console.debug("Couldn't find a React instance for the element", fiber);
     return;
   }
-  const { columnNumber = 1, fileName, lineNumber = 1 } = fiber._debugSource;
+  const { columnNumber = 1, fileName, lineNumber = 1 } = source;
   return `${fileName}:${lineNumber}:${columnNumber}`;
 };
 
+type Source = {
+  columnNumber?: number;
+  fileName: string;
+  lineNumber?: number;
+};
 type Fiber = {
-  _debugSource?: {
-    columnNumber?: number;
-    fileName: string;
-    lineNumber?: number;
-  };
+  _debugSource?: Source;
+  _debugInfo?: Source; // Injected by React jsxDev patch for React 19
   _debugOwner?: Fiber;
-  type: string | { displayName?: string; name: string };
+  type:
+    | string
+    | { displayName?: string; name?: string; render?: () => unknown };
 };
 
 const getReactInstanceForElement = (element: Element): Fiber | undefined => {
