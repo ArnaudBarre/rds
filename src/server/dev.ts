@@ -123,7 +123,7 @@ export const main = commandWrapper(async (config) => {
             res.writeHead(200);
             res.end();
           })
-          .catch((err) => {
+          .catch((err: Error) => {
             res.writeHead(500);
             res.end(err.message);
           });

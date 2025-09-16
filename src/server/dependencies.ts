@@ -1,7 +1,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { getHash, jsonCache } from "@arnaud-barre/config-loader";
-import { build } from "esbuild";
+import { build, type BuildFailure } from "esbuild";
 import { cache } from "./cache.ts";
 import { colors } from "./colors.ts";
 import { DEPENDENCY_PREFIX, RDS_PREFIX } from "./consts.ts";
@@ -91,7 +91,7 @@ export const bundleDependencies = async (target: string[]) => {
     target,
     outdir: cacheDir,
     logLevel: "silent",
-  }).catch((err) => {
+  }).catch((err: BuildFailure) => {
     logger.endLine("bundleDependencies", colors.red(" x"));
     const match = (err.message as string).match(/Could not resolve "(.*)"/);
     if (!match) {

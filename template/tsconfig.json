@@ -6,7 +6,7 @@
     "module": "ESNext",
     "moduleDetection": "force",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["@arnaud-barre/rds/client"],
+    "types": ["@arnaud-barre/rds/client", "tsl/patches"],
     "skipLibCheck": true,
 
     /* Bundler mode */

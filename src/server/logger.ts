@@ -1,5 +1,5 @@
 import { logEsbuildErrors } from "@arnaud-barre/config-loader";
-import type { BuildResult } from "esbuild";
+import type { BuildFailure } from "esbuild";
 import type { RDSErrorPayload } from "../hmr.ts";
 import { colors } from "./colors.ts";
 import { run } from "./utils.ts";
@@ -22,7 +22,7 @@ export const logger: {
   endLine: (id: string, message: string) => void;
   warn: (message: string) => void;
   rdsError: (error: RDSErrorPayload) => void;
-  esbuildResult: (result: BuildResult) => void;
+  esbuildResult: (result: BuildFailure) => void;
 } = {
   debug: isDebug
     ? run(() => {
