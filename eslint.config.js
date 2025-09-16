@@ -1,14 +1,9 @@
 import baseConfig from "@arnaud-barre/eslint-config";
-import tseslint from "typescript-eslint";
+import { defineConfig } from "eslint/config";
 
-export default tseslint.config(
+export default defineConfig(
   ...baseConfig,
   {
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.json", "./src/client/tsconfig.json"],
-      },
-    },
     rules: {
       "require-unicode-regexp": "off",
       "no-param-reassign": "off",

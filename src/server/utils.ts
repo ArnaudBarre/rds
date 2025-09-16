@@ -69,3 +69,8 @@ export const mapObjectValue = <K extends string, V, R>(
   }
   return result;
 };
+
+export const formatFileList = (files: string[]) => {
+  if (files.length <= 10) return files.join(", ");
+  return `${files.slice(0, 9).join(", ")} and ${files.length - 9} more`;
+};

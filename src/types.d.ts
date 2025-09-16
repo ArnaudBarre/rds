@@ -35,16 +35,6 @@ type UserConfig = {
      */
     qrCode?: boolean;
     /**
-     * Option for the eslint worker (dev only)
-     * @default { cache: true; fix: false }
-     */
-    eslint?: { cache?: boolean; fix?: boolean } | false;
-    /**
-     * Option to enable the tsc worker (dev only)
-     * @default true
-     */
-    tsc?: boolean;
-    /**
      * If set, configure where /api/* requests are redirect
      */
     proxy?: {

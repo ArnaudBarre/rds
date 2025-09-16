@@ -3,17 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "bun local-css",
     "dev": "rds dev --open",
     "build": "rds build",
-    "tsc": "tsc",
+    "tsc": "tsl",
     "preview": "rds preview",
-    "local-css": "downwind -o src/local.css",
-    "lint": "bun lint-ci --fix --cache",
-    "lint-ci": "eslint --max-warnings 0",
+    "lint": "eslint --max-warnings 0 --concurrency auto",
     "prettier": "bun prettier-ci --write",
     "prettier-ci": "prettier --ignore-path=.gitignore --check '**/*.{ts,tsx,cjs,html,css,json,md,svg}'",
-    "ci": "tsc && bun lint-ci && bun prettier-ci && bun run build"
+    "ci": "tsl && bun lint && bun prettier-ci && bun run build"
   },
   "prettier": {
     "experimentalOperatorPosition": "start",
@@ -29,13 +26,15 @@
   },
   "devDependencies": {
     "@arnaud-barre/downwind": "^0.7.7",
-    "@arnaud-barre/eslint-config": "^5.3.3",
-    "@arnaud-barre/prettier-plugin-sort-imports": "^0.2.1",
-    "@arnaud-barre/rds": "^0.8.3",
-    "@prettier/plugin-xml": "^3.4.1",
-    "@types/react-dom": "^19.1.5",
-    "eslint": "^9.28.0",
-    "prettier": "^3.5.3",
-    "typescript": "~5.8"
+    "@arnaud-barre/eslint-config": "^6.1.2",
+    "@arnaud-barre/tsl-config": "^0.1.1",
+    "@arnaud-barre/prettier-plugin-sort-imports": "^0.2.2",
+    "@arnaud-barre/rds": "^0.8.4",
+    "@prettier/plugin-xml": "^3.4.2",
+    "@types/react-dom": "^19.1.9",
+    "eslint": "^9.35.0",
+    "prettier": "^3.6.2",
+    "tsl": "^1.0.23",
+    "typescript": "~5.9"
   }
 }

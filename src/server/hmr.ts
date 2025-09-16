@@ -10,7 +10,7 @@ import type { OXCCache } from "./oxc.ts";
 import type { Scanner } from "./scanner.ts";
 import { svgCache } from "./svg.ts";
 import type { GraphNode } from "./types.ts";
-import { isCSS, isJS, isJSON, isSVG } from "./utils.ts";
+import { formatFileList, isCSS, isJS, isJSON, isSVG } from "./utils.ts";
 import type { WS } from "./ws.ts";
 
 export const setupHmr = ({
@@ -19,7 +19,6 @@ export const setupHmr = ({
   oxcCache,
   scanner,
   importsTransform,
-  lintFile,
   ws,
 }: {
   downwind: Downwind;
@@ -27,7 +26,6 @@ export const setupHmr = ({
   oxcCache: OXCCache;
   scanner: Scanner;
   importsTransform: ImportsTransform;
-  lintFile: (path: string) => void;
   ws: WS;
 }) => {
   const invalidate = (node: GraphNode) => {
@@ -81,11 +79,7 @@ export const setupHmr = ({
   srcWatcher
     .on("change", (path) => {
       logger.debug(`change ${path}`);
-      if (clearCache(path, true)) {
-        // Type or whitespace only change, but can impact lint result
-        lintFile(path);
-        return;
-      }
+      if (clearCache(path, true)) return;
       importsTransform.setLastEdit(path, Date.now());
       const graphNode = scanner.graph.get(path)!;
       invalidate(graphNode);
@@ -97,7 +91,8 @@ export const setupHmr = ({
         errorPaths.clear();
       } else {
         logger.info(
-          colors.green("hmr update ") + colors.dim([...updates].join(", ")),
+          colors.green("hmr update ")
+            + colors.dim(formatFileList([...updates])),
         );
         const filesToTransform = [...new Set([...errorPaths, ...updates])];
         let hasError = false;

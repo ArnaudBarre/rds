@@ -14,12 +14,10 @@ export type Scanner = ReturnType<typeof initScanner>;
 export const initScanner = ({
   downwind,
   oxcCache,
-  lintFile,
   watchFile,
 }: {
   downwind: Downwind;
   oxcCache: OXCCache;
-  lintFile: (path: string) => void;
   watchFile: (path: string) => void;
 }) => {
   const graph: Graph = new Map([
@@ -48,7 +46,6 @@ export const initScanner = ({
       graphNode.srcImports = imports.map((i) => i[1]);
       output = { isCSS: true, code, imports };
     } else {
-      lintFile(url);
       downwind.scanCache.get(url);
       const oldSrcImports = graphNode.srcImports;
       const { code, imports, selfUpdate } = oxcCache.get(url, true);

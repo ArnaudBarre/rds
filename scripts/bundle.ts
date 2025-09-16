@@ -1,10 +1,9 @@
-#!/usr/bin/env tnode
+#!/usr/bin/env node
 import { execSync } from "node:child_process";
 import { cpSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { Worker } from "node:worker_threads";
 import { build, type BuildOptions, context } from "esbuild";
-import oxcPackageJson from "oxc-transform/package.json";
-import packageJSON from "../package.json";
+import oxcPackageJson from "oxc-transform/package.json" with { type: "json" };
+import packageJSON from "../package.json" with { type: "json" };
 import { esbuildFilesLoaders } from "../src/server/mimeTypes.ts";
 
 const dev = process.argv.includes("--dev");
@@ -35,16 +34,10 @@ await Promise.all([
   buildOrWatch({
     bundle: true,
     splitting: true,
-    entryPoints: [
-      "src/server/index.ts",
-      "src/server/cli.ts",
-      "src/server/tscWorker.ts",
-      "src/server/eslintWorker.ts",
-    ],
+    entryPoints: ["src/server/index.ts", "src/server/cli.ts"],
     external: [
       ...Object.keys(packageJSON.peerDependencies),
       ...Object.keys(packageJSON.dependencies),
-      "chalk", // In eslint worker
     ],
     ...serverOptions,
   }),
@@ -79,7 +72,7 @@ writeFileSync(
     {
       name: packageJSON.name,
       description:
-        "React Development Server: A modern CRA inspired by Vite and powered by OXC, esbuild & Lightning CSS",
+        "React Development Server: A modern CRA inspired by Vite and powered by oxc, esbuild & Lightning CSS",
       type: "module",
       version: packageJSON.version,
       author: "Arnaud Barré (https://github.com/ArnaudBarre)",
@@ -100,6 +93,3 @@ writeFileSync(
     2,
   ),
 );
-
-// eslint-disable-next-line no-new
-if (dev) new Worker(`./${outdir}/server/tscWorker`);

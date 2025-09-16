@@ -25,11 +25,6 @@ export const loadConfig = async (
       host: false,
       qrCode: false,
       ...mergedConfig.server,
-      eslint:
-        !mergedConfig.server || mergedConfig.server.eslint !== false
-          ? { cache: true, fix: false, ...mergedConfig.server?.eslint }
-          : false,
-      tsc: mergedConfig.server?.tsc ?? true,
       proxy: proxyUrl
         ? {
             host: proxyUrl.hostname,

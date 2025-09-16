@@ -47,7 +47,9 @@ export const initOXC = async (config: ResolvedConfig) => {
       try {
         return transform(`/@fs/${url}`, content, {
           sourcemap: true,
-          jsx: { refresh: true, development: true, runtime: "automatic" },
+          jsx: url.endsWith("x")
+            ? { refresh: true, development: true, runtime: "automatic" }
+            : undefined,
           define: {
             "process.env.NODE_ENV": '"development"',
             ...config.define,

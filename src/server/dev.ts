@@ -1,6 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
 import type { IncomingMessage } from "node:http";
-import { Worker } from "node:worker_threads";
 import { watch } from "chokidar";
 import { assetsCache } from "./assets.ts";
 import { clientCode } from "./client.ts";
@@ -32,9 +31,9 @@ import { svgCache } from "./svg.ts";
 import type { LoadedFile } from "./types.ts";
 import {
   cacheDir,
+  formatFileList,
   getExtension,
   getHashedUrl,
-  getPathFromServerOutput,
   isCSS,
   isJS,
   isJSON,
@@ -46,18 +45,6 @@ import { initWS } from "./ws.ts";
 export const main = commandWrapper(async (config) => {
   const downwind = await getDownwind(config.build.target);
   const srcWatcher = watch([ENTRY_POINT], { ignoreInitial: true });
-  if (config.server.tsc) {
-    // eslint-disable-next-line no-new
-    new Worker(getPathFromServerOutput("./tscWorker"), {
-      resourceLimits: { stackSizeMb: 16 },
-    });
-  }
-  const eslintWorker = config.server.eslint
-    ? new Worker(getPathFromServerOutput("./eslintWorker"), {
-        workerData: config.server.eslint,
-      })
-    : undefined;
-  const lintFile = (path: string) => eslintWorker?.postMessage(path);
 
   if (!existsSync(cacheDir)) mkdirSync(cacheDir);
   const ws = initWS(config);
@@ -65,7 +52,6 @@ export const main = commandWrapper(async (config) => {
   const scanner = initScanner({
     downwind,
     oxcCache,
-    lintFile,
     watchFile: (path) => srcWatcher.add(path),
   });
   scanner.get(ENTRY_POINT);
@@ -81,7 +67,6 @@ export const main = commandWrapper(async (config) => {
     oxcCache,
     scanner,
     importsTransform,
-    lintFile,
     ws,
   });
   downwind.onUtilsUpdate((from) => {
@@ -100,7 +85,9 @@ export const main = commandWrapper(async (config) => {
     importsTransform.get(ENTRY_POINT);
     logger.info(
       colors.green("hmr update ")
-        + colors.dim([...changedCSS, "virtual:@downwind/devtools"].join(", ")),
+        + colors.dim(
+          formatFileList([...changedCSS, "virtual:@downwind/devtools"]),
+        ),
     );
     ws.send({
       type: "update",

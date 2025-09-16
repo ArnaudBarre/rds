@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0
+
+- Remove tsc and eslint workers
+- Truncate hmr update list to 10 files
+
 ## 0.8.4
 
 - Fix inspector for React 19
