@@ -3,6 +3,7 @@
 ## 0.9.0
 
 - Remove tsc and eslint workers
+- Support [subpath imports](https://nodejs.org/api/packages.html#subpath-imports)
 - Truncate hmr update list to 10 files
 
 ## 0.8.4

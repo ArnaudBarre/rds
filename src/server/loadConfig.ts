@@ -1,4 +1,4 @@
-import { rmSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { loadConfig as configLoader } from "@arnaud-barre/config-loader";
 import type { InlineConfig, UserConfig } from "../types.d.ts";
 import { debugNow, logger } from "./logger.ts";
@@ -13,6 +13,10 @@ export const loadConfig = async (
   if (inlineConfig.force) rmSync(cacheDir, { recursive: true, force: true });
   const configFile: UserConfig =
     (await configLoader<UserConfig>("rds"))?.config ?? {};
+  const packageImports = JSON.parse(readFileSync("package.json", "utf-8"))
+    .imports as
+    | Record<string, string | Record<string, string | undefined> | undefined>
+    | undefined;
   const mergedConfig = mergeConfig<UserConfig>(configFile, inlineConfig);
   const proxyUrl = mergedConfig.server?.proxy
     ? new URL(mergedConfig.server.proxy.target)
@@ -36,6 +40,7 @@ export const loadConfig = async (
       urls: [] as string[],
     },
     define: mergedConfig.define ?? {},
+    packageImports,
     build: {
       emptyOutDir: mergedConfig.build?.emptyOutDir ?? true,
       // https://github.com/vitejs/vite/blob/main/packages/vite/src/node/constants.ts#L14-L23

@@ -116,7 +116,7 @@ RefreshRuntime.enqueueUpdate();
     const output: OXCOutput = {
       code,
       input: readFile(url),
-      imports: scanImports(url, code),
+      imports: scanImports(url, code, config.packageImports),
       selfUpdate: hasFastRefresh,
     };
     logger.debug(`oxc: load - ${url}: ${Math.round(debugNow() - startGet)}ms`);
