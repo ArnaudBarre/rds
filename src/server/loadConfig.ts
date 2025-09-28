@@ -53,7 +53,7 @@ export const loadConfig = async (
       ],
       metafile: mergedConfig.build?.metafile ?? false,
       sourcemap: mergedConfig.build?.sourcemap,
-      downwindIntervalCheckMs: mergedConfig.build?.downwindIntervalCheckMs,
+      downwindIdleMs: mergedConfig.build?.downwindIdleMs,
     },
   };
   logger.debug(`Load config: ${(debugNow() - start).toFixed(2)}ms`);

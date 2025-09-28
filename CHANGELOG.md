@@ -1,9 +1,13 @@
 # Changelog
 
+## 0.10.0
+
+- Support [subpath imports](https://nodejs.org/api/packages.html#subpath-imports)
+- Bump downwind to 0.8 (renamed `downwindIntervalCheckMs` to `downwindIdleMs`)
+
 ## 0.9.0
 
 - Remove tsc and eslint workers
-- Support [subpath imports](https://nodejs.org/api/packages.html#subpath-imports)
 - Truncate hmr update list to 10 files
 
 ## 0.8.4

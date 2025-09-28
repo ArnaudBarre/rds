@@ -1,4 +1,5 @@
 import type { DefineConfig } from "@arnaud-barre/config-loader";
+import type { downwind } from "@arnaud-barre/downwind/esbuild";
 import type { BuildOptions } from "esbuild";
 
 type UserConfig = {
@@ -71,7 +72,7 @@ type UserConfig = {
     /**
      * Pass to downwind, number of millisecond to wait without new scan before generating utils
      */
-    downwindIntervalCheckMs?: number;
+    downwindIdleMs?: NonNullable<Parameters<typeof downwind>[0]>["idleMs"];
   };
 };
 

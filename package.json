@@ -2,7 +2,7 @@
   "name": "@arnaud-barre/rds",
   "private": true,
   "type": "module",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "license": "MIT",
   "scripts": {
     "dev": "scripts/bundle.ts --dev",
@@ -20,11 +20,11 @@
     ]
   },
   "peerDependencies": {
-    "@arnaud-barre/downwind": "^0.7.7"
+    "@arnaud-barre/downwind": "^0.8.0"
   },
   "dependencies": {
-    "@arnaud-barre/config-loader": "^0.7.5",
-    "oxc-transform": "^0.89.0",
+    "@arnaud-barre/config-loader": "^0.7.7",
+    "oxc-transform": "^0.93.0",
     "chokidar": "^4.0.3",
     "es-module-lexer": "^1.7.0",
     "esbuild": "^0.25.9",
@@ -33,15 +33,15 @@
   },
   "devDependencies": {
     "@arnaud-barre/tsl-config": "^0.1.1",
-    "@arnaud-barre/downwind": "^0.7.7",
+    "@arnaud-barre/downwind": "^0.8.0",
     "@arnaud-barre/eslint-config": "^6.1.2",
-    "@arnaud-barre/prettier-plugin-sort-imports": "^0.2.2",
+    "@arnaud-barre/prettier-plugin-sort-imports": "^0.2.4",
     "@types/node": "^22.18.4",
     "@types/react": "^19.1.13",
     "@types/ws": "^8.18.1",
     "eslint": "^9.35.0",
     "prettier": "^3.6.2",
-    "tsl": "^1.0.23",
+    "tsl": "^1.0.25",
     "typescript": "~5.9"
   }
 }
